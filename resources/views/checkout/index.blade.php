@@ -3,7 +3,7 @@
 
     <x-slot name="header">
         <div>
-            <h2 class="text-xl font-extrabold text-slate-900">💳 Checkout</h2>
+            <h2 class="text-xl font-extrabold text-slate-900">Checkout</h2>
             <p class="mt-0.5 text-sm text-slate-500">Lengkapi alamat, pilih pengiriman dan metode pembayaran</p>
         </div>
     </x-slot>
@@ -31,10 +31,10 @@
                     <section class="card p-6">
                         <div class="flex items-center justify-between">
                             <h3 class="flex items-center gap-2 text-base font-extrabold text-slate-900">
-                                <span class="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-extrabold text-white">1</span>
+                                <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-extrabold text-white">1</span>
                                 Alamat Pengiriman
                             </h3>
-                            <a href="{{ route('alamat.create') }}" class="text-sm font-bold text-indigo-600 hover:text-indigo-800">+ Tambah Alamat</a>
+                            <a href="{{ route('alamat.create') }}" class="text-sm font-bold text-brand-600 hover:text-brand-800">+ Tambah Alamat</a>
                         </div>
 
                         @if ($alamats->isEmpty())
@@ -45,16 +45,16 @@
                         @else
                             <div class="mt-5 grid gap-3 sm:grid-cols-2">
                                 @foreach ($alamats as $alamat)
-                                    <label class="relative block cursor-pointer rounded-2xl border-2 p-4 transition {{ old('alamat_id', $alamats->firstWhere('is_default', true)?->id ?? $alamats->first()->id) == $alamat->id ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 bg-white hover:border-indigo-200' }}">
+                                    <label class="relative block cursor-pointer rounded-2xl border-2 p-4 transition {{ old('alamat_id', $alamats->firstWhere('is_default', true)?->id ?? $alamats->first()->id) == $alamat->id ? 'border-brand-500 bg-brand-50/50' : 'border-slate-200 bg-white hover:border-brand-200' }}">
                                         <input type="radio" name="alamat_id" value="{{ $alamat->id }}"
                                                class="peer sr-only"
                                                {{ old('alamat_id', $alamats->firstWhere('is_default', true)?->id ?? $alamats->first()->id) == $alamat->id ? 'checked' : '' }}>
-                                        <span class="pointer-events-none absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border-2 border-slate-300 peer-checked:border-indigo-600">
-                                            <span class="h-2.5 w-2.5 rounded-full bg-indigo-600 peer-checked:block" style="display: {{ old('alamat_id', $alamats->firstWhere('is_default', true)?->id ?? $alamats->first()->id) == $alamat->id ? 'block' : 'none' }}"></span>
+                                        <span class="pointer-events-none absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border-2 border-slate-300 peer-checked:border-brand-600">
+                                            <span class="h-2.5 w-2.5 rounded-full bg-brand-600 peer-checked:block" style="display: {{ old('alamat_id', $alamats->firstWhere('is_default', true)?->id ?? $alamats->first()->id) == $alamat->id ? 'block' : 'none' }}"></span>
                                         </span>
                                         <div class="pr-6">
                                             <div class="flex items-center gap-2">
-                                                <span class="badge bg-indigo-50 text-indigo-700 ring-indigo-200">{{ $alamat->label }}</span>
+                                                <span class="badge bg-brand-50 text-brand-700 ring-brand-200">{{ $alamat->label }}</span>
                                                 @if ($alamat->is_default)
                                                     <span class="badge bg-emerald-50 text-emerald-700 ring-emerald-200">Utama</span>
                                                 @endif
@@ -74,24 +74,24 @@
                     {{-- 2. Pengiriman --}}
                     <section class="card p-6">
                         <h3 class="flex items-center gap-2 text-base font-extrabold text-slate-900">
-                            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-extrabold text-white">2</span>
+                            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-extrabold text-white">2</span>
                             Metode Pengiriman
                             <span class="ml-auto rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-500">{{ number_format($beratGram) }} gram</span>
                         </h3>
 
                         <div class="mt-5 grid gap-3 sm:grid-cols-2">
                             @foreach (\App\Http\Controllers\CheckoutController::KURIR as $nama => $konfig)
-                                <label class="relative block cursor-pointer rounded-2xl border-2 p-4 transition" x-bind:class="kurir === '{{ $nama }}' ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 bg-white hover:border-indigo-200'">
+                                <label class="relative block cursor-pointer rounded-2xl border-2 p-4 transition" x-bind:class="kurir === '{{ $nama }}' ? 'border-brand-500 bg-brand-50/50' : 'border-slate-200 bg-white hover:border-brand-200'">
                                     <input type="radio" name="kurir" value="{{ $nama }}" x-model="kurir" class="sr-only">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-3">
-                                            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-xl">🚚</span>
+                                            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-xl"><x-ikon nama="truk" kelas="h-5 w-5" /></span>
                                             <div>
                                                 <p class="text-sm font-bold text-slate-800">{{ $nama }}</p>
                                                 <p class="text-xs text-slate-400">{{ $konfig['layanan'] }} • {{ $konfig['estimasi'] }}</p>
                                             </div>
                                         </div>
-                                        <p class="text-sm font-extrabold text-indigo-700">{{ rp(\App\Http\Controllers\CheckoutController::hitungOngkir($nama, $beratGram)) }}</p>
+                                        <p class="text-sm font-extrabold text-brand-700">{{ rp(\App\Http\Controllers\CheckoutController::hitungOngkir($nama, $beratGram)) }}</p>
                                     </div>
                                 </label>
                             @endforeach
@@ -104,7 +104,7 @@
                     {{-- 3. Pembayaran --}}
                     <section class="card p-6">
                         <h3 class="flex items-center gap-2 text-base font-extrabold text-slate-900">
-                            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-extrabold text-white">3</span>
+                            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-extrabold text-white">3</span>
                             Metode Pembayaran
                         </h3>
 
@@ -116,12 +116,12 @@
                                 </div>
                                 <div class="grid gap-3 sm:grid-cols-2">
                                     @foreach ($kelompok as $metode)
-                                        <label class="relative block cursor-pointer rounded-2xl border-2 p-4 transition {{ old('metode_pembayaran_id') == $metode->id ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 bg-white hover:border-indigo-200' }}">
+                                        <label class="relative block cursor-pointer rounded-2xl border-2 p-4 transition {{ old('metode_pembayaran_id') == $metode->id ? 'border-brand-500 bg-brand-50/50' : 'border-slate-200 bg-white hover:border-brand-200' }}">
                                             <input type="radio" name="metode_pembayaran_id" value="{{ $metode->id }}"
                                                    class="sr-only" {{ old('metode_pembayaran_id') == $metode->id ? 'checked' : '' }}>
                                             <div class="flex items-center gap-3">
                                                 <span class="flex h-11 w-11 items-center justify-center rounded-xl text-xl {{ match ($metode->tipe) { 'transfer' => 'bg-blue-50', 'ewallet' => 'bg-emerald-50', 'cod' => 'bg-amber-50', default => 'bg-slate-50' } }}">
-                                                    {{ match ($metode->tipe) { 'transfer' => '🏦', 'ewallet' => '📱', 'cod' => '💵', default => '💳' } }}
+                                                    <x-ikon :nama="match ($metode->tipe) { 'transfer' => 'bank', 'ewallet' => 'ponsel', 'cod' => 'uang', default => 'kartu' }" kelas="h-5 w-5 text-slate-700" />
                                                 </span>
                                                 <div class="min-w-0">
                                                     <p class="text-sm font-bold text-slate-800">{{ $metode->nama }}</p>
@@ -145,7 +145,7 @@
                     {{-- 4. Catatan --}}
                     <section class="card p-6">
                         <h3 class="flex items-center gap-2 text-base font-extrabold text-slate-900">
-                            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-extrabold text-white">4</span>
+                            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-extrabold text-white">4</span>
                             Catatan (Opsional)
                         </h3>
                         <textarea name="catatan" rows="3" placeholder="Contoh: tolong kemas dengan aman, tambahkan bubble wrap..."
@@ -164,7 +164,7 @@
                                         @if ($item->produk->gambar)
                                             <img src="{{ asset($item->produk->gambar) }}" class="h-14 w-14 rounded-xl object-cover" alt="">
                                         @else
-                                            <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-100 text-2xl">🛍️</div>
+                                            <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-100 text-2xl"><x-ikon nama="toko" kelas="h-6 w-6" /></div>
                                         @endif
                                         <span class="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-800 text-[10px] font-bold text-white">{{ $item->qty }}</span>
                                     </div>
@@ -188,16 +188,16 @@
                             </div>
                             <div class="flex justify-between border-t border-slate-100 pt-3 text-base">
                                 <dt class="font-extrabold text-slate-900">Total Bayar</dt>
-                                <dd class="font-extrabold text-indigo-700" x-text="'Rp ' + Number(total).toLocaleString('id-ID')">{{ rp($subtotal + \App\Http\Controllers\CheckoutController::hitungOngkir('JNE', $beratGram)) }}</dd>
+                                <dd class="font-extrabold text-brand-700" x-text="'Rp ' + Number(total).toLocaleString('id-ID')">{{ rp($subtotal + \App\Http\Controllers\CheckoutController::hitungOngkir('JNE', $beratGram)) }}</dd>
                             </div>
                         </dl>
 
                         <div class="mt-5 rounded-xl bg-slate-50 p-3 text-[11px] leading-relaxed text-slate-500 ring-1 ring-slate-200/70">
-                            💡 Dengan melanjutkan, Anda menyetujui bahwa pesanan akan diproses sesuai kebijakan toko.
+                            Dengan melanjutkan, Anda menyetujui bahwa pesanan akan diproses sesuai kebijakan toko.
                         </div>
 
                         <button type="submit" id="btn-bayar" class="btn-primary mt-5 w-full py-3.5 text-base" {{ $alamats->isEmpty() ? 'disabled' : '' }}>
-                            🛒 Buat Pesanan
+                            Buat Pesanan
                         </button>
                     </div>
                 </div>

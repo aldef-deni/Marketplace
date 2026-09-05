@@ -24,6 +24,12 @@ class AppServiceProvider extends ServiceProvider
     {
         Carbon::setLocale('id');
 
+        // market.arahinn.com dilayani lewat HTTPS di belakang proxy; tanpa ini
+        // aset dan tautan absolut bisa terbentuk sebagai http:// dan diblokir.
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
+
         Blade::directive('rp', function (string $expression) {
             return "<?php echo rp($expression); ?>";
         });

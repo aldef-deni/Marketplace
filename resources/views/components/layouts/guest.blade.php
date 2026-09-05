@@ -1,142 +1,168 @@
+@props(['title' => null, 'deskripsi' => null])
+
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-pt-24">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Marketplace Nusantara' }} — Belanja Mudah & Aman</title>
-
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet">
-
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.meta', ['judul' => $title, 'deskripsi' => $deskripsi])
 </head>
 <body class="font-sans antialiased">
 
-    {{-- Strip promosi --}}
-    <div class="bg-gradient-to-r from-indigo-700 via-violet-700 to-fuchsia-700 py-2 text-center text-xs font-semibold text-white sm:text-sm">
-        🎉 Gratis ongkir untuk pembelian di atas Rp 500.000 &nbsp;•&nbsp; Belanja mudah, aman, dan terpercaya
-    </div>
+{{-- Strip promosi --}}
+<div class="bg-ink-950 py-2.5 text-center text-[11px] font-semibold tracking-wide text-ink-300 sm:text-xs">
+    <span class="text-accent-400">Gratis ongkir</span> untuk belanja di atas {{ rp(500000) }}
+    <span class="mx-2 text-ink-700">&bull;</span>
+    <span class="hidden sm:inline">Pembayaran aman, pengiriman ke seluruh Indonesia</span>
+    <span class="sm:hidden">Aman &amp; terpercaya</span>
+</div>
 
-    {{-- Navigasi --}}
-    <header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/90 backdrop-blur-lg">
-        <div class="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
-            <a href="{{ route('beranda') }}" class="flex shrink-0 items-center gap-2">
-                <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-lg text-white shadow-md shadow-indigo-200">
-                    🛍️
-                </span>
-                <span class="hidden text-lg font-extrabold tracking-tight text-slate-900 sm:block">
-                    Marketplace<span class="text-indigo-600">Nusantara</span>
-                </span>
+{{-- Navigasi utama --}}
+<header x-data="{ cari: false }" class="sticky top-0 z-40 border-b border-white/5 bg-ink-950/95 backdrop-blur-xl">
+    <div class="mx-auto flex h-[4.5rem] max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+
+        <a href="{{ route('beranda') }}" class="flex shrink-0 items-center transition hover:opacity-90"
+           aria-label="{{ config('brand.nama') }} — beranda">
+            <x-logo varian="landscape" kelas="h-9 w-auto sm:h-10" />
+        </a>
+
+        {{-- Pencarian (desktop) --}}
+        <form action="{{ route('toko.index') }}" method="GET" class="hidden flex-1 justify-center md:flex">
+            <div class="relative w-full max-w-lg">
+                <input type="search" name="q" value="{{ request('q') }}"
+                       placeholder="Cari produk, merek, atau kategori…"
+                       class="w-full rounded-full border-white/10 bg-white/[0.06] py-2.5 pl-11 pr-4 text-sm text-white placeholder:text-ink-400 focus:border-accent-500/60 focus:bg-white/10 focus:ring-1 focus:ring-accent-500/50">
+                <svg class="pointer-events-none absolute inset-y-0 left-4 my-auto h-4 w-4 text-ink-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/>
+                </svg>
+            </div>
+        </form>
+
+        <nav class="ml-auto flex items-center gap-1 sm:gap-1.5">
+            {{-- Pencarian (mobile) --}}
+            <button type="button" @click="cari = !cari"
+                    class="rounded-lg p-2.5 text-ink-300 transition hover:bg-white/5 hover:text-white md:hidden"
+                    aria-label="Cari produk">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/>
+                </svg>
+            </button>
+
+            <a href="{{ route('toko.index') }}"
+               class="hidden rounded-lg px-3 py-2 text-sm font-semibold text-ink-300 transition hover:bg-white/5 hover:text-white sm:block">
+                Toko
             </a>
 
-            {{-- Pencarian --}}
-            <form action="{{ route('toko.index') }}" method="GET" class="hidden flex-1 md:block">
-                <div class="relative">
-                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari produk impianmu..."
-                        class="w-full rounded-full border-slate-200 bg-slate-100 py-2.5 pl-10 pr-4 text-sm placeholder:text-slate-400 focus:border-indigo-400 focus:bg-white focus:ring-indigo-400">
-                    <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">🔍</span>
-                </div>
-            </form>
+            @auth
+                <a href="{{ route('keranjang.index') }}"
+                   class="relative rounded-lg p-2.5 text-ink-300 transition hover:bg-white/5 hover:text-white" title="Keranjang">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.5l1.7 10.2a1.5 1.5 0 001.48 1.25h8.9a1.5 1.5 0 001.47-1.19l1.4-6.76H5.2"/>
+                        <circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/>
+                    </svg>
+                    @if (jmlKeranjang() > 0)
+                        <span class="absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent-500 px-1 text-[10px] font-bold leading-none text-ink-950">
+                            {{ jmlKeranjang() }}
+                        </span>
+                    @endif
+                </a>
 
-            <nav class="ml-auto flex items-center gap-1 sm:gap-2">
-                <a href="{{ route('toko.index') }}"
-                   class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-indigo-700">Toko</a>
+                <a href="{{ route('dashboard') }}"
+                   class="hidden rounded-full bg-accent-500 px-5 py-2.5 text-sm font-bold text-ink-950 shadow-accent transition hover:-translate-y-0.5 hover:bg-accent-400 sm:block">
+                    Dashboard
+                </a>
+            @else
+                <a href="{{ route('login') }}"
+                   class="rounded-lg px-3 py-2 text-sm font-semibold text-ink-300 transition hover:text-white">Masuk</a>
+                <a href="{{ route('register') }}"
+                   class="rounded-full bg-accent-500 px-5 py-2.5 text-sm font-bold text-ink-950 shadow-accent transition hover:-translate-y-0.5 hover:bg-accent-400">
+                    Daftar
+                </a>
+            @endauth
+        </nav>
+    </div>
 
-                @auth
-                    <a href="{{ route('keranjang.index') }}" class="relative rounded-lg px-2.5 py-2 text-slate-600 transition hover:bg-slate-100" title="Keranjang">
-                        <span class="text-xl">🛒</span>
-                        @if (jmlKeranjang() > 0)
-                            <span class="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
-                                {{ jmlKeranjang() }}
-                            </span>
-                        @endif
-                    </a>
+    {{-- Pencarian mobile, muncul saat ikon ditekan --}}
+    <div x-show="cari" x-cloak x-transition class="border-t border-white/5 px-4 py-3 md:hidden">
+        <form action="{{ route('toko.index') }}" method="GET">
+            <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari produk…"
+                   class="w-full rounded-full border-white/10 bg-white/[0.06] px-4 py-2.5 text-sm text-white placeholder:text-ink-400 focus:border-accent-500/60 focus:ring-1 focus:ring-accent-500/50">
+        </form>
+    </div>
+</header>
 
-                    <a href="{{ route('dashboard') }}"
-                       class="hidden rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 sm:block">
-                        Dashboard
-                    </a>
-                @else
-                    <a href="{{ route('login') }}" class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:text-indigo-700">Masuk</a>
-                    <a href="{{ route('register') }}"
-                       class="rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700">Daftar</a>
-                @endauth
-            </nav>
-        </div>
-    </header>
+@include('partials.flash')
 
-    {{-- Pesan flash --}}
-    @if (session('success') || session('error') || session('info'))
-        <div class="mx-auto mt-4 max-w-7xl px-4 sm:px-6 lg:px-8">
-            @if (session('success'))
-                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-sm">✅ {{ session('success') }}</div>
-            @endif
-            @if (session('error'))
-                <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800 shadow-sm">⛔ {{ session('error') }}</div>
-            @endif
-            @if (session('info'))
-                <div class="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-medium text-sky-800 shadow-sm">ℹ️ {{ session('info') }}</div>
-            @endif
-        </div>
-    @endif
+<main>
+    {{ $slot }}
+</main>
 
-    <main>
-        {{ $slot }}
-    </main>
+{{-- Footer --}}
+<footer class="mt-20 bg-ink-950 text-ink-300">
+    <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div class="grid gap-10 md:grid-cols-12">
 
-    {{-- Footer --}}
-    <footer class="mt-16 border-t border-slate-200 bg-white">
-        <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-            <div class="grid gap-10 md:grid-cols-4">
-                <div class="md:col-span-2">
-                    <div class="flex items-center gap-2">
-                        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-lg text-white">🛍️</span>
-                        <span class="text-lg font-extrabold text-slate-900">Marketplace<span class="text-indigo-600">Nusantara</span></span>
-                    </div>
-                    <p class="mt-4 max-w-md text-sm leading-relaxed text-slate-500">
-                        Platform belanja online terpercaya dengan ribuan produk pilihan.
-                        Belanja mudah, pembayaran fleksibel, dan pengiriman cepat ke seluruh Indonesia.
-                    </p>
-                    <div class="mt-5 flex items-center gap-2">
-                        <span class="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 ring-1 ring-blue-200">BCA</span>
-                        <span class="rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700 ring-1 ring-amber-200">Mandiri</span>
-                        <span class="rounded-lg bg-cyan-50 px-3 py-1.5 text-xs font-bold text-cyan-700 ring-1 ring-cyan-200">BRI</span>
-                        <span class="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 ring-1 ring-red-200">GoPay</span>
-                        <span class="rounded-lg bg-purple-50 px-3 py-1.5 text-xs font-bold text-purple-700 ring-1 ring-purple-200">OVO</span>
-                        <span class="rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-700 ring-1 ring-sky-200">DANA</span>
-                        <span class="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">COD</span>
-                    </div>
-                </div>
-                <div>
-                    <h4 class="text-sm font-bold uppercase tracking-wider text-slate-900">Belanja</h4>
-                    <ul class="mt-4 space-y-2.5 text-sm text-slate-500">
-                        <li><a href="{{ route('toko.index') }}" class="transition hover:text-indigo-600">Semua Produk</a></li>
-                        <li><a href="{{ route('toko.index', ['urutkan' => 'termurah']) }}" class="transition hover:text-indigo-600">Produk Termurah</a></li>
-                        <li><a href="{{ route('beranda') }}#kategori" class="transition hover:text-indigo-600">Kategori</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-sm font-bold uppercase tracking-wider text-slate-900">Bantuan</h4>
-                    <ul class="mt-4 space-y-2.5 text-sm text-slate-500">
-                        @auth
-                            <li><a href="{{ route('pesanan.index') }}" class="transition hover:text-indigo-600">Pesanan Saya</a></li>
-                            <li><a href="{{ route('alamat.index') }}" class="transition hover:text-indigo-600">Buku Alamat</a></li>
-                            <li><a href="{{ route('profile.edit') }}" class="transition hover:text-indigo-600">Profil Saya</a></li>
-                        @else
-                            <li><a href="{{ route('login') }}" class="transition hover:text-indigo-600">Masuk Akun</a></li>
-                            <li><a href="{{ route('register') }}" class="transition hover:text-indigo-600">Daftar Akun</a></li>
-                        @endauth
-                        <li>Email: <a href="mailto:halo@marketplace.test" class="transition hover:text-indigo-600">halo@marketplace.test</a></li>
-                    </ul>
+            <div class="md:col-span-5">
+                <x-logo varian="landscape" kelas="h-11 w-auto" loading="lazy" />
+                <p class="mt-5 max-w-md text-sm leading-relaxed text-ink-400">
+                    {{ config('brand.deskripsi') }}
+                </p>
+
+                <p class="mt-6 text-[11px] font-bold uppercase tracking-widest text-ink-500">Metode Pembayaran</p>
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                    @foreach (['BCA', 'Mandiri', 'BRI', 'BNI', 'GoPay', 'OVO', 'DANA', 'COD'] as $metode)
+                        <span class="rounded-lg bg-white/[0.06] px-3 py-1.5 text-[11px] font-bold text-ink-200 ring-1 ring-white/10">{{ $metode }}</span>
+                    @endforeach
                 </div>
             </div>
-            <div class="mt-10 flex flex-col items-center justify-between gap-3 border-t border-slate-100 pt-6 text-xs text-slate-400 sm:flex-row">
-                <p>© {{ date('Y') }} Marketplace Nusantara. Seluruh hak cipta dilindungi.</p>
-                <p>Dibuat dengan ❤️ untuk Indonesia</p>
+
+            <div class="md:col-span-2">
+                <h4 class="text-xs font-bold uppercase tracking-widest text-white">Belanja</h4>
+                <ul class="mt-4 space-y-2.5 text-sm">
+                    <li><a href="{{ route('toko.index') }}" class="text-ink-400 transition hover:text-accent-400">Semua Produk</a></li>
+                    <li><a href="{{ route('toko.index', ['urutkan' => 'termurah']) }}" class="text-ink-400 transition hover:text-accent-400">Harga Termurah</a></li>
+                    <li><a href="{{ route('toko.index', ['urutkan' => 'terbaru']) }}" class="text-ink-400 transition hover:text-accent-400">Produk Terbaru</a></li>
+                    <li><a href="{{ route('beranda') }}#kategori" class="text-ink-400 transition hover:text-accent-400">Kategori</a></li>
+                </ul>
+            </div>
+
+            <div class="md:col-span-2">
+                <h4 class="text-xs font-bold uppercase tracking-widest text-white">Akun</h4>
+                <ul class="mt-4 space-y-2.5 text-sm">
+                    @auth
+                        <li><a href="{{ route('dashboard') }}" class="text-ink-400 transition hover:text-accent-400">Dashboard</a></li>
+                        <li><a href="{{ route('pesanan.index') }}" class="text-ink-400 transition hover:text-accent-400">Pesanan Saya</a></li>
+                        <li><a href="{{ route('alamat.index') }}" class="text-ink-400 transition hover:text-accent-400">Buku Alamat</a></li>
+                        <li><a href="{{ route('profile.edit') }}" class="text-ink-400 transition hover:text-accent-400">Profil Saya</a></li>
+                    @else
+                        <li><a href="{{ route('login') }}" class="text-ink-400 transition hover:text-accent-400">Masuk</a></li>
+                        <li><a href="{{ route('register') }}" class="text-ink-400 transition hover:text-accent-400">Daftar Akun</a></li>
+                    @endauth
+                </ul>
+            </div>
+
+            <div class="md:col-span-3">
+                <h4 class="text-xs font-bold uppercase tracking-widest text-white">Hubungi Kami</h4>
+                <ul class="mt-4 space-y-2.5 text-sm text-ink-400">
+                    <li><a href="mailto:{{ config('brand.email') }}" class="transition hover:text-accent-400">{{ config('brand.email') }}</a></li>
+                    <li>
+                        <a href="https://wa.me/{{ config('brand.whatsapp') }}" target="_blank" rel="noopener"
+                           class="transition hover:text-accent-400">WhatsApp {{ config('brand.telepon') }}</a>
+                    </li>
+                    <li>
+                        <a href="{{ config('brand.induk.url') }}" target="_blank" rel="noopener"
+                           class="transition hover:text-accent-400">{{ config('brand.induk.nama') }} Group</a>
+                    </li>
+                </ul>
             </div>
         </div>
-    </footer>
+
+        <div class="divider-brand mt-12"></div>
+
+        <div class="mt-6 flex flex-col items-center justify-between gap-2 text-xs text-ink-500 sm:flex-row">
+            <p>&copy; {{ date('Y') }} {{ config('brand.nama') }}. Seluruh hak cipta dilindungi.</p>
+            <p>Bagian dari <span class="font-semibold text-ink-300">{{ config('brand.induk.nama') }}</span> &mdash; {{ config('brand.domain') }}</p>
+        </div>
+    </div>
+</footer>
 
 </body>
 </html>

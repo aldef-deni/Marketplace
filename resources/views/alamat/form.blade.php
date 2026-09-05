@@ -3,7 +3,7 @@
 
     <x-slot name="header">
         <div>
-            <h2 class="text-xl font-extrabold text-slate-900">📍 {{ $alamat->exists ? 'Edit Alamat' : 'Tambah Alamat Baru' }}</h2>
+            <h2 class="text-xl font-extrabold text-slate-900">{{ $alamat->exists ? 'Edit Alamat' : 'Tambah Alamat Baru' }}</h2>
             <p class="mt-0.5 text-sm text-slate-500">Pastikan alamat yang diisi benar agar paket sampai tepat</p>
         </div>
     </x-slot>
@@ -17,7 +17,7 @@
                 <div>
                     <label class="label-field">Label Alamat</label>
                     <select name="label" class="input-field">
-                        @foreach (['Rumah' => '🏠 Rumah', 'Kantor' => '🏢 Kantor', 'Lainnya' => '📍 Lainnya'] as $nilai => $label)
+                        @foreach (['Rumah' => 'Rumah', 'Kantor' => 'Kantor', 'Lainnya' => 'Lainnya'] as $nilai => $label)
                             <option value="{{ $nilai }}" @selected(old('label', $alamat->label) === $nilai)>{{ $label }}</option>
                         @endforeach
                     </select>
@@ -67,8 +67,8 @@
                 @error('alamat_lengkap') <p class="mt-1 text-xs font-semibold text-rose-600">{{ $message }}</p> @enderror
             </div>
 
-            <label class="flex cursor-pointer items-center gap-3 rounded-2xl bg-indigo-50/60 p-4 ring-1 ring-indigo-100">
-                <input type="checkbox" name="is_default" value="1" class="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+            <label class="flex cursor-pointer items-center gap-3 rounded-2xl bg-brand-50/60 p-4 ring-1 ring-brand-100">
+                <input type="checkbox" name="is_default" value="1" class="h-5 w-5 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                     @checked(old('is_default', $alamat->is_default))>
                 <span class="text-sm font-semibold text-slate-700">Jadikan alamat utama</span>
             </label>

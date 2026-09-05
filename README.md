@@ -1,127 +1,191 @@
 <div align="center">
 
-# 🛍️ Marketplace Nusantara
+<img src="public/images/logo-landscape-160.png" alt="Market ArahInn" width="360">
 
-**Sistem marketplace e-commerce lengkap berbasis Laravel 12** — belanja online dengan pembayaran fleksibel dan pengiriman ke seluruh Indonesia.
+# Market ArahInn
 
-![Laravel](https://img.shields.io/badge/Laravel-12.x-red) ![PHP](https://img.shields.io/badge/PHP-8.2%2B-blue) ![MySQL](https://img.shields.io/badge/MySQL-MariaDB-orange) ![Status](https://img.shields.io/badge/Status-Siap%20Dipakai-green)
+**Belanja Terarah, Belanja Terpercaya**
+
+Marketplace e-commerce berbasis Laravel 12 untuk **https://market.arahinn.com**
+
+![Laravel](https://img.shields.io/badge/Laravel-12.x-FF2D20) ![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4) ![MySQL](https://img.shields.io/badge/MySQL%20%2F%20MariaDB-siap-0B5FB0) ![Status](https://img.shields.io/badge/Status-Siap%20Produksi-F59300)
 
 </div>
 
-## ✨ Fitur Utama
+---
 
-### 🏪 Toko (Sisi Pembeli)
-- Halaman beranda dengan hero, kategori, produk terbaru, dan promo
-- Katalog produk dengan pencarian, filter kategori, dan pengurutan harga
-- Detail produk dengan galeri, diskon, dan stok
+## Identitas Merek
+
+| Aspek | Nilai |
+|-------|-------|
+| Nama | Market ArahInn |
+| Domain | `market.arahinn.com` |
+| Warna utama | Biru `#0B5FB0` — diambil dari huruf "A" pada logo |
+| Warna aksen | Oranye `#F59300` — diambil dari sapuan panah pada logo |
+| Permukaan gelap | `#06080C` — sama dengan latar berkas logo |
+| Tipografi | Plus Jakarta Sans |
+
+Seluruh teks merek, kontak, dan berkas logo terpusat di **`config/brand.php`**.
+Untuk mengganti nama, email, atau nomor WhatsApp, cukup ubah berkas itu (atau
+variabel `BRAND_*` di `.env`) — tidak perlu menyisir view satu per satu.
+
+### Berkas Logo
+
+Semua berkas di `public/images/` berlatar **transparan**, sehingga aman
+dipasang di atas warna apa pun.
+
+| Berkas | Pemakaian |
+|--------|-----------|
+| `logo-landscape*.png` / `.webp` | Bilah navigasi, footer, sidebar admin, invoice |
+| `logo-portrait*.png` / `.webp` | Materi promosi dan tata letak vertikal |
+| `icon-{16,32,180,192,512}.png` | Favicon, ikon PWA, ikon layar utama iOS |
+| `og-image.png` | Pratinjau tautan di WhatsApp, Facebook, X |
+| `favicon.ico` | Favicon peramban lama |
+
+Komponen `<x-logo>` memilih ukuran yang tepat secara otomatis:
+
+```blade
+<x-logo varian="landscape" kelas="h-10 w-auto" />
+<x-logo varian="portrait" kelas="h-40 w-auto" />
+```
+
+Ikon antarmuka memakai satu set SVG di `<x-ikon>` — bukan emoji — agar tampilan
+konsisten di semua sistem operasi:
+
+```blade
+<x-ikon nama="keranjang" kelas="h-5 w-5" />
+```
+
+---
+
+## Fitur
+
+### Toko (sisi pembeli)
+- Beranda: hero, kategori, produk terbaru, dan pita promo
+- Katalog dengan pencarian, filter kategori, dan pengurutan harga
+- Detail produk dengan diskon dan status stok
 - Keranjang belanja dengan pengaturan jumlah
-- Buku alamat lengkap (label, penerima, provinsi → kecamatan)
-- Checkout dengan pilihan kurir & perhitungan ongkir otomatis
+- Buku alamat (label, penerima, provinsi sampai kecamatan)
+- Checkout dengan pilihan kurir dan ongkir otomatis dari berat produk
 
-### 💳 Multi Metode Pembayaran
+### Pembayaran
 | Tipe | Metode |
 |------|--------|
-| 🏦 Transfer Bank | BCA, Mandiri, BRI |
-| 📱 E-Wallet | GoPay, OVO, DANA |
-| 💵 COD | Bayar di Tempat |
+| Transfer bank | BCA, Mandiri, BRI |
+| E-wallet | GoPay, OVO, DANA |
+| COD | Bayar di tempat |
 
-- Setiap metode menampilkan nomor rekening & instruksi pembayaran
-- Unggah bukti pembayaran → diverifikasi admin
-- Batas waktu pembayaran 24 jam
+Tiap metode menampilkan nomor rekening dan instruksi. Pembeli mengunggah bukti
+transfer, admin memverifikasi. Batas waktu pembayaran 24 jam.
 
-### 🚚 Alur Pesanan Sampai Pengiriman
+### Alur pesanan
 ```
-Pesanan Dibuat → Menunggu Pembayaran → Menunggu Konfirmasi → Diproses → Dikirim → Selesai
+Dibuat → Menunggu Pembayaran → Menunggu Konfirmasi → Diproses → Dikirim → Selesai
 ```
-- Kurir: **JNE, J&T Express, SiCepat, POS Indonesia**
-- Ongkir dihitung otomatis dari berat produk (per kg)
-- Admin input nomor resi → pengguna melacak pesanan
-- Konfirmasi pesanan diterima / pembatalan dengan pengembalian stok
-- Cetak invoice (PDF-ready)
+Kurir: JNE, J&T Express, SiCepat, POS Indonesia. Admin memasukkan nomor resi,
+pembeli melacak pesanan, lalu mengonfirmasi penerimaan. Pembatalan
+mengembalikan stok. Invoice dapat dicetak langsung dari peramban.
 
-### 🛠️ Dashboard Berdasarkan Role
-| Role | Akses |
-|------|-------|
-| 👑 **Superadmin** | Semua akses + manajemen pengguna & role + kelola metode pembayaran |
-| 🧑‍💼 **Admin** | Dashboard statistik, produk, kategori, pesanan, pembayaran, pengiriman |
-| 👤 **Pengguna** | Belanja, keranjang, pesanan, alamat, profil |
+### Peran pengguna
+| Peran | Akses |
+|-------|-------|
+| Superadmin | Semua akses, termasuk manajemen pengguna dan metode pembayaran |
+| Admin | Dashboard, produk, kategori, pesanan, pembayaran, pengiriman |
+| Pengguna | Belanja, keranjang, pesanan, alamat, profil |
 
-- Dashboard admin: pendapatan, grafik penjualan 7 hari, produk terlaris, stok menipis
-- Proteksi akses berbasis middleware `role`
+Dibatasi middleware `role`. Dashboard admin menampilkan pendapatan, grafik
+penjualan tujuh hari, produk terlaris, dan peringatan stok menipis.
 
-## 🚀 Cara Menjalankan
+---
 
-### Prasyarat
-- PHP ≥ 8.2 (dengan ekstensi: pdo_mysql, gd, fileinfo)
-- Composer 2.x
-- Node.js ≥ 20
-- MySQL / MariaDB
+## Menjalankan di Lokal
 
-### 1. Instalasi
+**Prasyarat:** PHP ≥ 8.2 (`pdo_mysql`, `gd`, `fileinfo`, `mbstring`),
+Composer 2.x, Node.js ≥ 20, MySQL/MariaDB.
+
 ```bash
-# Install dependensi
 composer install
 npm install && npm run build
 
-# Konfigurasi environment
 cp .env.example .env
 php artisan key:generate
 ```
 
-### 2. Konfigurasi Database
-Edit `.env`:
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=marketplace
-DB_USERNAME=root
-DB_PASSWORD=
-```
+Sesuaikan kredensial database di `.env`, lalu:
 
 ```bash
-# Buat database & jalankan migrasi + seeder
 php artisan migrate --seed
-```
-
-### 3. Jalankan Server
-```bash
 php artisan serve
 ```
-Buka **http://127.0.0.1:8000**
 
-> 💡 Jika menggunakan XAMPP, nyalakan MySQL melalui XAMPP Control Panel terlebih dahulu.
+Buka **http://127.0.0.1:8000**.
 
-## 👤 Akun Demo
+> Bila memakai XAMPP/Laragon, nyalakan MySQL lebih dulu.
 
-| Role | Email | Password |
-|------|-------|----------|
-| 👑 Superadmin | `superadmin@marketplace.test` | `password` |
-| 🧑‍💼 Admin | `admin@marketplace.test` | `password` |
-| 👤 Pengguna | `pengguna@marketplace.test` | `password` |
+### Akun Demo
 
-## 🗂️ Struktur Database
+| Peran | Email | Kata Sandi |
+|-------|-------|------------|
+| Superadmin | `superadmin@arahinn.com` | `password` |
+| Admin | `admin@arahinn.com` | `password` |
+| Pengguna | `pengguna@arahinn.com` | `password` |
 
-- `users` — pengguna dengan role (superadmin, admin, pengguna)
-- `kategoris` — kategori produk
-- `produks` — produk (harga, stok, berat, gambar, status)
-- `keranjangs` — keranjang belanja
-- `alamats` — buku alamat pengguna
-- `pesanans` — pesanan (no. invoice, status, kurir, total)
-- `pesanan_items` — detail item pesanan
-- `metode_pembayarans` — transfer / e-wallet / COD
-- `pembayarans` — pembayaran (bukti, status, verifikasi)
-- `pengirimans` — pengiriman (kurir, resi, status)
+> Ganti ketiga kata sandi ini sebelum situs dibuka untuk umum.
 
-## 📁 Route Utama
+---
+
+## Deploy ke market.arahinn.com
+
+Panduan lengkap — termasuk struktur folder, konfigurasi Apache/Nginx,
+dan langkah pembaruan berkala — ada di **[DEPLOY.md](DEPLOY.md)**.
+
+Membuat paket rilis siap unggah:
+
+```bash
+php artisan rilis:paket
+```
+
+Perintah ini menghasilkan `market-arahinn-<tanggal>.zip` di folder `Downloads`,
+berisi kode aplikasi beserta aset yang sudah di-build, tanpa `vendor/`,
+`node_modules/`, `.env`, maupun berkas pengembangan.
+
+---
+
+## Pengujian
+
+```bash
+php artisan test
+```
+
+Mencakup autentikasi, profil, aksesibilitas halaman publik, konsistensi
+identitas merek, dan kelengkapan set ikon.
+
+---
+
+## Struktur Database
+
+| Tabel | Isi |
+|-------|-----|
+| `users` | Pengguna beserta peran |
+| `kategoris` | Kategori produk (kolom `ikon` menyimpan nama ikon `<x-ikon>`) |
+| `produks` | Produk: harga, stok, berat, gambar, status |
+| `keranjangs` | Keranjang belanja |
+| `alamats` | Buku alamat pengguna |
+| `pesanans` | Pesanan: no. invoice, status, kurir, total |
+| `pesanan_items` | Rincian item pesanan |
+| `metode_pembayarans` | Transfer, e-wallet, COD |
+| `pembayarans` | Bukti bayar, status, verifikasi |
+| `pengirimans` | Kurir, resi, status |
+
+## Route Utama
 
 | URL | Deskripsi |
 |-----|-----------|
-| `/` | Beranda toko |
+| `/` | Beranda |
 | `/toko` | Katalog produk |
 | `/keranjang` | Keranjang belanja |
 | `/checkout` | Checkout |
-| `/pesanan` | Daftar pesanan saya |
+| `/pesanan` | Pesanan saya |
 | `/dashboard` | Dashboard pengguna |
 | `/admin` | Dashboard admin |
 | `/admin/produk` | Manajemen produk |
@@ -131,13 +195,18 @@ Buka **http://127.0.0.1:8000**
 | `/admin/pengguna` | Manajemen pengguna (superadmin) |
 | `/admin/metode-pembayaran` | Kelola metode bayar (superadmin) |
 
-## 🛠️ Teknologi
+## Teknologi
 
-- **Laravel 12** — framework backend
-- **MySQL / MariaDB** — database
-- **Tailwind CSS + Alpine.js** — frontend elegan tanpa framework berat
-- **Blade Components** — layout modular (toko, pengguna, admin)
+- **Laravel 12** — kerangka backend
+- **MySQL / MariaDB** — basis data
+- **Tailwind CSS 3 + Alpine.js** — antarmuka ringan tanpa framework berat
+- **Vite** — kompilasi aset
+- **Blade Components** — layout modular untuk toko, pengguna, dan admin
 
 ---
 
-© 2026 Marketplace Nusantara — Dibuat dengan ❤️ untuk Indonesia
+<div align="center">
+
+&copy; 2026 Market ArahInn &mdash; bagian dari ArahInn
+
+</div>

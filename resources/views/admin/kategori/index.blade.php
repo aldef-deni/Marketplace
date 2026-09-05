@@ -5,7 +5,7 @@
         {{-- Daftar --}}
         <div class="card overflow-hidden lg:col-span-2">
             <div class="p-6 pb-4">
-                <h3 class="text-base font-extrabold text-slate-900">🗂️ Daftar Kategori</h3>
+                <h3 class="text-base font-extrabold text-slate-900">Daftar Kategori</h3>
                 <p class="mt-0.5 text-xs text-slate-400">Total {{ $kategoris->count() }} kategori</p>
             </div>
             <div class="overflow-x-auto">
@@ -24,7 +24,7 @@
                             <tr class="transition hover:bg-slate-50/60">
                                 <td class="table-cell">
                                     <div class="flex items-center gap-3">
-                                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-xl">{{ $kategori->ikon }}</span>
+                                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><x-ikon :nama="$kategori->ikon" kelas="h-5 w-5" /></span>
                                         <p class="font-bold text-slate-800">{{ $kategori->nama }}</p>
                                     </div>
                                 </td>
@@ -45,11 +45,11 @@
                                             </button>
                                         </form>
                                         <button onclick="editKategori({{ $kategori->id }}, '{{ addslashes($kategori->nama) }}', '{{ addslashes($kategori->deskripsi ?? '') }}', '{{ $kategori->ikon }}')"
-                                                class="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100">✏️ Edit</button>
+                                                class="rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 transition hover:bg-brand-100">Edit</button>
                                         <form action="{{ route('admin.kategori.destroy', $kategori) }}" method="POST" onsubmit="return confirm('Hapus kategori ini?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button class="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 transition hover:bg-rose-100">🗑️</button>
+                                            <button class="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 transition hover:bg-rose-100"><x-ikon nama="sampah" kelas="h-3.5 w-3.5" /></button>
                                         </form>
                                     </div>
                                 </td>
@@ -62,7 +62,7 @@
 
         {{-- Form tambah --}}
         <div class="card h-fit p-6 lg:sticky lg:top-24">
-            <h3 class="text-base font-extrabold text-slate-900">➕ Tambah Kategori</h3>
+            <h3 class="text-base font-extrabold text-slate-900">Tambah Kategori</h3>
             <form action="{{ route('admin.kategori.store') }}" method="POST" class="mt-5 space-y-4">
                 @csrf
                 <div>
@@ -70,8 +70,12 @@
                     <input type="text" name="nama" class="input-field" required placeholder="Contoh: Elektronik">
                 </div>
                 <div>
-                    <label class="label-field">Ikon (Emoji)</label>
-                    <input type="text" name="ikon" class="input-field" placeholder="Contoh: 📱">
+                    <label class="label-field">Ikon</label>
+                    <select name="ikon" class="input-field">
+                        @foreach (config('brand.ikon_kategori') as $kunci => $label)
+                            <option value="{{ $kunci }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div>
                     <label class="label-field">Deskripsi</label>
@@ -87,7 +91,7 @@
         <div x-show="open" class="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="open = false"></div>
             <div class="relative w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
-                <h3 class="text-lg font-extrabold text-slate-900">✏️ Edit Kategori</h3>
+                <h3 class="text-lg font-extrabold text-slate-900">Edit Kategori</h3>
                 <form :action="`/admin/kategori/${id}`" method="POST" class="mt-5 space-y-4">
                     <input type="hidden" name="_method" value="PATCH">
                     @csrf
@@ -96,8 +100,12 @@
                         <input type="text" name="nama" x-model="nama" class="input-field" required>
                     </div>
                     <div>
-                        <label class="label-field">Ikon (Emoji)</label>
-                        <input type="text" name="ikon" x-model="ikon" class="input-field">
+                        <label class="label-field">Ikon</label>
+                        <select name="ikon" x-model="ikon" class="input-field">
+                            @foreach (config('brand.ikon_kategori') as $kunci => $label)
+                                <option value="{{ $kunci }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div>
                         <label class="label-field">Deskripsi</label>

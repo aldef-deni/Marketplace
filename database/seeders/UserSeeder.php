@@ -12,21 +12,21 @@ class UserSeeder extends Seeder
         $users = [
             [
                 'name' => 'Superadmin',
-                'email' => 'superadmin@marketplace.test',
+                'email' => 'superadmin@arahinn.com',
                 'password' => 'password',
                 'phone' => '081234567890',
                 'role' => 'superadmin',
             ],
             [
                 'name' => 'Admin Toko',
-                'email' => 'admin@marketplace.test',
+                'email' => 'admin@arahinn.com',
                 'password' => 'password',
                 'phone' => '081298765432',
                 'role' => 'admin',
             ],
             [
                 'name' => 'Budi Santoso',
-                'email' => 'pengguna@marketplace.test',
+                'email' => 'pengguna@arahinn.com',
                 'password' => 'password',
                 'phone' => '081355667788',
                 'role' => 'pengguna',

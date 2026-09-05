@@ -6,13 +6,12 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; padding: 40px; background: #fff; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #4f46e5; padding-bottom: 20px; }
-        .brand { display: flex; align-items: center; gap: 10px; }
-        .logo { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #4f46e5, #c026d3); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 22px; }
-        .brand h1 { font-size: 20px; color: #0f172a; }
-        .brand span { color: #4f46e5; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0B5FB0; padding-bottom: 20px; }
+        .brand { display: flex; align-items: center; gap: 14px; }
+        .logo { height: 46px; width: auto; }
+        .brand-teks p { font-size: 11px; color: #94a3b8; line-height: 1.5; }
         .title { text-align: right; }
-        .title h2 { font-size: 16px; text-transform: uppercase; letter-spacing: 1px; color: #4f46e5; }
+        .title h2 { font-size: 16px; text-transform: uppercase; letter-spacing: 1px; color: #0B5FB0; }
         .title p { font-size: 12px; color: #64748b; margin-top: 4px; }
         .info { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 24px 0; }
         .box { border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
@@ -20,25 +19,25 @@
         .box p { font-size: 13px; line-height: 1.6; }
         .box .nama { font-weight: 700; font-size: 14px; }
         table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-        th { background: #eef2ff; color: #4338ca; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; padding: 10px 12px; }
+        th { background: #EEF6FF; color: #084B8E; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; padding: 10px 12px; }
         td { font-size: 13px; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; }
         .total-wrap { display: flex; justify-content: flex-end; margin-top: 20px; }
         .total { width: 300px; }
         .total div { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
-        .total .grand { border-top: 2px solid #4f46e5; margin-top: 6px; padding-top: 10px; font-size: 16px; font-weight: 800; color: #4f46e5; }
+        .total .grand { border-top: 2px solid #0B5FB0; margin-top: 6px; padding-top: 10px; font-size: 16px; font-weight: 800; color: #0B5FB0; }
         .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 11px; color: #94a3b8; }
         .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
-        .status { background: #eef2ff; color: #4338ca; }
+        .status { background: #EEF6FF; color: #084B8E; }
         @media print { body { padding: 20px; } }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="brand">
-            <div class="logo">🛍️</div>
-            <div>
-                <h1>Marketplace<span>Nusantara</span></h1>
-                <p style="font-size: 11px; color: #94a3b8;">Jln. Merdeka No. 88, Jakarta Pusat • halo@marketplace.test</p>
+            <img class="logo" src="{{ asset(config('brand.logo.landscape_160')) }}" alt="{{ config('brand.nama') }}">
+            <div class="brand-teks">
+                <p>{{ config('brand.alamat') }} &bull; {{ config('brand.email') }}</p>
+                <p>{{ config('brand.domain') }}</p>
             </div>
         </div>
         <div class="title">
@@ -96,7 +95,7 @@
     </div>
 
     <div class="footer">
-        Terima kasih telah berbelanja di Marketplace Nusantara! • Invoice ini sah dan diproses secara otomatis oleh sistem.
+        Terima kasih telah berbelanja di {{ config('brand.nama') }} &bull; Invoice ini sah dan diproses otomatis oleh sistem.
     </div>
 
     <script>window.print();</script>

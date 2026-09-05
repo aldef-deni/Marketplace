@@ -1,0 +1,288 @@
+<?php
+
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Str;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use SplFileInfo;
+use ZipArchive;
+
+/**
+ * Membungkus perubahan aplikasi menjadi satu berkas ZIP di folder Downloads,
+ * siap diunggah manual ke market.arahinn.com.
+ *
+ * Server ArahInn tidak memakai VM/CI, jadi rilis dilakukan dengan mengunggah
+ * berkas. Perintah ini menyiapkan isinya supaya tidak ada yang terlewat dan
+ * tidak ada yang salah ikut terbawa (kredensial, dependensi, berkas kerja).
+ */
+class PaketRilis extends Command
+{
+    protected $signature = 'rilis:paket
+        {--sejak= : Hanya sertakan berkas yang berubah sejak ref git ini, misal HEAD~1 atau nama tag}
+        {--tujuan= : Folder tujuan ZIP (baku: folder Downloads pengguna)}
+        {--tanpa-build : Lewati "npm run build"; pakai aset yang sudah ada}';
+
+    protected $description = 'Bungkus perubahan menjadi ZIP siap unggah ke market.arahinn.com';
+
+    /**
+     * Folder dan berkas yang tidak boleh ikut terkirim ke server.
+     *
+     * vendor/ dan node_modules/ dipasang di server lewat composer/npm;
+     * .env berisi kredensial produksi yang tidak boleh ditimpa dari lokal.
+     */
+    private const KECUALI_AWALAN = [
+        '.git/', 'node_modules/', 'vendor/', 'storage/framework/', 'storage/logs/',
+        'tests/', '.github/', '.idea/', '.vscode/',
+    ];
+
+    private const KECUALI_BERKAS = [
+        '.env', '.env.backup', '.env.production', '.phpunit.result.cache',
+        'database/database.sqlite', 'package-lock.json',
+        'phpunit.xml', '.editorconfig', '.gitattributes',
+    ];
+
+    public function handle(): int
+    {
+        $akar = base_path();
+
+        if (! $this->option('tanpa-build')) {
+            $this->components->task('Membangun aset frontend', function () use ($akar) {
+                return Process::path($akar)->timeout(600)->run('npm run build')->successful();
+            });
+        }
+
+        $berkas = $this->option('sejak')
+            ? $this->berkasBerubah($akar, $this->option('sejak'))
+            : $this->seluruhBerkas($akar);
+
+        if ($berkas === null) {
+            return self::FAILURE;
+        }
+
+        if ($berkas === []) {
+            $this->components->warn('Tidak ada berkas yang perlu dikirim.');
+
+            return self::SUCCESS;
+        }
+
+        $tujuan = $this->folderTujuan();
+        $nama = sprintf(
+            'market-arahinn-%s%s.zip',
+            now()->format('Ymd-Hi'),
+            $this->option('sejak') ? '-perubahan' : '-lengkap',
+        );
+        $path = $tujuan.DIRECTORY_SEPARATOR.$nama;
+
+        $zip = new ZipArchive;
+        if ($zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            $this->components->error("Tidak dapat menulis ke {$path}");
+
+            return self::FAILURE;
+        }
+
+        foreach ($berkas as $relatif) {
+            $zip->addFile($akar.DIRECTORY_SEPARATOR.$relatif, $relatif);
+        }
+
+        $zip->addFromString('CARA-DEPLOY.txt', $this->catatanDeploy($berkas));
+        $zip->close();
+
+        $this->newLine();
+        $this->components->info('Paket rilis siap.');
+        $this->components->twoColumnDetail('Berkas', $path);
+        $this->components->twoColumnDetail('Jumlah berkas', (string) count($berkas));
+        $this->components->twoColumnDetail('Ukuran', $this->ukuran(filesize($path)));
+        $this->newLine();
+        $this->line('  Unggah dan ekstrak di root aplikasi pada server, lalu jalankan:');
+        $this->line('  <fg=gray>php artisan migrate --force && php artisan optimize</>');
+        $this->newLine();
+
+        return self::SUCCESS;
+    }
+
+    /**
+     * Seluruh berkas terlacak git, dikurangi yang masuk daftar kecualian.
+     */
+    private function seluruhBerkas(string $akar): ?array
+    {
+        $daftar = $this->adaGit($akar)
+            ? $this->keluaranGit($akar, 'git ls-files --cached --others --exclude-standard')
+            : $this->telusuriFolder($akar);
+
+        if ($daftar === null) {
+            return null;
+        }
+
+        $gabungan = array_unique([...$daftar, ...($this->telusuriFolder($akar, 'public/build') ?? [])]);
+        sort($gabungan);
+
+        return $this->saring($akar, $gabungan);
+    }
+
+    /**
+     * Berkas yang berubah sejak sebuah ref, ditambah hasil build terbaru —
+     * aset punya nama ber-hash sehingga selalu perlu ikut agar manifest cocok.
+     */
+    private function berkasBerubah(string $akar, string $ref): ?array
+    {
+        if (! $this->adaGit($akar)) {
+            $this->components->error('Opsi --sejak memerlukan repositori git.');
+
+            return null;
+        }
+
+        $berubah = $this->keluaranGit($akar, sprintf('git diff --name-only %s HEAD', escapeshellarg($ref)));
+        if ($berubah === null) {
+            $this->components->error("Ref git '{$ref}' tidak dikenal.");
+
+            return null;
+        }
+
+        $belumDicommit = $this->keluaranGit($akar, 'git ls-files --modified --others --exclude-standard') ?? [];
+        $aset = $this->telusuriFolder($akar, 'public/build') ?? [];
+
+        $gabungan = array_unique([...$berubah, ...$belumDicommit, ...$aset]);
+        sort($gabungan);
+
+        // Berkas yang dihapus tetap muncul di git diff; jangan dicoba dibungkus.
+        $ada = array_filter($gabungan, fn ($r) => is_file($akar.DIRECTORY_SEPARATOR.$r));
+
+        return $this->saring($akar, array_values($ada));
+    }
+
+    private function saring(string $akar, array $daftar): array
+    {
+        return array_values(array_filter($daftar, function (string $relatif) use ($akar) {
+            if (! is_file($akar.DIRECTORY_SEPARATOR.$relatif)) {
+                return false;
+            }
+            if (in_array($relatif, self::KECUALI_BERKAS, true)) {
+                return false;
+            }
+
+            return ! Str::startsWith($relatif, self::KECUALI_AWALAN);
+        }));
+    }
+
+    private function telusuriFolder(string $akar, string $sub = ''): ?array
+    {
+        $mulai = $sub ? $akar.DIRECTORY_SEPARATOR.$sub : $akar;
+        if (! is_dir($mulai)) {
+            return [];
+        }
+
+        $hasil = [];
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($mulai, RecursiveDirectoryIterator::SKIP_DOTS),
+        );
+
+        /** @var SplFileInfo $item */
+        foreach ($iterator as $item) {
+            if (! $item->isFile()) {
+                continue;
+            }
+            $relatif = str_replace('\\', '/', Str::after($item->getPathname(), $akar.DIRECTORY_SEPARATOR));
+            if (! Str::startsWith($relatif, self::KECUALI_AWALAN)) {
+                $hasil[] = $relatif;
+            }
+        }
+
+        sort($hasil);
+
+        return $hasil;
+    }
+
+    private function adaGit(string $akar): bool
+    {
+        return is_dir($akar.DIRECTORY_SEPARATOR.'.git');
+    }
+
+    private function keluaranGit(string $akar, string $perintah): ?array
+    {
+        $hasil = Process::path($akar)->run($perintah);
+
+        if (! $hasil->successful()) {
+            return null;
+        }
+
+        return array_values(array_filter(
+            array_map('trim', explode("\n", $hasil->output())),
+            fn ($baris) => $baris !== '',
+        ));
+    }
+
+    private function folderTujuan(): string
+    {
+        if ($pilihan = $this->option('tujuan')) {
+            return rtrim($pilihan, '\\/');
+        }
+
+        $rumah = getenv('USERPROFILE') ?: getenv('HOME') ?: base_path();
+        $unduhan = $rumah.DIRECTORY_SEPARATOR.'Downloads';
+
+        return is_dir($unduhan) ? $unduhan : $rumah;
+    }
+
+    private function ukuran(int $bita): string
+    {
+        return $bita >= 1_048_576
+            ? round($bita / 1_048_576, 1).' MB'
+            : round($bita / 1024).' KB';
+    }
+
+    private function catatanDeploy(array $berkas): string
+    {
+        $daftar = implode("\n", array_map(fn ($b) => '  - '.$b, array_slice($berkas, 0, 200)));
+        $sisa = count($berkas) > 200 ? "\n  ... dan ".(count($berkas) - 200)." berkas lain" : '';
+
+        return <<<TXT
+        Market ArahInn — paket rilis
+        Dibuat: {$this->waktu()}
+        Tujuan: https://market.arahinn.com
+
+        LANGKAH DEPLOY
+        --------------
+        1. Backup dulu folder aplikasi dan database di server.
+        2. Ekstrak isi ZIP ini ke ROOT aplikasi di server (menimpa berkas lama).
+           Jangan sertakan/menimpa berkas .env — kredensial produksi ada di sana.
+        3. Jalankan di root aplikasi:
+
+               composer install --no-dev --optimize-autoloader
+               php artisan migrate --force
+               php artisan optimize
+
+           (composer install hanya perlu bila composer.json ikut berubah)
+
+        4. Pastikan storage/ dan bootstrap/cache/ dapat ditulis oleh web server:
+
+               chmod -R 775 storage bootstrap/cache
+
+        5. Bila ini pemasangan pertama, buat symlink penyimpanan:
+
+               php artisan storage:link
+
+        CATATAN
+        -------
+        - vendor/ dan node_modules/ TIDAK disertakan; pasang lewat composer/npm.
+        - Aset frontend di public/build sudah dikompilasi, npm tidak perlu di server.
+        - Bila tampilan lama masih muncul, kosongkan cache peramban atau CDN.
+
+        ISI PAKET ({$this->jumlah($berkas)} berkas)
+        --------------------------------------------
+        {$daftar}{$sisa}
+        TXT;
+    }
+
+    private function waktu(): string
+    {
+        return now()->translatedFormat('d F Y H:i');
+    }
+
+    private function jumlah(array $berkas): int
+    {
+        return count($berkas);
+    }
+}

@@ -1,23 +1,24 @@
 <x-guest-layout>
     <div class="mx-auto flex min-h-[70vh] max-w-5xl items-center justify-center px-4 py-12 sm:px-6">
-        <div class="grid w-full overflow-hidden rounded-3xl bg-white shadow-2xl shadow-indigo-100 ring-1 ring-slate-200/70 lg:grid-cols-2">
+        <div class="grid w-full overflow-hidden rounded-3xl bg-white shadow-2xl shadow-brand-100 ring-1 ring-slate-200/70 lg:grid-cols-2">
 
             {{-- Panel brand --}}
-            <div class="relative hidden overflow-hidden bg-gradient-to-br from-indigo-700 via-violet-700 to-fuchsia-700 p-10 lg:block">
-                <div class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10 blur-2xl"></div>
-                <div class="pointer-events-none absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-fuchsia-400/20 blur-2xl"></div>
+            <div class="relative hidden overflow-hidden bg-gradient-to-b from-ink-950 via-brand-950 to-brand-900 p-10 lg:block">
+                <div class="pointer-events-none absolute inset-0 pola-grid opacity-70"></div>
+                <div class="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-accent-500/20 blur-3xl"></div>
+                <div class="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-brand-600/35 blur-3xl"></div>
                 <div class="relative flex h-full flex-col justify-between">
                     <div>
-                        <div class="flex items-center gap-2">
-                            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 text-xl ring-1 ring-white/25">🛍️</span>
-                            <span class="text-lg font-extrabold text-white">Marketplace<span class="text-amber-300">Nusantara</span></span>
-                        </div>
-                        <h2 class="mt-10 text-3xl font-extrabold leading-tight text-white">Selamat datang kembali! 👋</h2>
-                        <p class="mt-3 text-sm leading-relaxed text-indigo-100">Masuk untuk melanjutkan belanja, memantau pesanan, dan menikmati promo terbaik kami.</p>
+                        <a href="{{ route('beranda') }}" class="inline-flex transition hover:opacity-90">
+                            <x-logo varian="landscape" kelas="h-11 w-auto" />
+                        </a>
+                        <h2 class="mt-10 text-3xl font-extrabold leading-tight text-white">Selamat datang<br>kembali.</h2>
+                        <p class="mt-3 text-sm leading-relaxed text-ink-300">Masuk untuk melanjutkan belanja, memantau pesanan, dan menikmati promo terbaik kami.</p>
                     </div>
                     <div class="space-y-3">
-                        @foreach (['🛒 Ribuan produk pilihan berkualitas', '💳 Pembayaran fleksibel & aman', '🚚 Pengiriman cepat ke seluruh Indonesia'] as $fitur)
-                            <div class="flex items-center gap-3 rounded-2xl bg-white/10 px-4 py-3 text-sm font-semibold text-white ring-1 ring-white/15 backdrop-blur">
+                        @foreach (['Ribuan produk pilihan berkualitas', 'Pembayaran fleksibel & aman', 'Pengiriman cepat ke seluruh Indonesia'] as $fitur)
+                            <div class="flex items-center gap-3 rounded-2xl bg-white/[0.06] px-4 py-3 text-sm font-semibold text-white ring-1 ring-white/10 backdrop-blur">
+                                <x-ikon nama="centang" kelas="h-4 w-4 shrink-0 text-accent-400" />
                                 <span>{{ $fitur }}</span>
                             </div>
                         @endforeach
@@ -29,7 +30,7 @@
             <div class="p-8 sm:p-12">
                 <h1 class="text-2xl font-extrabold text-slate-900">Masuk Akun</h1>
                 <p class="mt-1.5 text-sm text-slate-500">Belum punya akun?
-                    <a href="{{ route('register') }}" class="font-bold text-indigo-600 hover:text-indigo-800">Daftar sekarang</a>
+                    <a href="{{ route('register') }}" class="font-bold text-brand-600 hover:text-brand-800">Daftar sekarang</a>
                 </p>
 
                 <x-auth-session-status class="mb-4" :status="session('status')" />
@@ -47,7 +48,7 @@
                         <div class="flex items-center justify-between">
                             <x-input-label for="password" :value="__('Password')" class="!mb-1.5 !text-sm !font-semibold !text-slate-700" />
                             @if (Route::has('password.request'))
-                                <a class="text-xs font-bold text-indigo-600 hover:text-indigo-800" href="{{ route('password.request') }}">
+                                <a class="text-xs font-bold text-brand-600 hover:text-brand-800" href="{{ route('password.request') }}">
                                     {{ __('Forgot your password?') }}
                                 </a>
                             @endif
@@ -58,18 +59,18 @@
 
                     <div class="flex items-center justify-between">
                         <label for="remember_me" class="flex items-center">
-                            <input id="remember_me" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" name="remember">
+                            <input id="remember_me" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" name="remember">
                             <span class="ms-2 text-sm font-medium text-slate-600">{{ __('Remember me') }}</span>
                         </label>
                     </div>
 
                     <button type="submit" class="btn-primary w-full py-3.5 text-base">
-                        🔐 {{ __('Log in') }}
+                        {{ __('Log in') }}
                     </button>
                 </form>
 
                 <div class="mt-8 rounded-2xl bg-slate-50 p-4 text-center text-xs text-slate-500 ring-1 ring-slate-200/70">
-                    💡 Akun demo: <span class="font-bold">superadmin@marketplace.test</span> / <span class="font-bold">admin@marketplace.test</span> / <span class="font-bold">pengguna@marketplace.test</span> — password: <span class="font-bold">password</span>
+                    Akun demo: <span class="font-bold">superadmin@arahinn.com</span> / <span class="font-bold">admin@arahinn.com</span> / <span class="font-bold">pengguna@arahinn.com</span> — password: <span class="font-bold">password</span>
                 </div>
             </div>
         </div>

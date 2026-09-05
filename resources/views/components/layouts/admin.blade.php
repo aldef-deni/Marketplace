@@ -1,15 +1,9 @@
+@props(['title' => null])
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Panel Admin' }} — Marketplace Nusantara</title>
-
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet">
-
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.meta', ['judul' => ($title ?? 'Panel Admin') . ' · Admin'])
 </head>
 <body class="font-sans antialiased">
 
@@ -17,76 +11,77 @@
 
     {{-- Sidebar --}}
     <aside :class="sidebar ? 'translate-x-0' : '-translate-x-full'"
-           class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-slate-900 text-slate-300 transition-transform duration-300 lg:translate-x-0">
+           class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-ink-950 text-ink-300 transition-transform duration-300 lg:translate-x-0">
 
-        <div class="flex h-16 items-center gap-2 border-b border-slate-800 px-5">
-            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-lg text-white shadow-lg shadow-indigo-900/40">🛍️</span>
-            <div>
-                <p class="text-sm font-extrabold text-white">Marketplace<span class="text-indigo-400">Nusantara</span></p>
-                <p class="text-[11px] font-medium text-slate-500">Panel Admin</p>
-            </div>
+        <div class="flex h-[4.5rem] items-center gap-3 border-b border-white/5 px-5">
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center transition hover:opacity-90">
+                <x-logo varian="landscape" kelas="h-8 w-auto" />
+            </a>
+            <span class="rounded-md bg-accent-500/15 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-accent-400 ring-1 ring-accent-500/25">Admin</span>
         </div>
 
         <nav class="flex-1 space-y-1 overflow-y-auto p-4">
-            <p class="px-3 pb-2 text-[10px] font-bold uppercase tracking-widest text-slate-600">Menu Utama</p>
+            <p class="px-3 pb-2 text-[10px] font-bold uppercase tracking-widest text-ink-500">Menu Utama</p>
             <a href="{{ route('admin.dashboard') }}"
-               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/30' : 'hover:bg-slate-800 hover:text-white' }}">
-                <span>📊</span> Dashboard
+               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.dashboard') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                <x-ikon nama="dashboard" kelas="h-5 w-5" /> Dashboard
             </a>
             <a href="{{ route('admin.pesanan.index') }}"
-               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.pesanan.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/30' : 'hover:bg-slate-800 hover:text-white' }}">
-                <span>📦</span> Pesanan
+               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.pesanan.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                <x-ikon nama="kotak" kelas="h-5 w-5" /> Pesanan
             </a>
             <a href="{{ route('admin.pembayaran.index') }}"
-               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.pembayaran.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/30' : 'hover:bg-slate-800 hover:text-white' }}">
-                <span>💳</span> Pembayaran
+               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.pembayaran.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                <x-ikon nama="kartu" kelas="h-5 w-5" /> Pembayaran
             </a>
             <a href="{{ route('admin.pengiriman.index') }}"
-               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.pengiriman.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/30' : 'hover:bg-slate-800 hover:text-white' }}">
-                <span>🚚</span> Pengiriman
+               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.pengiriman.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                <x-ikon nama="truk" kelas="h-5 w-5" /> Pengiriman
             </a>
 
-            <p class="px-3 pb-2 pt-5 text-[10px] font-bold uppercase tracking-widest text-slate-600">Katalog</p>
+            <p class="px-3 pb-2 pt-5 text-[10px] font-bold uppercase tracking-widest text-ink-500">Katalog</p>
             <a href="{{ route('admin.produk.index') }}"
-               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.produk.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/30' : 'hover:bg-slate-800 hover:text-white' }}">
-                <span>🏷️</span> Produk
+               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.produk.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                <x-ikon nama="label" kelas="h-5 w-5" /> Produk
             </a>
             <a href="{{ route('admin.kategori.index') }}"
-               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.kategori.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/30' : 'hover:bg-slate-800 hover:text-white' }}">
-                <span>🗂️</span> Kategori
+               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.kategori.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                <x-ikon nama="folder" kelas="h-5 w-5" /> Kategori
             </a>
 
             @if (auth()->user()->isSuperadmin())
-                <p class="px-3 pb-2 pt-5 text-[10px] font-bold uppercase tracking-widest text-slate-600">Manajemen</p>
+                <p class="px-3 pb-2 pt-5 text-[10px] font-bold uppercase tracking-widest text-ink-500">Manajemen</p>
                 <a href="{{ route('admin.pengguna.index') }}"
-                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.pengguna.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/30' : 'hover:bg-slate-800 hover:text-white' }}">
-                    <span>👥</span> Pengguna
+                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.pengguna.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                    <x-ikon nama="pengguna" kelas="h-5 w-5" /> Pengguna
                 </a>
                 <a href="{{ route('admin.metode-pembayaran.index') }}"
-                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.metode-pembayaran.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/30' : 'hover:bg-slate-800 hover:text-white' }}">
-                    <span>💳</span> Metode Pembayaran
+                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.metode-pembayaran.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                    <x-ikon nama="kartu" kelas="h-5 w-5" /> Metode Pembayaran
                 </a>
             @endif
         </nav>
 
-        <div class="border-t border-slate-800 p-4">
-            <a href="{{ route('beranda') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-slate-800">
-                <span>🏠</span> Lihat Toko
+        <div class="border-t border-white/5 p-4">
+            <a href="{{ route('beranda') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-white/5">
+                <x-ikon nama="rumah" kelas="h-5 w-5" /> Lihat Toko
             </a>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-rose-400 transition hover:bg-slate-800">
-                    <span>🚪</span> Keluar
+                <button class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-rose-400 transition hover:bg-white/5">
+                    <x-ikon nama="keluar" kelas="h-5 w-5" /> Keluar
                 </button>
             </form>
         </div>
     </aside>
 
     {{-- Overlay mobile --}}
-    <div x-show="sidebar" @click="sidebar = false" class="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden" x-transition.opacity></div>
+    <div x-show="sidebar" x-cloak @click="sidebar = false" class="fixed inset-0 z-40 bg-ink-950/60 backdrop-blur-sm lg:hidden" x-transition.opacity></div>
 
     {{-- Konten --}}
-    <div :class="sidebar ? 'lg:pl-64' : ''" class="flex min-h-screen flex-col transition-all duration-300">
+    {{-- Pergeseran konten dipasang sebagai kelas statis juga, supaya tata letak
+         tetap benar sebelum Alpine sempat aktif atau bila skrip gagal dimuat. --}}
+    <div :class="sidebar ? 'lg:pl-64' : 'lg:pl-0'" class="flex min-h-screen flex-col transition-all duration-300 lg:pl-64">
 
         {{-- Top bar --}}
         <header class="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-slate-200 bg-white/90 px-4 backdrop-blur-lg sm:px-6">
@@ -99,9 +94,9 @@
             </div>
 
             <div class="ml-auto flex items-center gap-3">
-                <a href="{{ route('toko.index') }}" class="hidden rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 sm:block">🏠 Toko</a>
+                <a href="{{ route('toko.index') }}" class="hidden rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 sm:block">Toko</a>
                 <div class="flex items-center gap-2.5 rounded-full bg-slate-50 py-1.5 pl-1.5 pr-4 ring-1 ring-slate-200">
-                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-xs font-bold text-white">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-accent-500 text-xs font-bold text-white">
                         {{ initials(auth()->user()->name) }}
                     </span>
                     <div class="hidden sm:block">
@@ -112,20 +107,7 @@
             </div>
         </header>
 
-        {{-- Flash --}}
-        @if (session('success') || session('error') || session('info'))
-            <div class="mx-auto mt-4 w-full max-w-7xl px-4 sm:px-6">
-                @if (session('success'))
-                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-sm">✅ {{ session('success') }}</div>
-                @endif
-                @if (session('error'))
-                    <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800 shadow-sm">⛔ {{ session('error') }}</div>
-                @endif
-                @if (session('info'))
-                    <div class="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-medium text-sky-800 shadow-sm">ℹ️ {{ session('info') }}</div>
-                @endif
-            </div>
-        @endif
+        @include('partials.flash')
 
         <main class="flex-1 p-4 sm:p-6">
             <div class="mx-auto max-w-7xl">
@@ -134,7 +116,7 @@
         </main>
 
         <footer class="px-6 pb-6 text-center text-xs text-slate-400">
-            © {{ date('Y') }} Marketplace Nusantara — Panel Admin
+            &copy; {{ date('Y') }} {{ config('brand.nama') }} &mdash; Panel Admin
         </footer>
     </div>
 </div>

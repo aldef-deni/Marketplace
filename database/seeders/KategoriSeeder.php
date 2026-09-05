@@ -10,16 +10,17 @@ class KategoriSeeder extends Seeder
 {
     public function run(): void
     {
+        // Kolom ikon menyimpan nama ikon dari komponen <x-ikon>, bukan emoji.
         $kategoris = [
-            ['Elektronik', '📱', 'Berbagai gadget dan perangkat elektronik terkini.'],
-            ['Fashion Pria', '👔', 'Pakaian, sepatu, dan aksesoris untuk pria.'],
-            ['Fashion Wanita', '👗', 'Pakaian, tas, dan aksesoris untuk wanita.'],
-            ['Kesehatan & Kecantikan', '💄', 'Produk perawatan tubuh dan kecantikan.'],
-            ['Makanan & Minuman', '🍫', 'Makanan ringan, minuman, dan kebutuhan dapur.'],
-            ['Peralatan Rumah', '🏠', 'Perlengkapan rumah tangga yang praktis.'],
-            ['Olahraga', '⚽', 'Perlengkapan olahraga dan kebugaran.'],
-            ['Otomotif', '🚗', 'Aksesoris dan perlengkapan kendaraan.'],
-            ['Buku & Alat Tulis', '📚', 'Buku, alat tulis, dan perlengkapan kantor.'],
+            ['Elektronik', 'ponsel', 'Berbagai gadget dan perangkat elektronik terkini.'],
+            ['Fashion Pria', 'baju', 'Pakaian, sepatu, dan aksesoris untuk pria.'],
+            ['Fashion Wanita', 'gaun', 'Pakaian, tas, dan aksesoris untuk wanita.'],
+            ['Kesehatan & Kecantikan', 'kecantikan', 'Produk perawatan tubuh dan kecantikan.'],
+            ['Makanan & Minuman', 'cangkir', 'Makanan ringan, minuman, dan kebutuhan dapur.'],
+            ['Peralatan Rumah', 'rumah', 'Perlengkapan rumah tangga yang praktis.'],
+            ['Olahraga', 'bola', 'Perlengkapan olahraga dan kebugaran.'],
+            ['Otomotif', 'mobil', 'Aksesoris dan perlengkapan kendaraan.'],
+            ['Buku & Alat Tulis', 'buku', 'Buku, alat tulis, dan perlengkapan kantor.'],
         ];
 
         foreach ($kategoris as [$nama, $ikon, $deskripsi]) {

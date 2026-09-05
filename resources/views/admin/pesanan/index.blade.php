@@ -3,19 +3,19 @@
 
     <div class="card overflow-hidden">
         <div class="p-6 pb-4">
-            <h3 class="text-base font-extrabold text-slate-900">📦 Daftar Pesanan</h3>
+            <h3 class="text-base font-extrabold text-slate-900">Daftar Pesanan</h3>
             <p class="mt-0.5 text-xs text-slate-400">Total {{ $pesanans->total() }} pesanan</p>
         </div>
 
         {{-- Filter status --}}
         <div class="flex flex-wrap gap-2 px-6 pb-4">
             <a href="{{ route('admin.pesanan.index') }}"
-               class="rounded-full px-4 py-2 text-xs font-bold transition {{ ! request('status') ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50' }}">
+               class="rounded-full px-4 py-2 text-xs font-bold transition {{ ! request('status') ? 'bg-brand-600 text-white shadow-md shadow-brand-200' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50' }}">
                 Semua ({{ $jumlahStatus->sum() }})
             </a>
             @foreach (\App\Models\Pesanan::STATUS as $nilai => $label)
                 <a href="{{ route('admin.pesanan.index', ['status' => $nilai]) }}"
-                   class="rounded-full px-4 py-2 text-xs font-bold transition {{ request('status') === $nilai ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50' }}">
+                   class="rounded-full px-4 py-2 text-xs font-bold transition {{ request('status') === $nilai ? 'bg-brand-600 text-white shadow-md shadow-brand-200' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50' }}">
                     {{ $label }} ({{ $jumlahStatus[$nilai] ?? 0 }})
                 </a>
             @endforeach
@@ -25,7 +25,7 @@
             <div class="flex gap-3">
                 <input type="hidden" name="status" value="{{ request('status') }}">
                 <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari no. invoice / nama / email..." class="input-field max-w-md">
-                <button class="btn-secondary">🔍 Cari</button>
+                <button class="btn-secondary">Cari</button>
             </div>
         </form>
 
@@ -47,7 +47,7 @@
                     @forelse ($pesanans as $pesanan)
                         <tr class="transition hover:bg-slate-50/60">
                             <td class="table-cell">
-                                <a href="{{ route('admin.pesanan.show', $pesanan) }}" class="font-extrabold text-indigo-700 hover:underline">{{ $pesanan->no_invoice }}</a>
+                                <a href="{{ route('admin.pesanan.show', $pesanan) }}" class="font-extrabold text-brand-700 hover:underline">{{ $pesanan->no_invoice }}</a>
                             </td>
                             <td class="table-cell">
                                 <p class="font-bold text-slate-800">{{ $pesanan->user->name }}</p>
@@ -64,13 +64,13 @@
                             <td class="table-cell"><span class="badge {{ $pesanan->status_warna }}">{{ $pesanan->status_label }}</span></td>
                             <td class="table-cell text-xs text-slate-500">{{ tanggalIndo($pesanan->created_at) }}</td>
                             <td class="table-cell">
-                                <a href="{{ route('admin.pesanan.show', $pesanan) }}" class="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100">Detail</a>
+                                <a href="{{ route('admin.pesanan.show', $pesanan) }}" class="rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 transition hover:bg-brand-100">Detail</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="8" class="px-4 py-16 text-center">
-                                <p class="text-4xl">📦</p>
+                                <p class="text-4xl"><x-ikon nama="kotak" kelas="h-9 w-9" /></p>
                                 <p class="mt-3 text-sm font-semibold text-slate-500">Tidak ada pesanan ditemukan.</p>
                             </td>
                         </tr>

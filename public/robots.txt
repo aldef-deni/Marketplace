@@ -1,2 +1,17 @@
+# Market ArahInn — market.arahinn.com
+
 User-agent: *
-Disallow:
+Allow: /
+Allow: /toko
+
+# Halaman privat dan transaksional tidak perlu diindeks.
+Disallow: /admin
+Disallow: /checkout
+Disallow: /keranjang
+Disallow: /pesanan
+Disallow: /alamat
+Disallow: /profile
+Disallow: /dashboard
+Disallow: /login
+Disallow: /register
+Disallow: /password

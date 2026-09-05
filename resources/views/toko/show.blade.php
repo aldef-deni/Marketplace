@@ -4,9 +4,9 @@
     <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {{-- Breadcrumb --}}
         <nav class="mb-6 flex items-center gap-2 text-xs font-semibold text-slate-400">
-            <a href="{{ route('beranda') }}" class="hover:text-indigo-600">Beranda</a> <span>/</span>
-            <a href="{{ route('toko.index') }}" class="hover:text-indigo-600">Toko</a> <span>/</span>
-            <a href="{{ route('toko.index', ['kategori' => $produk->kategori?->slug]) }}" class="hover:text-indigo-600">{{ $produk->kategori?->nama }}</a> <span>/</span>
+            <a href="{{ route('beranda') }}" class="hover:text-brand-600">Beranda</a> <span>/</span>
+            <a href="{{ route('toko.index') }}" class="hover:text-brand-600">Toko</a> <span>/</span>
+            <a href="{{ route('toko.index', ['kategori' => $produk->kategori?->slug]) }}" class="hover:text-brand-600">{{ $produk->kategori?->nama }}</a> <span>/</span>
             <span class="text-slate-700">{{ \Illuminate\Support\Str::limit($produk->nama, 30) }}</span>
         </nav>
 
@@ -17,13 +17,13 @@
                     @if ($produk->gambar)
                         <img src="{{ asset($produk->gambar) }}" alt="{{ $produk->nama }}" class="aspect-square w-full object-cover">
                     @else
-                        <div class="flex aspect-square w-full items-center justify-center bg-gradient-to-br from-indigo-100 to-violet-100 text-8xl">🛍️</div>
+                        <div class="flex aspect-square w-full items-center justify-center bg-gradient-to-br from-brand-100 to-accent-100 text-8xl"><x-ikon nama="toko" kelas="h-5 w-5" /></div>
                     @endif
                 </div>
                 <div class="mt-4 grid grid-cols-3 gap-4">
-                    @foreach ([['🚚', 'Pengiriman cepat', 'Ke seluruh Indonesia'], ['🛡️', 'Garansi kualitas', 'Produk 100% original'], ['↩️', 'Mudah dikembalikan', 'Jika produk tidak sesuai']] as [$ikon, $judul, $ket])
+                    @foreach ([['truk', 'Pengiriman cepat', 'Ke seluruh Indonesia'], ['perisai', 'Garansi kualitas', 'Produk 100% original'], ['papan', 'Mudah dikembalikan', 'Jika produk tidak sesuai']] as [$ikon, $judul, $ket])
                         <div class="rounded-2xl bg-white p-3 text-center shadow-sm ring-1 ring-slate-200/70">
-                            <p class="text-xl">{{ $ikon }}</p>
+                            <x-ikon :nama="$ikon" kelas="h-5 w-5 text-brand-600" />
                             <p class="mt-1 text-xs font-bold text-slate-700">{{ $judul }}</p>
                             <p class="text-[10px] text-slate-400">{{ $ket }}</p>
                         </div>
@@ -33,11 +33,11 @@
 
             {{-- Detail --}}
             <div>
-                <span class="badge {{ $produk->kategori ? 'bg-indigo-50 text-indigo-700 ring-indigo-200' : '' }}">{{ $produk->kategori?->nama }}</span>
+                <span class="badge {{ $produk->kategori ? 'bg-brand-50 text-brand-700 ring-brand-200' : '' }}">{{ $produk->kategori?->nama }}</span>
                 <h1 class="mt-3 text-2xl font-extrabold leading-snug text-slate-900 sm:text-3xl">{{ $produk->nama }}</h1>
 
                 <div class="mt-4 flex items-baseline gap-3">
-                    <p class="text-3xl font-extrabold text-indigo-700">{{ rp($produk->harga) }}</p>
+                    <p class="text-3xl font-extrabold text-brand-700">{{ rp($produk->harga) }}</p>
                     @if ($produk->harga_coret && $produk->harga_coret > $produk->harga)
                         <p class="text-lg font-medium text-slate-400 line-through">{{ rp($produk->harga_coret) }}</p>
                         <span class="badge bg-rose-100 text-rose-700 ring-rose-200">Hemat {{ $produk->diskon_persen }}%</span>
@@ -71,13 +71,13 @@
                             @csrf
                             <div class="flex flex-wrap items-center gap-3">
                                 <div class="flex items-center rounded-2xl ring-1 ring-slate-300">
-                                    <button type="button" onclick="this.parentElement.querySelector('input').stepDown(); this.parentElement.querySelector('input').dispatchEvent(new Event('input'))" class="px-4 py-3 text-lg font-bold text-slate-500 hover:text-indigo-600">−</button>
+                                    <button type="button" onclick="this.parentElement.querySelector('input').stepDown(); this.parentElement.querySelector('input').dispatchEvent(new Event('input'))" class="px-4 py-3 text-lg font-bold text-slate-500 hover:text-brand-600">−</button>
                                     <input type="number" name="qty" value="1" min="1" max="{{ $produk->stok }}"
                                            class="w-16 border-0 bg-transparent text-center text-sm font-bold text-slate-800 focus:ring-0">
-                                    <button type="button" onclick="this.parentElement.querySelector('input').stepUp(); this.parentElement.querySelector('input').dispatchEvent(new Event('input'))" class="px-4 py-3 text-lg font-bold text-slate-500 hover:text-indigo-600">+</button>
+                                    <button type="button" onclick="this.parentElement.querySelector('input').stepUp(); this.parentElement.querySelector('input').dispatchEvent(new Event('input'))" class="px-4 py-3 text-lg font-bold text-slate-500 hover:text-brand-600">+</button>
                                 </div>
                                 <button type="submit" class="btn-primary flex-1 py-3.5 sm:flex-none sm:px-10">
-                                    🛒 Tambah ke Keranjang
+                                    Tambah ke Keranjang
                                 </button>
                             </div>
                         </form>
@@ -87,7 +87,7 @@
                         </div>
                     @endif
                 @else
-                    <div class="mt-6 rounded-2xl bg-indigo-50 px-5 py-4 text-sm text-indigo-700 ring-1 ring-indigo-200">
+                    <div class="mt-6 rounded-2xl bg-brand-50 px-5 py-4 text-sm text-brand-700 ring-1 ring-brand-200">
                         <a href="{{ route('login') }}" class="font-bold underline">Masuk</a> atau
                         <a href="{{ route('register') }}" class="font-bold underline">daftar</a> untuk mulai berbelanja.
                     </div>

@@ -3,18 +3,18 @@
 
     <div class="card overflow-hidden">
         <div class="p-6 pb-4">
-            <h3 class="text-base font-extrabold text-slate-900">💳 Verifikasi Pembayaran</h3>
+            <h3 class="text-base font-extrabold text-slate-900">Verifikasi Pembayaran</h3>
             <p class="mt-0.5 text-xs text-slate-400">Periksa dan verifikasi bukti pembayaran pelanggan</p>
         </div>
 
         <div class="flex flex-wrap gap-2 px-6 pb-4">
             <a href="{{ route('admin.pembayaran.index') }}"
-               class="rounded-full px-4 py-2 text-xs font-bold transition {{ ! request('status') ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50' }}">
+               class="rounded-full px-4 py-2 text-xs font-bold transition {{ ! request('status') ? 'bg-brand-600 text-white shadow-md shadow-brand-200' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50' }}">
                 Semua ({{ $jumlahStatus->sum() }})
             </a>
             @foreach (['menunggu' => 'Menunggu', 'dibayar' => 'Dibayar', 'dibatalkan' => 'Dibatalkan'] as $nilai => $label)
                 <a href="{{ route('admin.pembayaran.index', ['status' => $nilai]) }}"
-                   class="rounded-full px-4 py-2 text-xs font-bold transition {{ request('status') === $nilai ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50' }}">
+                   class="rounded-full px-4 py-2 text-xs font-bold transition {{ request('status') === $nilai ? 'bg-brand-600 text-white shadow-md shadow-brand-200' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50' }}">
                     {{ $label }} ({{ $jumlahStatus[$nilai] ?? 0 }})
                 </a>
             @endforeach
@@ -37,7 +37,7 @@
                     @forelse ($pembayarans as $pembayaran)
                         <tr class="transition hover:bg-slate-50/60">
                             <td class="table-cell">
-                                <p class="font-extrabold text-indigo-700">{{ $pembayaran->kode }}</p>
+                                <p class="font-extrabold text-brand-700">{{ $pembayaran->kode }}</p>
                                 <p class="text-xs text-slate-400">{{ $pembayaran->pesanan->no_invoice }}</p>
                             </td>
                             <td class="table-cell">
@@ -58,7 +58,7 @@
                             <td class="table-cell">
                                 <span class="badge {{ $pembayaran->status_warna }}">{{ $pembayaran->status_label }}</span>
                                 @if ($pembayaran->keterangan && $pembayaran->status === 'menunggu' && $pembayaran->bukti)
-                                    <p class="mt-1 max-w-40 text-[10px] text-rose-500" title="{{ $pembayaran->keterangan }}">⚠️ {{ \Illuminate\Support\Str::limit($pembayaran->keterangan, 28) }}</p>
+                                    <p class="mt-1 max-w-40 text-[10px] text-rose-500" title="{{ $pembayaran->keterangan }}">{{ \Illuminate\Support\Str::limit($pembayaran->keterangan, 28) }}</p>
                                 @endif
                             </td>
                             <td class="table-cell">
@@ -75,14 +75,14 @@
                                         </form>
                                     </div>
                                 @else
-                                    <a href="{{ route('admin.pesanan.show', $pembayaran->pesanan) }}" class="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100">Detail</a>
+                                    <a href="{{ route('admin.pesanan.show', $pembayaran->pesanan) }}" class="rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 transition hover:bg-brand-100">Detail</a>
                                 @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="7" class="px-4 py-16 text-center">
-                                <p class="text-4xl">💳</p>
+                                <p class="text-4xl"><x-ikon nama="kartu" kelas="h-9 w-9" /></p>
                                 <p class="mt-3 text-sm font-semibold text-slate-500">Tidak ada pembayaran ditemukan.</p>
                             </td>
                         </tr>

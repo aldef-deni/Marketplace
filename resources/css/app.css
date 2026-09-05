@@ -2,35 +2,87 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =====================================================================
+   Market ArahInn — lapisan dasar
+   ===================================================================== */
 @layer base {
+    :root {
+        --brand: 11 95 176;      /* #0B5FB0 */
+        --accent: 245 147 0;     /* #F59300 */
+        --ink: 6 8 12;           /* #06080C — sama dengan latar logo */
+    }
+
     html {
         scroll-behavior: smooth;
     }
 
     body {
         @apply bg-slate-50 text-slate-800 antialiased;
+        font-feature-settings: 'cv11', 'ss01';
     }
 
     ::selection {
-        @apply bg-indigo-600 text-white;
+        @apply bg-brand-600 text-white;
     }
 
     [x-cloak] {
         display: none !important;
     }
-}
 
-@layer components {
-    .card {
-        @apply bg-white rounded-2xl shadow-sm ring-1 ring-slate-200/70;
+    /* Scrollbar halus agar terasa rapi di desktop */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: theme('colors.slate.300') transparent;
     }
 
+    *::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    *::-webkit-scrollbar-thumb {
+        @apply rounded-full border-[3px] border-solid border-transparent bg-slate-300 bg-clip-content;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+        @apply bg-slate-400 bg-clip-content;
+    }
+}
+
+/* =====================================================================
+   Komponen
+   ===================================================================== */
+@layer components {
+    /* ---------- Permukaan ---------- */
+    .card {
+        @apply rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/70;
+    }
+
+    .card-elevated {
+        @apply rounded-3xl bg-white shadow-elevate ring-1 ring-slate-200/60;
+    }
+
+    /* Panel gelap premium — dipakai navbar, footer, dan sidebar admin.
+       Warnanya sengaja sama dengan latar logo agar logo menyatu tanpa kotak hitam. */
+    .surface-ink {
+        @apply bg-ink-950 text-ink-200;
+    }
+
+    /* ---------- Tombol ---------- */
     .btn-primary {
-        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-brand transition hover:-translate-y-0.5 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-60;
+    }
+
+    .btn-accent {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-accent-500 px-5 py-2.5 text-sm font-semibold text-ink-950 shadow-accent transition hover:-translate-y-0.5 hover:bg-accent-400 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-60;
     }
 
     .btn-secondary {
-        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-300 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-60;
+        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-300 transition hover:bg-slate-50 hover:ring-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-60;
+    }
+
+    .btn-ghost {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-brand-700;
     }
 
     .btn-danger {
@@ -41,16 +93,26 @@
         @apply px-3 py-1.5 text-xs;
     }
 
+    /* ---------- Form ---------- */
     .input-field {
-        @apply w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm placeholder:text-slate-400 focus:border-indigo-500 focus:ring-indigo-500;
+        @apply w-full rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-brand-500;
     }
 
     .label-field {
         @apply mb-1.5 block text-sm font-semibold text-slate-700;
     }
 
+    /* ---------- Data ---------- */
     .badge {
         @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset;
+    }
+
+    .badge-brand {
+        @apply badge bg-brand-50 text-brand-700 ring-brand-200;
+    }
+
+    .badge-accent {
+        @apply badge bg-accent-50 text-accent-700 ring-accent-200;
     }
 
     .table-head {
@@ -61,13 +123,42 @@
         @apply px-4 py-3 text-sm text-slate-700;
     }
 
+    /* ---------- Kartu produk ---------- */
     .kartu-produk {
-        @apply relative overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/70 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-100;
+        @apply relative overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/70 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-100 hover:ring-brand-200;
+    }
+
+    /* ---------- Logo ---------- */
+    /* Logo dirender di atas pelat gelap agar latar hitam bawaan file logo
+       menyatu dengan permukaan, bukan tampak seperti kotak menempel. */
+    .logo-plate {
+        @apply inline-flex items-center justify-center rounded-xl bg-ink-950 ring-1 ring-white/10;
+    }
+
+    .divider-brand {
+        @apply h-px w-full bg-gradient-to-r from-transparent via-accent-400/70 to-transparent;
     }
 }
 
+/* =====================================================================
+   Utilitas
+   ===================================================================== */
 @layer utilities {
     .teks-gradien {
-        @apply bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent;
+        @apply bg-gradient-to-r from-brand-700 via-brand-500 to-accent-500 bg-clip-text text-transparent;
+    }
+
+    .teks-emas {
+        @apply bg-gradient-to-r from-accent-300 via-accent-400 to-accent-600 bg-clip-text text-transparent;
+    }
+
+    /* Pola titik halus untuk hero gelap */
+    .pola-grid {
+        background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px);
+        background-size: 22px 22px;
+    }
+
+    .ring-brand-glow {
+        box-shadow: 0 0 0 1px rgba(11, 95, 176, 0.25), 0 0 42px -12px rgba(245, 147, 0, 0.45);
     }
 }

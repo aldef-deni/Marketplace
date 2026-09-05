@@ -104,8 +104,12 @@ class PesananController extends Controller
         return back()->with('success', 'Pesanan dibatalkan.');
     }
 
-    public function cetak(Pesanan $pesanan)
+    public function cetak(string $noInvoice)
     {
+        $pesanan = Pesanan::with([
+            'items', 'alamat', 'pembayaran.metodePembayaran', 'pengiriman',
+        ])->where('no_invoice', $noInvoice)->firstOrFail();
+
         abort_if($pesanan->user_id !== auth()->id() && ! auth()->user()->isAdmin(), 403);
 
         return view('pesanan.cetak', compact('pesanan'));

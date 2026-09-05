@@ -7,7 +7,7 @@
             @if ($produk->exists) @method('PATCH') @endif
 
             <div class="flex items-center gap-3 border-b border-slate-100 pb-5">
-                <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-100 to-violet-100 text-2xl">🏷️</span>
+                <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-100 to-accent-100 text-2xl"><x-ikon nama="label" kelas="h-6 w-6" /></span>
                 <div>
                     <h2 class="text-lg font-extrabold text-slate-900">{{ $produk->exists ? 'Edit Produk' : 'Tambah Produk Baru' }}</h2>
                     <p class="text-xs text-slate-400">Lengkapi informasi produk dengan benar</p>
@@ -25,7 +25,7 @@
                     <select name="kategori_id" class="input-field" required>
                         <option value="">— Pilih Kategori —</option>
                         @foreach ($kategoris as $kategori)
-                            <option value="{{ $kategori->id }}" @selected(old('kategori_id', $produk->kategori_id) == $kategori->id)>{{ $kategori->ikon }} {{ $kategori->nama }}</option>
+                            <option value="{{ $kategori->id }}" @selected(old('kategori_id', $produk->kategori_id) == $kategori->id)>{{ $kategori->nama }}</option>
                         @endforeach
                     </select>
                     @error('kategori_id') <p class="mt-1 text-xs font-semibold text-rose-600">{{ $message }}</p> @enderror
@@ -63,7 +63,7 @@
                         @if ($produk->gambar)
                             <img src="{{ asset($produk->gambar) }}" class="h-20 w-20 rounded-2xl object-cover ring-1 ring-slate-200" alt="">
                         @endif
-                        <input type="file" name="gambar" accept="image/*" class="block w-full cursor-pointer rounded-xl border border-slate-300 bg-white p-2.5 text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-indigo-700">
+                        <input type="file" name="gambar" accept="image/*" class="block w-full cursor-pointer rounded-xl border border-slate-300 bg-white p-2.5 text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-600 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-brand-700">
                     </div>
                     @error('gambar') <p class="mt-1 text-xs font-semibold text-rose-600">{{ $message }}</p> @enderror
                 </div>
@@ -75,7 +75,7 @@
             </div>
 
             <div class="flex items-center gap-3 border-t border-slate-100 pt-5">
-                <button type="submit" class="btn-primary">{{ $produk->exists ? '💾 Simpan Perubahan' : '➕ Tambah Produk' }}</button>
+                <button type="submit" class="btn-primary">{{ $produk->exists ? 'Simpan Perubahan' : 'Tambah Produk' }}</button>
                 <a href="{{ route('admin.produk.index') }}" class="btn-secondary">Batal</a>
             </div>
         </form>

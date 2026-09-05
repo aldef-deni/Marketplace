@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => CheckRole::class,
         ]);
+
+        // Subdomain dilayani di balik proxy/load balancer ArahInn, sehingga
+        // X-Forwarded-* perlu dipercaya agar skema HTTPS dan IP klien benar.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

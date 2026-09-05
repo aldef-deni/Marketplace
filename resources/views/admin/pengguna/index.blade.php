@@ -3,7 +3,7 @@
 
     <div class="card overflow-hidden">
         <div class="p-6 pb-4">
-            <h3 class="text-base font-extrabold text-slate-900">👥 Manajemen Pengguna</h3>
+            <h3 class="text-base font-extrabold text-slate-900">Manajemen Pengguna</h3>
             <p class="mt-0.5 text-xs text-slate-400">Kelola role pengguna (Superadmin / Admin / Pengguna)</p>
         </div>
 
@@ -15,7 +15,7 @@
                     <option value="{{ $nilai }}" @selected(request('role') === $nilai)>{{ $label }}</option>
                 @endforeach
             </select>
-            <button class="btn-secondary">🔍 Filter</button>
+            <button class="btn-secondary">Filter</button>
         </form>
 
         <div class="overflow-x-auto">
@@ -35,11 +35,11 @@
                         <tr class="transition hover:bg-slate-50/60">
                             <td class="table-cell">
                                 <div class="flex items-center gap-3">
-                                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-xs font-bold text-white">
+                                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-accent-500 text-xs font-bold text-white">
                                         {{ initials($pengguna->name) }}
                                     </span>
                                     <div>
-                                        <p class="font-bold text-slate-800">{{ $pengguna->name }} {!! $pengguna->id === auth()->id() ? '<span class="text-xs text-indigo-500">(Anda)</span>' : '' !!}</p>
+                                        <p class="font-bold text-slate-800">{{ $pengguna->name }} {!! $pengguna->id === auth()->id() ? '<span class="text-xs text-brand-500">(Anda)</span>' : '' !!}</p>
                                         <p class="text-xs text-slate-400">{{ $pengguna->email }}</p>
                                     </div>
                                 </div>
@@ -64,7 +64,7 @@
                                         <form action="{{ route('admin.pengguna.destroy', $pengguna) }}" method="POST" onsubmit="return confirm('Hapus pengguna ini?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button class="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 transition hover:bg-rose-100">🗑️</button>
+                                            <button class="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 transition hover:bg-rose-100"><x-ikon nama="sampah" kelas="h-3.5 w-3.5" /></button>
                                         </form>
                                     @endif
                                 </div>
@@ -73,7 +73,7 @@
                     @empty
                         <tr>
                             <td colspan="6" class="px-4 py-16 text-center">
-                                <p class="text-4xl">👥</p>
+                                <p class="text-4xl"><x-ikon nama="pengguna" kelas="h-9 w-9" /></p>
                                 <p class="mt-3 text-sm font-semibold text-slate-500">Tidak ada pengguna ditemukan.</p>
                             </td>
                         </tr>

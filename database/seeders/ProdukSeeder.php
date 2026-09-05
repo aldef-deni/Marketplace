@@ -105,21 +105,19 @@ class ProdukSeeder extends Seeder
      */
     private function buatGambar(string $slug, string $nama, string $emoji, string $kategori): string
     {
+        // Sembilan gradasi dalam keluarga warna Market ArahInn: biru ke oranye.
         $palet = [
-            'Elektronik' => ['#6366f1', '#8b5cf6'],
-            'Fashion Pria' => ['#0ea5e9', '#2563eb'],
-            'Fashion Wanita' => ['#ec4899', '#f43f5e'],
-            'Kesehatan & Kecantikan' => ['#10b981', '#14b8a6'],
-            'Makanan & Minuman' => ['#f59e0b', '#ef4444'],
-            'Peralatan Rumah' => ['#f97316', '#f59e0b'],
-            'Olahraga' => ['#22c55e', '#10b981'],
-            'Otomotif' => ['#64748b', '#334155'],
-            'Buku & Alat Tulis' => ['#a855f7', '#6366f1'],
+            'Elektronik' => ['#0B5FB0', '#1E7AD6'],
+            'Fashion Pria' => ['#1E7AD6', '#0B5FB0'],
+            'Fashion Wanita' => ['#D97400', '#B45509'],
+            'Kesehatan & Kecantikan' => ['#0A3D72', '#1E7AD6'],
+            'Makanan & Minuman' => ['#F59300', '#D97400'],
+            'Peralatan Rumah' => ['#FBAA24', '#F59300'],
+            'Olahraga' => ['#06203E', '#0B5FB0'],
+            'Otomotif' => ['#0B5FB0', '#F59300'],
+            'Buku & Alat Tulis' => ['#084B8E', '#0B5FB0'],
         ];
-        [$warna1, $warna2] = $palet[$kategori] ?? ['#6366f1', '#8b5cf6'];
-
-        $namaPendek = Str::limit($nama, 28, '');
-        $warnaKontras = $this->warnaKontras($warna1);
+        [$warna1, $warna2] = $palet[$kategori] ?? ['#0B5FB0', '#1E7AD6'];
 
         $svg = <<<SVG
         <svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
@@ -137,9 +135,7 @@ class ProdukSeeder extends Seeder
           <circle cx="520" cy="80" r="160" fill="url(#sh)"/>
           <circle cx="60" cy="540" r="120" fill="url(#sh)"/>
           <circle cx="300" cy="260" r="170" fill="#ffffff" fill-opacity="0.12"/>
-          <text x="300" y="310" font-size="190" text-anchor="middle" dominant-baseline="central">{$emoji}</text>
-          <rect x="90" y="470" width="420" height="64" rx="32" fill="#ffffff" fill-opacity="0.16"/>
-          <text x="300" y="496" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff" text-anchor="middle" dominant-baseline="central">{$namaPendek}</text>
+          <text x="300" y="300" font-size="190" text-anchor="middle" dominant-baseline="central">{$emoji}</text>
         </svg>
         SVG;
 
@@ -149,11 +145,4 @@ class ProdukSeeder extends Seeder
         return 'uploads/'.$path;
     }
 
-    private function warnaKontras(string $hex): string
-    {
-        [$r, $g, $b] = array_map(fn ($v) => hexdec($v), str_split(ltrim($hex, '#'), 2));
-        $luminansi = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
-
-        return $luminansi > 0.6 ? '#1e293b' : '#ffffff';
-    }
 }
