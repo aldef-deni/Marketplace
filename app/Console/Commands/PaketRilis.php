@@ -142,15 +142,47 @@ class PaketRilis extends Command
         }
 
         $belumDicommit = $this->keluaranGit($akar, 'git ls-files --modified --others --exclude-standard') ?? [];
-        $aset = $this->telusuriFolder($akar, 'public/build') ?? [];
 
-        $gabungan = array_unique([...$berubah, ...$belumDicommit, ...$aset]);
+        // git diff mendaftar berkas apa adanya, termasuk yang kini masuk
+        // .gitignore. Unggahan pengguna yang baru dilepas dari pelacakan masih
+        // ada di disk, jadi tanpa penyaringan ini berkas milik orang lain bisa
+        // ikut terbungkus dan terkirim.
+        $kandidat = $this->buangYangDiabaikan($akar, array_unique([...$berubah, ...$belumDicommit]));
+
+        // public/build sengaja ditambahkan setelah penyaringan: folder itu
+        // memang diabaikan git, tetapi wajib ikut karena server tidak menjalankan npm.
+        $gabungan = array_unique([...$kandidat, ...($this->telusuriFolder($akar, 'public/build') ?? [])]);
         sort($gabungan);
 
         // Berkas yang dihapus tetap muncul di git diff; jangan dicoba dibungkus.
         $ada = array_filter($gabungan, fn ($r) => is_file($akar.DIRECTORY_SEPARATOR.$r));
 
         return $this->saring($akar, array_values($ada));
+    }
+
+    /**
+     * Singkirkan berkas yang diabaikan git.
+     *
+     * check-ignore mengembalikan kode keluar bukan-nol bila tidak ada yang
+     * cocok, sehingga hasilnya dibaca langsung dan bukan lewat keluaranGit()
+     * yang memperlakukan keadaan itu sebagai kegagalan.
+     */
+    private function buangYangDiabaikan(string $akar, array $daftar): array
+    {
+        if ($daftar === []) {
+            return [];
+        }
+
+        $hasil = Process::path($akar)
+            ->input(implode("\n", $daftar))
+            ->run('git check-ignore --stdin');
+
+        $diabaikan = array_flip(array_filter(
+            array_map('trim', explode("\n", $hasil->output())),
+            fn ($baris) => $baris !== '',
+        ));
+
+        return array_values(array_filter($daftar, fn ($r) => ! isset($diabaikan[$r])));
     }
 
     private function saring(string $akar, array $daftar): array
