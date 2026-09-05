@@ -9,6 +9,14 @@ class Keranjang extends Model
 {
     protected $fillable = ['user_id', 'produk_id', 'qty'];
 
+    protected $casts = [
+        // Lihat catatan pada model Pesanan: kunci asing yang terbaca sebagai
+        // string membuat pemeriksaan kepemilikan menolak pemiliknya sendiri.
+        'user_id' => 'integer',
+        'produk_id' => 'integer',
+        'qty' => 'integer',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -114,6 +114,6 @@ class AlamatController extends Controller
 
     private function authorizeOwn(Alamat $alamat): void
     {
-        abort_if($alamat->user_id !== auth()->id(), 403);
+        abort_if((int) $alamat->user_id !== (int) auth()->id(), 403);
     }
 }

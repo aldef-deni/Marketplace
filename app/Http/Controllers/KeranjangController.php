@@ -62,6 +62,6 @@ class KeranjangController extends Controller
 
     private function authorizeOwn(Keranjang $item): void
     {
-        abort_if($item->user_id !== auth()->id(), 403);
+        abort_if((int) $item->user_id !== (int) auth()->id(), 403);
     }
 }

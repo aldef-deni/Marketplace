@@ -34,6 +34,7 @@ class CekSistem extends Command
 
         $this->bagian('Basis data');
         $this->periksaKoneksi();
+        $this->periksaTipeAngka();
         $this->periksaTabel();
         $this->periksaKolom();
         $this->periksaMigrasi();
@@ -73,6 +74,27 @@ class CekSistem extends Command
         } catch (Throwable $e) {
             $this->salah('Koneksi basis data', Str::limit($e->getMessage(), 70));
         }
+    }
+
+    /**
+     * Deteksi driver yang mengembalikan kolom angka sebagai string.
+     *
+     * Perilaku ini lazim pada PDO dengan emulated prepares di hosting bersama,
+     * dan pernah membuat pemeriksaan kepemilikan menolak pemiliknya sendiri.
+     * Model sudah memaksa kunci asing menjadi integer, tetapi keadaannya tetap
+     * layak dilaporkan karena menjelaskan gejala yang hanya muncul di server.
+     */
+    private function periksaTipeAngka(): void
+    {
+        try {
+            $nilai = DB::selectOne('select 1 as angka')->angka;
+        } catch (Throwable) {
+            return;
+        }
+
+        is_int($nilai)
+            ? $this->ok('Tipe angka dari driver', 'integer')
+            : $this->peringatan('Tipe angka dari driver', 'string — kunci asing dinormalkan lewat cast model');
     }
 
     private function periksaTabel(): void

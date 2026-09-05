@@ -25,6 +25,10 @@ class Pesanan extends Model
     ];
 
     protected $casts = [
+        // Tanpa cast ini, driver basis data tertentu mengembalikan kunci asing
+        // sebagai string sehingga perbandingan ketat dengan auth()->id() gagal.
+        'user_id' => 'integer',
+        'alamat_id' => 'integer',
         'subtotal' => 'decimal:0',
         'ongkir' => 'decimal:0',
         'total' => 'decimal:0',
