@@ -128,6 +128,22 @@
         @apply relative overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/70 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-100 hover:ring-brand-200;
     }
 
+    /* ---------- Lencana metode pembayaran ---------- */
+    /* Warna khas tiap penyedia dikirim lewat properti kustom --warna-merchant
+       dari Blade, sehingga daftar merchant bisa diubah di config/brand.php
+       tanpa menambah kelas Tailwind baru. */
+    .kartu-merchant {
+        @apply inline-flex select-none items-center justify-center rounded-xl bg-white/[0.06] px-3.5 py-2 text-[11px] font-bold tracking-wide text-ink-200 ring-1 ring-white/10 transition duration-300 ease-out;
+    }
+
+    .kartu-merchant:hover {
+        background-color: var(--warna-merchant, theme('colors.brand.600'));
+        color: #fff;
+        transform: translateY(-3px);
+        /* Menimpa ring bawaan sekaligus memberi bayangan sewarna merchant. */
+        box-shadow: 0 14px 26px -14px var(--warna-merchant, theme('colors.brand.600'));
+    }
+
     /* ---------- Logo ---------- */
     /* Logo dirender di atas pelat gelap agar latar hitam bawaan file logo
        menyatu dengan permukaan, bukan tampak seperti kotak menempel. */
@@ -160,5 +176,23 @@
 
     .ring-brand-glow {
         box-shadow: 0 0 0 1px rgba(11, 95, 176, 0.25), 0 0 42px -12px rgba(245, 147, 0, 0.45);
+    }
+}
+
+/* =====================================================================
+   Aksesibilitas gerak
+   ===================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .kartu-merchant:hover {
+        transform: none;
     }
 }

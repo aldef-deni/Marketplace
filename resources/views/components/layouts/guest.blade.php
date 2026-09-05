@@ -100,16 +100,22 @@
     <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div class="grid gap-10 md:grid-cols-12">
 
-            <div class="md:col-span-5">
-                <x-logo varian="landscape" kelas="h-11 w-auto" loading="lazy" />
-                <p class="mt-5 max-w-md text-sm leading-relaxed text-ink-400">
+            <div class="text-center md:col-span-5">
+                <a href="{{ route('beranda') }}" class="inline-flex transition hover:opacity-90"
+                   aria-label="{{ config('brand.nama') }} — beranda">
+                    <x-logo varian="landscape" kelas="h-16 w-auto sm:h-20" loading="lazy" />
+                </a>
+
+                <p class="mx-auto mt-6 max-w-md text-sm leading-relaxed text-ink-400">
                     {{ config('brand.deskripsi') }}
                 </p>
 
-                <p class="mt-6 text-[11px] font-bold uppercase tracking-widest text-ink-500">Metode Pembayaran</p>
-                <div class="mt-3 flex flex-wrap items-center gap-2">
-                    @foreach (['BCA', 'Mandiri', 'BRI', 'BNI', 'GoPay', 'OVO', 'DANA', 'COD'] as $metode)
-                        <span class="rounded-lg bg-white/[0.06] px-3 py-1.5 text-[11px] font-bold text-ink-200 ring-1 ring-white/10">{{ $metode }}</span>
+                <p class="mt-7 text-[11px] font-bold uppercase tracking-widest text-ink-500">Metode Pembayaran</p>
+                {{-- Grid 4 kolom agar seluruh kartu berukuran sama dan tersusun rapi,
+                     alih-alih membungkus dengan satu kartu tersisa di baris bawah. --}}
+                <div class="mx-auto mt-3.5 grid max-w-xs grid-cols-4 gap-2">
+                    @foreach (config('brand.metode_bayar') as $metode)
+                        <span class="kartu-merchant" style="--warna-merchant: {{ $metode['warna'] }}">{{ $metode['nama'] }}</span>
                     @endforeach
                 </div>
             </div>
@@ -157,10 +163,9 @@
 
         <div class="divider-brand mt-12"></div>
 
-        <div class="mt-6 flex flex-col items-center justify-between gap-2 text-xs text-ink-500 sm:flex-row">
-            <p>&copy; {{ date('Y') }} {{ config('brand.nama') }}. Seluruh hak cipta dilindungi.</p>
-            <p>Bagian dari <span class="font-semibold text-ink-300">{{ config('brand.induk.nama') }}</span> &mdash; {{ config('brand.domain') }}</p>
-        </div>
+        <p class="mt-6 text-center text-xs text-white">
+            &copy; {{ date('Y') }} {{ config('brand.nama') }}. Seluruh hak cipta dilindungi.
+        </p>
     </div>
 </footer>
 

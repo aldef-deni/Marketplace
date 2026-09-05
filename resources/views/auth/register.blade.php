@@ -8,12 +8,13 @@
                 <div class="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-accent-500/20 blur-3xl"></div>
                 <div class="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-brand-600/35 blur-3xl"></div>
                 <div class="relative flex h-full flex-col justify-between">
-                    <div>
-                        <a href="{{ route('beranda') }}" class="inline-flex transition hover:opacity-90">
-                            <x-logo varian="landscape" kelas="h-11 w-auto" />
+                    <div class="text-center">
+                        <a href="{{ route('beranda') }}" class="inline-flex transition hover:opacity-90"
+                           aria-label="{{ config('brand.nama') }} — beranda">
+                            <x-logo varian="landscape" kelas="h-16 w-auto xl:h-20" />
                         </a>
                         <h2 class="mt-10 text-3xl font-extrabold leading-tight text-white">Bergabung<br>dengan kami.</h2>
-                        <p class="mt-3 text-sm leading-relaxed text-ink-300">Buat akun gratis dan mulai pengalaman belanja online yang mudah, aman, dan menyenangkan.</p>
+                        <p class="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink-300">Buat akun gratis dan mulai pengalaman belanja online yang mudah, aman, dan menyenangkan.</p>
                     </div>
                     <div class="space-y-3">
                         @foreach (['Daftar gratis, tanpa biaya', 'Dapatkan promo eksklusif', 'Lacak pesanan secara real-time'] as $fitur)
@@ -28,6 +29,13 @@
 
             {{-- Form --}}
             <div class="p-8 sm:p-12">
+                <div class="mb-8 flex justify-center lg:hidden">
+                    <a href="{{ route('beranda') }}" class="logo-plate px-6 py-3.5 transition hover:opacity-90"
+                       aria-label="{{ config('brand.nama') }} — beranda">
+                        <x-logo varian="landscape" kelas="h-11 w-auto" />
+                    </a>
+                </div>
+
                 <h1 class="text-2xl font-extrabold text-slate-900">Buat Akun Baru</h1>
                 <p class="mt-1.5 text-sm text-slate-500">Sudah punya akun?
                     <a href="{{ route('login') }}" class="font-bold text-brand-600 hover:text-brand-800">Masuk di sini</a>
