@@ -36,4 +36,19 @@ class BerandaTest extends TestCase
         $this->get('/login')->assertOk()->assertSee('Market ArahInn', escape: false);
         $this->get('/register')->assertOk();
     }
+
+    /**
+     * Config cache lama di server bisa belum memuat kunci yang baru
+     * ditambahkan, sehingga config() mengembalikan null. Footer tampil di
+     * setiap halaman, jadi kasus itu tidak boleh menjatuhkan seluruh situs.
+     */
+    public function test_footer_tetap_tampil_saat_kunci_config_belum_ada(): void
+    {
+        $this->seed(KategoriSeeder::class);
+        config(['brand.metode_bayar' => null]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Seluruh hak cipta dilindungi', escape: false);
+    }
 }

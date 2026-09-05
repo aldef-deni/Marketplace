@@ -72,7 +72,7 @@
                 <div>
                     <label class="label-field">Ikon</label>
                     <select name="ikon" class="input-field">
-                        @foreach (config('brand.ikon_kategori') as $kunci => $label)
+                        @foreach (config('brand.ikon_kategori') ?? [] as $kunci => $label)
                             <option value="{{ $kunci }}">{{ $label }}</option>
                         @endforeach
                     </select>
@@ -102,7 +102,7 @@
                     <div>
                         <label class="label-field">Ikon</label>
                         <select name="ikon" x-model="ikon" class="input-field">
-                            @foreach (config('brand.ikon_kategori') as $kunci => $label)
+                            @foreach (config('brand.ikon_kategori') ?? [] as $kunci => $label)
                                 <option value="{{ $kunci }}">{{ $label }}</option>
                             @endforeach
                         </select>

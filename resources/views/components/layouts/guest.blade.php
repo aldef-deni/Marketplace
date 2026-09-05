@@ -114,7 +114,7 @@
                 {{-- Grid 4 kolom agar seluruh kartu berukuran sama dan tersusun rapi,
                      alih-alih membungkus dengan satu kartu tersisa di baris bawah. --}}
                 <div class="mx-auto mt-3.5 grid max-w-xs grid-cols-4 gap-2">
-                    @foreach (config('brand.metode_bayar') as $metode)
+                    @foreach (config('brand.metode_bayar') ?? [] as $metode)
                         <span class="kartu-merchant" style="--warna-merchant: {{ $metode['warna'] }}">{{ $metode['nama'] }}</span>
                     @endforeach
                 </div>
