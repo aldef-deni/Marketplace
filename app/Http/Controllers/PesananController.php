@@ -60,6 +60,10 @@ class PesananController extends Controller
             $pesanan->pembayaran->update([
                 'bukti' => $file,
                 'nama_pengirim' => $validated['nama_pengirim'],
+                // Unggahan baru mengembalikan pembayaran ke antrean penilaian,
+                // dan alasan penolakan sebelumnya tidak lagi berlaku.
+                'status' => 'menunggu',
+                'keterangan' => null,
             ]);
             $pesanan->update([
                 'status' => 'menunggu_konfirmasi',

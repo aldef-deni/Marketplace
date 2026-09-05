@@ -32,12 +32,20 @@ class PembayaranController extends Controller
 
     public function verifikasi(Pembayaran $pembayaran)
     {
-        abort_if($pembayaran->status !== 'menunggu', 422, 'Pembayaran sudah diverifikasi.');
+        abort_if(! in_array($pembayaran->status, ['menunggu', 'ditolak']), 422, 'Pembayaran sudah diverifikasi.');
+
+        // Tanpa bukti tidak ada yang bisa dinilai; memverifikasinya berarti
+        // menyatakan uang sudah diterima padahal tidak ada dasarnya.
+        if (blank($pembayaran->bukti) && $pembayaran->metodePembayaran?->tipe !== 'cod') {
+            return back()->with('error', 'Pembeli belum mengunggah bukti pembayaran.');
+        }
 
         \DB::transaction(function () use ($pembayaran) {
             $pembayaran->update([
                 'status' => 'dibayar',
                 'dibayar_at' => Carbon::now(),
+                // Alasan penolakan sebelumnya tidak lagi berlaku.
+                'keterangan' => null,
             ]);
 
             $pesanan = $pembayaran->pesanan;
@@ -69,11 +77,25 @@ class PembayaranController extends Controller
     {
         abort_if($pembayaran->status !== 'menunggu', 422, 'Pembayaran sudah diverifikasi.');
 
-        $keterangan = $request->input('keterangan', 'Bukti pembayaran tidak sesuai.');
+        if (blank($pembayaran->bukti)) {
+            return back()->with('error', 'Belum ada bukti yang bisa ditolak. Pembeli belum mengunggah apa pun.');
+        }
+
+        $validated = $request->validate([
+            'keterangan' => ['required', 'string', 'min:5', 'max:300'],
+        ], [
+            'keterangan.required' => 'Alasan penolakan wajib diisi agar pembeli tahu apa yang harus diperbaiki.',
+            'keterangan.min' => 'Alasan penolakan terlalu singkat.',
+        ]);
+
+        $keterangan = $validated['keterangan'];
 
         \DB::transaction(function () use ($pembayaran, $keterangan) {
+            // Penolakan sebelumnya menulis ulang status 'menunggu' — nilai yang
+            // sudah dipakainya — sehingga tidak ada yang berubah di layar dan
+            // admin mengira tindakannya gagal.
             $pembayaran->update([
-                'status' => 'menunggu',
+                'status' => 'ditolak',
                 'keterangan' => $keterangan,
             ]);
 

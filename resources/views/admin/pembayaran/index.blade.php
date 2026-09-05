@@ -12,7 +12,7 @@
                class="rounded-full px-4 py-2 text-xs font-bold transition {{ ! request('status') ? 'bg-brand-600 text-white shadow-md shadow-brand-200' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50' }}">
                 Semua ({{ $jumlahStatus->sum() }})
             </a>
-            @foreach (['menunggu' => 'Menunggu', 'dibayar' => 'Dibayar', 'dibatalkan' => 'Dibatalkan'] as $nilai => $label)
+            @foreach (['menunggu' => 'Menunggu', 'ditolak' => 'Ditolak', 'dibayar' => 'Dibayar', 'dibatalkan' => 'Dibatalkan'] as $nilai => $label)
                 <a href="{{ route('admin.pembayaran.index', ['status' => $nilai]) }}"
                    class="rounded-full px-4 py-2 text-xs font-bold transition {{ request('status') === $nilai ? 'bg-brand-600 text-white shadow-md shadow-brand-200' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50' }}">
                     {{ $label }} ({{ $jumlahStatus[$nilai] ?? 0 }})
@@ -57,22 +57,54 @@
                             </td>
                             <td class="table-cell">
                                 <span class="badge {{ $pembayaran->status_warna }}">{{ $pembayaran->status_label }}</span>
-                                @if ($pembayaran->keterangan && $pembayaran->status === 'menunggu' && $pembayaran->bukti)
-                                    <p class="mt-1 max-w-40 text-[10px] text-rose-500" title="{{ $pembayaran->keterangan }}">{{ \Illuminate\Support\Str::limit($pembayaran->keterangan, 28) }}</p>
+                                {{-- Alasan penolakan dulu hanya tampil bila ada bukti, sehingga
+                                     penolakan pada pembayaran tanpa bukti tidak meninggalkan jejak. --}}
+                                @if ($pembayaran->keterangan)
+                                    <p class="mt-1 max-w-48 text-[10px] leading-relaxed text-rose-600" title="{{ $pembayaran->keterangan }}">
+                                        {{ \Illuminate\Support\Str::limit($pembayaran->keterangan, 60) }}
+                                    </p>
                                 @endif
                             </td>
                             <td class="table-cell">
-                                @if ($pembayaran->status === 'menunggu' && $pembayaran->metodePembayaran->tipe !== 'cod')
+                                {{-- Tombol hanya muncul bila ada bukti untuk dinilai. Sebelumnya
+                                     admin bisa menolak atau bahkan memverifikasi pembayaran yang
+                                     buktinya belum pernah dikirim pembeli. --}}
+                                @if ($pembayaran->menungguPenilaian())
+                                    <div x-data="{ tolak: false }" class="flex flex-col items-end gap-2">
+                                        <div class="flex items-center gap-2">
+                                            <form action="{{ route('admin.pembayaran.verifikasi', $pembayaran) }}" method="POST" onsubmit="return confirm('Verifikasi pembayaran ini?')">
+                                                @csrf
+                                                <button class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-emerald-700">Verifikasi</button>
+                                            </form>
+
+                                            <button type="button" @click="tolak = ! tolak"
+                                                    class="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 ring-1 ring-rose-200 transition hover:bg-rose-100">
+                                                Tolak
+                                            </button>
+                                        </div>
+
+                                        {{-- Alasan diketik di kolom sungguhan, bukan prompt() —
+                                             prompt tidak menyisakan apa pun bila terpotong,
+                                             dan tidak bisa divalidasi sebelum terkirim. --}}
+                                        <form x-show="tolak" x-cloak x-transition
+                                              action="{{ route('admin.pembayaran.tolak', $pembayaran) }}" method="POST"
+                                              class="w-64 rounded-xl bg-rose-50 p-3 text-left ring-1 ring-rose-200">
+                                            @csrf
+                                            <label class="block text-[10px] font-bold uppercase tracking-wider text-rose-700">Alasan penolakan</label>
+                                            <textarea name="keterangan" rows="2" required minlength="5" maxlength="300"
+                                                      placeholder="Contoh: nominal transfer tidak sesuai."
+                                                      class="mt-1.5 w-full rounded-lg border-rose-200 text-xs focus:border-rose-400 focus:ring-rose-400"></textarea>
+                                            <div class="mt-2 flex justify-end gap-2">
+                                                <button type="button" @click="tolak = false"
+                                                        class="rounded-lg px-2.5 py-1 text-[11px] font-bold text-slate-500">Batal</button>
+                                                <button class="rounded-lg bg-rose-600 px-3 py-1 text-[11px] font-bold text-white transition hover:bg-rose-700">Kirim Penolakan</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                @elseif ($pembayaran->status === 'menunggu' && $pembayaran->metodePembayaran->tipe !== 'cod')
                                     <div class="flex items-center justify-end gap-2">
-                                        <form action="{{ route('admin.pembayaran.verifikasi', $pembayaran) }}" method="POST" onsubmit="return confirm('Verifikasi pembayaran ini?')">
-                                            @csrf
-                                            <button class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-emerald-700">✓ Verifikasi</button>
-                                        </form>
-                                        <form action="{{ route('admin.pembayaran.tolak', $pembayaran) }}" method="POST" onsubmit="const a = prompt('Alasan penolakan:'); if (!a) return false; this.querySelector('input[name=keterangan]').value = a;">
-                                            @csrf
-                                            <input type="hidden" name="keterangan">
-                                            <button class="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 ring-1 ring-rose-200 transition hover:bg-rose-100">✕ Tolak</button>
-                                        </form>
+                                        <span class="text-[11px] font-semibold text-slate-400">Menunggu bukti dari pembeli</span>
+                                        <a href="{{ route('admin.pesanan.show', $pembayaran->pesanan) }}" class="rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 transition hover:bg-brand-100">Detail</a>
                                     </div>
                                 @else
                                     <a href="{{ route('admin.pesanan.show', $pembayaran->pesanan) }}" class="rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 transition hover:bg-brand-100">Detail</a>

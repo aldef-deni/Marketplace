@@ -95,7 +95,23 @@
                                   class="mt-5 rounded-2xl border-2 border-dashed border-brand-200 bg-brand-50/40 p-5"
                                   onsubmit="this.querySelector('button[type=submit]').disabled = true">
                                 @csrf
-                                <p class="text-sm font-extrabold text-slate-800">Unggah Bukti Pembayaran</p>
+                                {{-- Bukti yang ditolak harus disertai alasannya di sini; tanpa itu
+                                     pembeli hanya tahu unggahannya gagal, bukan apa yang harus
+                                     diperbaiki. --}}
+                                @if ($pesanan->pembayaran?->ditolak())
+                                    <div class="mb-4 flex items-start gap-3 rounded-xl bg-rose-50 p-4 ring-1 ring-rose-200">
+                                        <x-ikon nama="peringatan" kelas="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
+                                        <div>
+                                            <p class="text-sm font-bold text-rose-800">Bukti sebelumnya ditolak</p>
+                                            <p class="mt-1 text-xs leading-relaxed text-rose-700">{{ $pesanan->pembayaran->keterangan }}</p>
+                                            <p class="mt-1.5 text-xs text-rose-600">Silakan unggah ulang bukti yang sesuai.</p>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <p class="text-sm font-extrabold text-slate-800">
+                                    {{ $pesanan->pembayaran?->ditolak() ? 'Unggah Ulang Bukti Pembayaran' : 'Unggah Bukti Pembayaran' }}
+                                </p>
                                 <p class="mt-0.5 text-xs text-slate-500">Upload screenshot / foto bukti transfer untuk diverifikasi admin.</p>
                                 <div class="mt-4 grid gap-3 sm:grid-cols-2">
                                     <div>
