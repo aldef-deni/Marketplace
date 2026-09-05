@@ -10,7 +10,28 @@
 
     <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {{-- Profil pengguna --}}
-        @include('partials.kartu-profil')
+        @php
+            // Dirakit di sini, bukan di dalam atribut komponen: tanda kutip
+            // ganda pada ekspresinya akan menutup atribut HTML lebih awal.
+            $ringkasanAktivitas = $aktivitasBulanIni
+                ? "Sudah membuat {$aktivitasBulanIni} pesanan bulan ini."
+                : 'Belum ada pesanan bulan ini — yuk temukan produk favoritmu.';
+        @endphp
+
+        <x-kartu-profil :aktivitas="$ringkasanAktivitas">
+
+            <a href="{{ route('toko.index') }}"
+               class="inline-flex items-center justify-center gap-2 rounded-xl bg-accent-500 px-5 py-2.5 text-sm font-bold text-ink-950 shadow-accent transition hover:-translate-y-0.5 hover:bg-accent-400">
+                <x-ikon nama="toko" kelas="h-4 w-4" />
+                Mulai Belanja
+            </a>
+
+            <a href="{{ route('profile.edit') }}"
+               class="inline-flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] px-5 py-2.5 text-sm font-semibold text-ink-200 ring-1 ring-white/10 transition hover:bg-white/10">
+                <x-ikon nama="pensil" kelas="h-4 w-4" />
+                Edit Profil
+            </a>
+        </x-kartu-profil>
 
         {{-- Statistik --}}
         <div class="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">

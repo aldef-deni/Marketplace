@@ -1,24 +1,34 @@
-<x-layouts.app>
+@php
+    // Admin dan superadmin tetap berada di panelnya sendiri saat menyunting
+    // profil, supaya navigasinya tidak berpindah konteks ke tampilan toko.
+    // Judul ditaruh di badan karena layout admin tidak punya slot header.
+    $layout = $user->isAdmin() ? 'layouts.admin' : 'layouts.app';
+@endphp
+
+<x-dynamic-component :component="$layout">
     <x-slot name="title">Profil Saya</x-slot>
 
-    <x-slot name="header">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
-                <h1 class="text-xl font-extrabold tracking-tight text-slate-900">Profil Saya</h1>
-                <p class="mt-0.5 text-sm text-slate-500">Kelola data akun, kata sandi, dan keamanan.</p>
-            </div>
+    <div class="mx-auto max-w-3xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
 
-            <div class="flex items-center gap-2.5 rounded-full bg-slate-50 py-1.5 pl-1.5 pr-4 ring-1 ring-slate-200">
-                <x-avatar :user="$user" cincin="ring-1 ring-slate-200" />
+        {{-- Panel admin sudah menampilkan judul halaman dan identitas pengguna
+             di bilah atasnya, jadi kepala ini hanya untuk tampilan pembeli. --}}
+        @unless ($user->isAdmin())
+            <div class="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <p class="text-xs font-bold text-slate-800">{{ $user->name }}</p>
-                    <p class="text-[10px] font-medium text-slate-400">{{ $user->role_label }}</p>
+                    <h1 class="text-xl font-extrabold tracking-tight text-slate-900">Profil Saya</h1>
+                    <p class="mt-0.5 text-sm text-slate-500">Kelola foto, data akun, kata sandi, dan keamanan.</p>
+                </div>
+
+                <div class="flex items-center gap-2.5 rounded-full bg-slate-50 py-1.5 pl-1.5 pr-4 ring-1 ring-slate-200">
+                    <x-avatar :user="$user" cincin="ring-1 ring-slate-200" />
+                    <div>
+                        <p class="text-xs font-bold text-slate-800">{{ $user->name }}</p>
+                        <p class="text-[10px] font-medium text-slate-400">{{ $user->role_label }}</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </x-slot>
+        @endunless
 
-    <div class="mx-auto max-w-3xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
         {{-- Foto profil --}}
         <div class="card p-6 sm:p-8">
             <header>
@@ -90,4 +100,4 @@
             @include('profile.partials.delete-user-form')
         </div>
     </div>
-</x-layouts.app>
+</x-dynamic-component>

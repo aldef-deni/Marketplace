@@ -135,4 +135,55 @@ class ProfilAvatarTest extends TestCase
             ->assertSee('Foto Profil')
             ->assertSee(route('profile.avatar'), escape: false);
     }
+
+    public function test_dashboard_admin_menampilkan_kartu_profil(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'name' => 'Admin Uji']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('Admin Uji')
+            ->assertSee('Edit Profil')
+            ->assertSee('Kelola Pesanan')
+            ->assertSee(route('profile.avatar'), escape: false);
+    }
+
+    public function test_superadmin_mendapat_pintasan_kelola_pengguna(): void
+    {
+        $superadmin = User::factory()->create(['role' => 'superadmin']);
+
+        $this->actingAs($superadmin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('Kelola Pengguna')
+            ->assertSee(route('profile.avatar'), escape: false);
+    }
+
+    /**
+     * Pengelola tetap berada di panel admin saat menyunting profil; berpindah
+     * ke tampilan toko akan terasa seperti keluar dari areanya sendiri.
+     */
+    public function test_halaman_profil_admin_memakai_layout_panel(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee('Panel Admin')
+            ->assertSee('Foto Profil');
+    }
+
+    public function test_admin_dapat_mengunggah_foto_profil(): void
+    {
+        Storage::fake('uploads');
+        $admin = User::factory()->create(['role' => 'admin', 'avatar' => null]);
+
+        $this->actingAs($admin)
+            ->post(route('profile.avatar'), ['avatar' => UploadedFile::fake()->image('admin.jpg')])
+            ->assertSessionHasNoErrors();
+
+        $this->assertNotNull($admin->refresh()->avatar);
+    }
 }

@@ -1,11 +1,17 @@
+@props([
+    'aktivitas' => null,
+])
+
 @php
     $pengguna = auth()->user();
     $bergabung = $pengguna->created_at?->translatedFormat('F Y') ?? '-';
 @endphp
 
-{{-- Kartu profil pada dashboard: menampilkan identitas pengguna sekaligus
-     menjadi jalan tercepat mengganti foto, tanpa berpindah halaman. --}}
-<div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-ink-950 via-brand-950 to-brand-900 shadow-elevate">
+{{-- Kartu profil untuk dashboard semua peran: menampilkan identitas sekaligus
+     menjadi jalan tercepat mengganti foto, tanpa berpindah halaman.
+     Tombolnya diserahkan ke pemanggil lewat slot, karena yang relevan bagi
+     pembeli berbeda dengan yang relevan bagi admin. --}}
+<div {{ $attributes->merge(['class' => 'relative overflow-hidden rounded-3xl bg-gradient-to-br from-ink-950 via-brand-950 to-brand-900 shadow-elevate']) }}>
     <div class="pointer-events-none absolute inset-0 pola-grid opacity-60"></div>
     <div class="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-accent-500/20 blur-3xl"></div>
     <div class="pointer-events-none absolute -bottom-24 -left-12 h-64 w-64 rounded-full bg-brand-600/30 blur-3xl"></div>
@@ -58,13 +64,9 @@
 
                 <p class="mt-1 truncate text-sm text-ink-300">{{ $pengguna->email }}</p>
 
-                @isset($aktivitasBulanIni)
-                    <p class="mt-2 text-sm text-ink-300">
-                        {{ $aktivitasBulanIni
-                            ? "Sudah membuat {$aktivitasBulanIni} pesanan bulan ini."
-                            : 'Belum ada pesanan bulan ini — yuk temukan produk favoritmu.' }}
-                    </p>
-                @endisset
+                @if ($aktivitas)
+                    <p class="mt-2 text-sm text-ink-300">{{ $aktivitas }}</p>
+                @endif
 
                 <div class="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-ink-400 sm:justify-start">
                     <span class="inline-flex items-center gap-1.5">
@@ -82,19 +84,9 @@
                 </div>
             </div>
 
-            {{-- Tindakan --}}
+            {{-- Tindakan, ditentukan pemanggil --}}
             <div class="flex shrink-0 flex-col gap-2 sm:self-center">
-                <a href="{{ route('toko.index') }}"
-                   class="inline-flex items-center justify-center gap-2 rounded-xl bg-accent-500 px-5 py-2.5 text-sm font-bold text-ink-950 shadow-accent transition hover:-translate-y-0.5 hover:bg-accent-400">
-                    <x-ikon nama="toko" kelas="h-4 w-4" />
-                    Mulai Belanja
-                </a>
-
-                <a href="{{ route('profile.edit') }}"
-                   class="inline-flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] px-5 py-2.5 text-sm font-semibold text-ink-200 ring-1 ring-white/10 transition hover:bg-white/10">
-                    <x-ikon nama="pensil" kelas="h-4 w-4" />
-                    Edit Profil
-                </a>
+                {{ $slot }}
             </div>
         </div>
 

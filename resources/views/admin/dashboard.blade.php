@@ -1,6 +1,39 @@
 <x-layouts.admin>
     <x-slot name="title">Dashboard Admin</x-slot>
 
+    {{-- Profil pengelola --}}
+    @php
+        // Dirakit di sini, bukan di dalam atribut komponen: tanda kutip ganda
+        // pada ekspresinya akan menutup atribut HTML lebih awal.
+        $antre = $stats['menunggu_verifikasi'] + $stats['perlu_dikirim'];
+
+        $ringkasanAktivitas = $antre > 0
+            ? "Ada {$antre} pesanan yang menunggu tindakan Anda."
+            : 'Tidak ada antrean yang menunggu tindakan. Semua terkendali.';
+    @endphp
+
+    <x-kartu-profil :aktivitas="$ringkasanAktivitas" class="mb-6">
+        <a href="{{ route('profile.edit') }}"
+           class="inline-flex items-center justify-center gap-2 rounded-xl bg-accent-500 px-5 py-2.5 text-sm font-bold text-ink-950 shadow-accent transition hover:-translate-y-0.5 hover:bg-accent-400">
+            <x-ikon nama="pensil" kelas="h-4 w-4" />
+            Edit Profil
+        </a>
+
+        @if (auth()->user()->isSuperadmin())
+            <a href="{{ route('admin.pengguna.index') }}"
+               class="inline-flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] px-5 py-2.5 text-sm font-semibold text-ink-200 ring-1 ring-white/10 transition hover:bg-white/10">
+                <x-ikon nama="pengguna" kelas="h-4 w-4" />
+                Kelola Pengguna
+            </a>
+        @else
+            <a href="{{ route('admin.pesanan.index') }}"
+               class="inline-flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] px-5 py-2.5 text-sm font-semibold text-ink-200 ring-1 ring-white/10 transition hover:bg-white/10">
+                <x-ikon nama="kotak" kelas="h-4 w-4" />
+                Kelola Pesanan
+            </a>
+        @endif
+    </x-kartu-profil>
+
     {{-- Kartu statistik --}}
     <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
         @foreach ([
