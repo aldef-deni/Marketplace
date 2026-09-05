@@ -89,7 +89,9 @@ class AlurTransaksiTest extends TestCase
             ])
             ->assertSessionHasNoErrors();
 
-        return Pesanan::latest()->firstOrFail();
+        // Diurutkan berdasarkan id, bukan created_at: beberapa pesanan uji
+        // lahir dalam detik yang sama sehingga urutan waktunya tidak pasti.
+        return Pesanan::latest('id')->firstOrFail();
     }
 
     public function test_siklus_transfer_bank_berjalan_sampai_selesai(): void

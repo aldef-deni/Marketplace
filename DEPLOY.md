@@ -24,7 +24,7 @@ Yang **tidak** ikut dibungkus, dan alasannya:
 | Tidak disertakan | Alasan |
 |------------------|--------|
 | `.env` | Berisi kredensial produksi; jangan pernah ditimpa dari lokal |
-| `vendor/` | Dipasang di server dengan `composer install` |
+| `vendor/` | Dipasang di server dengan `composer install` — termasuk dompdf dan PhpSpreadsheet untuk unduhan laporan |
 | `node_modules/` | Hanya dibutuhkan saat build, dan build sudah dilakukan di lokal |
 | `storage/logs`, `storage/framework` | Berkas kerja milik server |
 | `tests/`, `phpunit.xml` | Tidak diperlukan di produksi |

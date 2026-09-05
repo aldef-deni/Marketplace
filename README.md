@@ -95,6 +95,20 @@ mengembalikan stok. Invoice dapat dicetak langsung dari peramban.
 - Tombol Google otomatis tersembunyi bila kredensialnya belum diisi;
   penyiapannya ada di [DEPLOY.md](DEPLOY.md#7-masuk-dengan-google-sso)
 
+### Laporan
+| Laporan | Akses | Isi |
+|---|---|---|
+| Transaksi | Admin & Superadmin | Ringkasan nilai, rincian per status/metode/kurir/hari, pelanggan teratas, dan daftar transaksi |
+| Toko | Superadmin | Kondisi katalog dan stok, kinerja per kategori, serta kinerja tiap produk |
+
+Filter: rentang tanggal, status pesanan, metode pembayaran, kurir, pencarian
+invoice/pelanggan, dan pilihan menyertakan pesanan batal. Setiap laporan dapat
+diunduh sebagai **PDF** dan **Excel** dengan kriteria yang sedang aktif.
+
+> Catatan: aplikasi ini bertipe satu toko — produk bertaut ke kategori, bukan ke
+> penjual. "Laporan Toko" berarti laporan kondisi dan kinerja katalog, bukan
+> perbandingan antar-merchant.
+
 ### Peran pengguna
 | Peran | Akses |
 |-------|-------|
@@ -212,6 +226,7 @@ merek, dan kelengkapan set ikon.
 - **Tailwind CSS 3 + Alpine.js** — antarmuka ringan tanpa framework berat
 - **Vite** — kompilasi aset
 - **Laravel Socialite** — masuk dengan akun Google
+- **dompdf** dan **PhpSpreadsheet** — unduhan laporan PDF dan Excel
 - **Blade Components** — layout modular untuk toko, pengguna, dan admin
 
 ---

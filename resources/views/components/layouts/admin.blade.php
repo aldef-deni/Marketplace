@@ -39,6 +39,18 @@
                 <x-ikon nama="truk" kelas="h-5 w-5" /> Pengiriman
             </a>
 
+            <a href="{{ route('admin.laporan.transaksi') }}"
+               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.laporan.transaksi*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                <x-ikon nama="grafik" kelas="h-5 w-5" /> Laporan Transaksi
+            </a>
+
+            @if (auth()->user()->isSuperadmin())
+                <a href="{{ route('admin.laporan.toko') }}"
+                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.laporan.toko*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                    <x-ikon nama="toko" kelas="h-5 w-5" /> Laporan Toko
+                </a>
+            @endif
+
             <p class="px-3 pb-2 pt-5 text-[10px] font-bold uppercase tracking-widest text-ink-500">Katalog</p>
             <a href="{{ route('admin.produk.index') }}"
                class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.produk.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
