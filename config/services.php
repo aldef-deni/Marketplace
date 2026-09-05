@@ -35,4 +35,18 @@ return [
         ],
     ],
 
+    /*
+    | Google Sign-In. Redirect URI di Google Cloud Console harus sama persis
+    | dengan nilai GOOGLE_REDIRECT_URI, termasuk skema dan garis miringnya.
+    */
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        // Memakai ?: dan bukan nilai baku env(), sebab baris "GOOGLE_REDIRECT_URI="
+        // yang dibiarkan kosong menghasilkan string kosong — bukan null — sehingga
+        // nilai baku env() tidak akan pernah terpakai.
+        'redirect' => env('GOOGLE_REDIRECT_URI')
+            ?: rtrim((string) env('APP_URL', 'http://localhost'), '/').'/auth/google/callback',
+    ],
+
 ];

@@ -42,11 +42,21 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
-        ]);
-
         $user = $request->user();
+
+        // Akun tanpa kata sandi (masuk lewat Google) dikonfirmasi dengan
+        // mengetik ulang alamat emailnya.
+        if ($user->punyaKataSandi()) {
+            $request->validateWithBag('userDeletion', [
+                'password' => ['required', 'current_password'],
+            ]);
+        } else {
+            $request->validateWithBag('userDeletion', [
+                'email_konfirmasi' => ['required', 'string', 'in:'.$user->email],
+            ], [
+                'email_konfirmasi.in' => 'Alamat email tidak cocok dengan akun ini.',
+            ]);
+        }
 
         Auth::logout();
 

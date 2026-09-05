@@ -80,3 +80,17 @@ if (! function_exists('jmlKeranjang')) {
             : 0;
     }
 }
+
+if (! function_exists('googleAktif')) {
+    /**
+     * Kredensial Google Sign-In sudah terisi.
+     *
+     * Dipakai untuk menyembunyikan tombol SSO di lingkungan yang belum
+     * dikonfigurasi, alih-alih menampilkan tombol yang pasti gagal.
+     */
+    function googleAktif(): bool
+    {
+        return filled(config('services.google.client_id'))
+            && filled(config('services.google.client_secret'));
+    }
+}

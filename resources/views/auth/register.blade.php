@@ -41,7 +41,11 @@
                     <a href="{{ route('login') }}" class="font-bold text-brand-600 hover:text-brand-800">Masuk di sini</a>
                 </p>
 
-                <form method="POST" action="{{ route('register') }}" class="mt-8 space-y-5">
+                <div class="mt-8">
+                    <x-tombol-google teks="Daftar dengan Google" />
+                </div>
+
+                <form method="POST" action="{{ route('register') }}" class="space-y-5">
                     @csrf
 
                     <div>

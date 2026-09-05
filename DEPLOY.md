@@ -223,7 +223,81 @@ sebagai `https://` walau PHP berada di balik proxy.
 
 ---
 
-## 7. Tugas Terjadwal (opsional)
+## 7. Masuk dengan Google (SSO)
+
+Tombol &ldquo;Masuk dengan Google&rdquo; hanya muncul bila `GOOGLE_CLIENT_ID` dan
+`GOOGLE_CLIENT_SECRET` terisi. Kalau dikosongkan, situs tetap berjalan normal
+dengan login email dan kata sandi saja.
+
+### Mengambil kredensial
+
+1. Buka [Google Cloud Console](https://console.cloud.google.com/) → buat project
+   (atau pilih yang sudah ada).
+2. **APIs & Services → OAuth consent screen**
+   - User Type: **External**, lalu **Publish app** agar bisa dipakai siapa saja
+     (selama masih *Testing*, hanya akun yang didaftarkan sebagai test user yang bisa masuk)
+   - App name: `Market ArahInn`
+   - Authorized domain: `arahinn.com`
+   - Scope cukup bawaan: `email`, `profile`, `openid`
+3. **APIs & Services → Credentials → Create Credentials → OAuth client ID**
+   - Application type: **Web application**
+   - **Authorized JavaScript origins**
+     ```
+     https://market.arahinn.com
+     ```
+   - **Authorized redirect URIs** — harus sama persis, tanpa garis miring di akhir:
+     ```
+     https://market.arahinn.com/auth/google/callback
+     ```
+4. Salin **Client ID** dan **Client secret** ke `.env` server:
+
+   ```env
+   GOOGLE_CLIENT_ID=xxxxxxxx.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=GOCSPX-xxxxxxxx
+   GOOGLE_REDIRECT_URI=https://market.arahinn.com/auth/google/callback
+   ```
+
+5. Terapkan:
+
+   ```bash
+   php artisan config:clear
+   php artisan optimize
+   ```
+
+### Untuk pengembangan di komputer lokal
+
+Tambahkan satu redirect URI lagi pada OAuth client yang sama:
+
+```
+http://localhost:8000/auth/google/callback
+```
+
+lalu isi `GOOGLE_REDIRECT_URI` di `.env` lokal dengan alamat tersebut.
+
+### Cara kerja penautan akun
+
+- Pencocokan dilakukan berdasarkan `google_id` lebih dulu, baru alamat email.
+  Pengguna yang dulu mendaftar dengan kata sandi lalu memakai tombol Google
+  akan **masuk ke akun yang sama**, bukan membuat akun kedua.
+- Surel dari Google yang belum terverifikasi ditolak. Tanpa pemeriksaan ini,
+  seseorang bisa mendaftarkan alamat email orang lain di Google dan memakainya
+  untuk mengambil alih akun di sini.
+- Akun hasil pendaftaran Google tidak memiliki kata sandi. Pemiliknya bisa
+  membuat kata sandi kapan saja lewat **Profil → Buat Kata Sandi**, sehingga
+  setelahnya bisa masuk dengan dua cara.
+
+### Bila gagal
+
+| Pesan | Penyebab |
+|---|---|
+| `redirect_uri_mismatch` | URI di Google Console berbeda dengan `GOOGLE_REDIRECT_URI` — periksa `http` vs `https` dan garis miring di akhir |
+| `Access blocked: app not verified` | OAuth consent screen masih berstatus *Testing*; publikasikan, atau tambahkan email penguji |
+| Tombol tidak muncul | `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` kosong, atau config cache belum disegarkan |
+| `Gagal terhubung ke Google` | Periksa `storage/logs/laravel.log`; biasanya Client Secret salah atau server tidak bisa keluar ke internet |
+
+---
+
+## 8. Tugas Terjadwal (opsional)
 
 Bila nanti dipakai antrean atau pembersihan pesanan kedaluwarsa, tambahkan satu
 cron:
@@ -234,7 +308,7 @@ cron:
 
 ---
 
-## 8. Daftar Periksa Sebelum Diumumkan
+## 9. Daftar Periksa Sebelum Diumumkan
 
 - [ ] `APP_DEBUG=false` dan `APP_ENV=production`
 - [ ] `APP_URL=https://market.arahinn.com`
@@ -248,12 +322,13 @@ cron:
 - [ ] Nomor rekening dan instruksi pembayaran diperbarui lewat
       **Panel Admin → Metode Pembayaran**
 - [ ] Kontak di `config/brand.php` (email, WhatsApp, alamat) sudah benar
+- [ ] Redirect URI Google cocok dan OAuth consent screen sudah dipublikasikan
 - [ ] Uji satu siklus penuh: daftar → belanja → checkout → unggah bukti →
       verifikasi admin → input resi → konfirmasi diterima → cetak invoice
 
 ---
 
-## 9. Bila Terjadi Masalah
+## 10. Bila Terjadi Masalah
 
 | Gejala | Penyebab yang paling sering |
 |--------|------------------------------|

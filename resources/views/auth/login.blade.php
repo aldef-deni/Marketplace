@@ -43,7 +43,11 @@
 
                 <x-auth-session-status class="mb-4" :status="session('status')" />
 
-                <form method="POST" action="{{ route('login') }}" class="mt-8 space-y-5">
+                <div class="mt-8">
+                    <x-tombol-google teks="Masuk dengan Google" />
+                </div>
+
+                <form method="POST" action="{{ route('login') }}" class="space-y-5">
                     @csrf
 
                     <div>

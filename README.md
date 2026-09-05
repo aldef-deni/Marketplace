@@ -86,6 +86,15 @@ Kurir: JNE, J&T Express, SiCepat, POS Indonesia. Admin memasukkan nomor resi,
 pembeli melacak pesanan, lalu mengonfirmasi penerimaan. Pembatalan
 mengembalikan stok. Invoice dapat dicetak langsung dari peramban.
 
+### Masuk & mendaftar
+- Email dan kata sandi, atau **Masuk dengan Google** (Laravel Socialite)
+- Akun dicocokkan lewat `google_id` lalu email, sehingga pengguna lama yang
+  beralih ke tombol Google tetap masuk ke akun yang sama
+- Surel Google yang belum terverifikasi ditolak, untuk mencegah pengambilalihan akun
+- Akun hasil pendaftaran Google bisa membuat kata sandi kapan saja lewat **Profil**
+- Tombol Google otomatis tersembunyi bila kredensialnya belum diisi;
+  penyiapannya ada di [DEPLOY.md](DEPLOY.md#7-masuk-dengan-google-sso)
+
 ### Peran pengguna
 | Peran | Akses |
 |-------|-------|
@@ -157,8 +166,9 @@ berisi kode aplikasi beserta aset yang sudah di-build, tanpa `vendor/`,
 php artisan test
 ```
 
-Mencakup autentikasi, profil, aksesibilitas halaman publik, konsistensi
-identitas merek, dan kelengkapan set ikon.
+Mencakup autentikasi (termasuk alur Google SSO dengan Socialite yang
+dipalsukan), profil, aksesibilitas halaman publik, konsistensi identitas
+merek, dan kelengkapan set ikon.
 
 ---
 
@@ -166,7 +176,7 @@ identitas merek, dan kelengkapan set ikon.
 
 | Tabel | Isi |
 |-------|-----|
-| `users` | Pengguna beserta peran |
+| `users` | Pengguna, peran, dan `google_id` untuk akun tertaut Google |
 | `kategoris` | Kategori produk (kolom `ikon` menyimpan nama ikon `<x-ikon>`) |
 | `produks` | Produk: harga, stok, berat, gambar, status |
 | `keranjangs` | Keranjang belanja |
@@ -201,6 +211,7 @@ identitas merek, dan kelengkapan set ikon.
 - **MySQL / MariaDB** — basis data
 - **Tailwind CSS 3 + Alpine.js** — antarmuka ringan tanpa framework berat
 - **Vite** — kompilasi aset
+- **Laravel Socialite** — masuk dengan akun Google
 - **Blade Components** — layout modular untuk toko, pengguna, dan admin
 
 ---

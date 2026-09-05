@@ -25,6 +25,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'google_id',
         'phone',
         'avatar',
         'role',
@@ -37,6 +38,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'google_id',
         'remember_token',
     ];
 
@@ -51,6 +53,23 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Akun yang mendaftar lewat Google belum tentu punya kata sandi. Dipakai
+     * untuk menentukan apakah formulir meminta kata sandi lama atau tidak.
+     */
+    public function punyaKataSandi(): bool
+    {
+        return filled($this->password);
+    }
+
+    /**
+     * Akun tertaut Google, sehingga bisa masuk lewat tombol SSO.
+     */
+    public function tertautGoogle(): bool
+    {
+        return filled($this->google_id);
     }
 
     public function keranjangs(): HasMany

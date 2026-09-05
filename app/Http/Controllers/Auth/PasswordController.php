@@ -15,10 +15,16 @@ class PasswordController extends Controller
      */
     public function update(Request $request): RedirectResponse
     {
-        $validated = $request->validateWithBag('updatePassword', [
-            'current_password' => ['required', 'current_password'],
-            'password' => ['required', Password::defaults(), 'confirmed'],
-        ]);
+        // Akun yang mendaftar lewat Google belum punya kata sandi, sehingga
+        // tidak ada sandi lama yang bisa diminta. Di situ formulir berfungsi
+        // sebagai "buat kata sandi", bukan "ganti kata sandi".
+        $aturan = ['password' => ['required', Password::defaults(), 'confirmed']];
+
+        if ($request->user()->punyaKataSandi()) {
+            $aturan['current_password'] = ['required', 'current_password'];
+        }
+
+        $validated = $request->validateWithBag('updatePassword', $aturan);
 
         $request->user()->update([
             'password' => Hash::make($validated['password']),
