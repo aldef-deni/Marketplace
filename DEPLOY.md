@@ -39,6 +39,28 @@ Yang **tidak** ikut dibungkus, dan alasannya:
 - Composer 2.x
 - Sertifikat SSL aktif untuk `market.arahinn.com`
 
+### Composer di server ArahInn
+
+Composer **tidak ada di PATH**. Yang dipakai adalah `composer.phar` di root
+aplikasi, jadi seluruh perintah composer ditulis begini:
+
+```bash
+cd /home/ckgiyjjt/market.arahinn.com
+php composer.phar install --no-dev --optimize-autoloader
+```
+
+Bila `composer.phar` belum ada, pasang sekali saja:
+
+```bash
+curl -sS https://getcomposer.org/installer -o composer-setup.php
+php composer-setup.php --install-dir=. --filename=composer.phar
+rm composer-setup.php
+```
+
+Berkas itu berada di luar `public/`, jadi tidak dapat diakses dari web.
+Periksa juga `php -v` — Composer menyelesaikan dependensi berdasarkan PHP CLI,
+yang di cPanel kadang berbeda versi dari PHP web.
+
 > Node.js **tidak** dibutuhkan di server — aset sudah dikompilasi di lokal.
 
 ---
@@ -158,6 +180,18 @@ php artisan up
 
 `php artisan optimize` menyegarkan cache config, rute, dan view sekaligus.
 Melewatkannya adalah penyebab paling umum "kenapa perubahan saya tidak muncul".
+
+Tiga hal yang terbukti menjatuhkan situs saat rilis Google SSO, semuanya karena
+langkah di atas dilewati:
+
+| Gejala | Penyebab |
+|---|---|
+| `Route [x] not defined` | Cache rute masih versi lama. `config:clear` **tidak** menyentuhnya — perlu `route:clear` atau `optimize` |
+| `Class "..." not found` | `composer install` belum dijalankan padahal paketnya berubah |
+| `foreach() argument must be of type array` | Cache config dibuat sebelum kunci barunya ada |
+
+Urutannya penting: **ekstrak seluruh berkas dulu, baru `optimize`**. Menjalankan
+`optimize` lebih dahulu membuat rute dan config baru tidak ikut terbaca.
 
 Nama berkas aset di `public/build` mengandung hash, jadi peramban pengunjung
 otomatis mengambil versi baru tanpa perlu hard refresh.
