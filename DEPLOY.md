@@ -286,6 +286,25 @@ lalu isi `GOOGLE_REDIRECT_URI` di `.env` lokal dengan alamat tersebut.
   membuat kata sandi kapan saja lewat **Profil → Buat Kata Sandi**, sehingga
   setelahnya bisa masuk dengan dua cara.
 
+### Memeriksa tanpa membuka peramban
+
+Setelah kredensial diisi, jalankan di server:
+
+```bash
+php artisan google:cek
+```
+
+Perintah ini memeriksa isian `.env`, mencocokkan redirect URI dengan `APP_URL`,
+lalu menanyakan langsung ke Google apakah Client ID dikenali dan redirect
+URI-nya terdaftar — jadi kesalahan ketik ketahuan sebelum ada pengguna yang
+menekan tombolnya.
+
+Pakai `--tanpa-jaringan` bila hanya ingin memeriksa isian `.env` saja.
+
+> Client Secret belum ikut teruji oleh perintah ini, sebab secret baru dipakai
+> saat menukar kode otorisasi setelah pengguna menyetujui di layar Google.
+> Uji akhir tetap dengan menekan tombolnya sekali di peramban.
+
 ### Bila gagal
 
 | Pesan | Penyebab |
