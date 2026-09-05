@@ -11,7 +11,6 @@ use App\Support\FilterLaporan;
 use App\Support\PenyusunLaporan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Laporan transaksi dan kondisi toko.
@@ -41,6 +40,10 @@ class LaporanController extends Controller
 
     public function transaksiPdf(Request $request)
     {
+        if ($belumSiap = $this->pustakaSiap('pdf')) {
+            return $belumSiap;
+        }
+
         [$filter, $laporan] = $this->siapkan($request);
 
         $pdf = Pdf::loadView('admin.laporan.cetak-transaksi', [
@@ -56,8 +59,12 @@ class LaporanController extends Controller
         return $pdf->download($filter->namaBerkas('laporan-transaksi').'.pdf');
     }
 
-    public function transaksiExcel(Request $request): StreamedResponse
+    public function transaksiExcel(Request $request)
     {
+        if ($belumSiap = $this->pustakaSiap('excel')) {
+            return $belumSiap;
+        }
+
         [$filter, $laporan] = $this->siapkan($request);
         $ringkasan = $laporan->ringkasan();
 
@@ -120,6 +127,10 @@ class LaporanController extends Controller
 
     public function tokoPdf(Request $request)
     {
+        if ($belumSiap = $this->pustakaSiap('pdf')) {
+            return $belumSiap;
+        }
+
         [$filter, $laporan] = $this->siapkan($request);
 
         $pdf = Pdf::loadView('admin.laporan.cetak-toko', [
@@ -133,8 +144,12 @@ class LaporanController extends Controller
         return $pdf->download($filter->namaBerkas('laporan-toko').'.pdf');
     }
 
-    public function tokoExcel(Request $request): StreamedResponse
+    public function tokoExcel(Request $request)
     {
+        if ($belumSiap = $this->pustakaSiap('excel')) {
+            return $belumSiap;
+        }
+
         [$filter, $laporan] = $this->siapkan($request);
         $toko = $laporan->ringkasanToko();
 
@@ -164,6 +179,28 @@ class LaporanController extends Controller
         );
 
         return $berkas->unduh($filter->namaBerkas('laporan-toko'));
+    }
+
+    /**
+     * Pastikan pustaka pembuat berkas benar-benar terpasang.
+     *
+     * Tanpa ini, "composer install" yang terlewat di server berujung galat 500
+     * berisi nama kelas — tidak berguna bagi pengguna dan membocorkan detail
+     * internal bila APP_DEBUG sempat menyala.
+     */
+    private function pustakaSiap(string $jenis): ?\Illuminate\Http\RedirectResponse
+    {
+        if (unduhanLaporanSiap()[$jenis]) {
+            return null;
+        }
+
+        $paket = $jenis === 'pdf' ? 'barryvdh/laravel-dompdf' : 'phpoffice/phpspreadsheet';
+
+        \Illuminate\Support\Facades\Log::error(
+            "Paket {$paket} belum terpasang. Jalankan \"composer install --no-dev\" di server."
+        );
+
+        return back()->with('error', 'Modul unduhan belum terpasang di server. Hubungi pengelola sistem.');
     }
 
     /**

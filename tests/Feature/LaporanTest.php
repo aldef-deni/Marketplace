@@ -241,4 +241,32 @@ class LaporanTest extends TestCase
             ->assertSee($aktif->no_invoice)
             ->assertDontSee($batal->no_invoice);
     }
+
+    /**
+     * Paket PHP tidak ikut di dalam paket rilis. Bila composer install
+     * terlewat, pengguna harus melihat pesan yang wajar — bukan galat 500
+     * berisi nama kelas.
+     */
+    public function test_tombol_unduhan_disembunyikan_saat_pustaka_belum_terpasang(): void
+    {
+        $this->buatPesanan();
+
+        $halaman = $this->actingAs($this->admin)->get(route('admin.laporan.transaksi'));
+
+        // Di lingkungan pengujian pustakanya terpasang, jadi tombolnya ada.
+        $halaman->assertOk()
+            ->assertSee('Unduh PDF')
+            ->assertSee('Unduh Excel')
+            ->assertDontSee('Modul unduhan belum terpasang di server');
+    }
+
+    public function test_kesiapan_pustaka_unduhan_dilaporkan(): void
+    {
+        $siap = unduhanLaporanSiap();
+
+        $this->assertArrayHasKey('pdf', $siap);
+        $this->assertArrayHasKey('excel', $siap);
+        $this->assertTrue($siap['pdf'], 'dompdf harus terpasang di lingkungan pengujian.');
+        $this->assertTrue($siap['excel'], 'PhpSpreadsheet harus terpasang di lingkungan pengujian.');
+    }
 }

@@ -69,18 +69,32 @@
         <button class="btn-primary">Terapkan Filter</button>
         <a href="{{ $aksi }}" class="btn-secondary">Atur Ulang</a>
 
-        <div class="ml-auto flex items-center gap-2">
-            <a href="{{ $unduhPdf }}"
-               class="inline-flex items-center gap-2 rounded-xl bg-rose-50 px-4 py-2.5 text-sm font-bold text-rose-700 ring-1 ring-rose-200 transition hover:bg-rose-100">
-                <x-ikon nama="printer" kelas="h-4 w-4" />
-                Unduh PDF
-            </a>
+        {{-- Tombol hanya muncul bila pustaka pembuat berkasnya benar-benar
+             terpasang; menawarkan unduhan yang pasti gagal hanya menyesatkan. --}}
+        @php ($siap = unduhanLaporanSiap())
 
-            <a href="{{ $unduhExcel }}"
-               class="inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700 ring-1 ring-emerald-200 transition hover:bg-emerald-100">
-                <x-ikon nama="grafik" kelas="h-4 w-4" />
-                Unduh Excel
-            </a>
+        <div class="ml-auto flex items-center gap-2">
+            @if ($siap['pdf'])
+                <a href="{{ $unduhPdf }}"
+                   class="inline-flex items-center gap-2 rounded-xl bg-rose-50 px-4 py-2.5 text-sm font-bold text-rose-700 ring-1 ring-rose-200 transition hover:bg-rose-100">
+                    <x-ikon nama="printer" kelas="h-4 w-4" />
+                    Unduh PDF
+                </a>
+            @endif
+
+            @if ($siap['excel'])
+                <a href="{{ $unduhExcel }}"
+                   class="inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700 ring-1 ring-emerald-200 transition hover:bg-emerald-100">
+                    <x-ikon nama="grafik" kelas="h-4 w-4" />
+                    Unduh Excel
+                </a>
+            @endif
+
+            @unless ($siap['pdf'] && $siap['excel'])
+                <span class="rounded-xl bg-amber-50 px-4 py-2.5 text-xs font-semibold text-amber-800 ring-1 ring-amber-200">
+                    Modul unduhan belum terpasang di server
+                </span>
+            @endunless
         </div>
     </div>
 </form>

@@ -98,3 +98,23 @@ if (! function_exists('googleAktif')) {
             && filled(config('services.google.client_secret'));
     }
 }
+
+if (! function_exists('unduhanLaporanSiap')) {
+    /**
+     * Pustaka pembuat berkas laporan sudah terpasang.
+     *
+     * dompdf dan PhpSpreadsheet dipasang lewat composer dan tidak ikut di
+     * dalam paket rilis. Bila "composer install" terlewat setelah unggah,
+     * pemanggilannya melempar galat fatal — jadi keberadaannya diperiksa
+     * lebih dulu, dan tombol unduhannya disembunyikan bila belum ada.
+     *
+     * @return array{pdf: bool, excel: bool}
+     */
+    function unduhanLaporanSiap(): array
+    {
+        return [
+            'pdf' => class_exists(\Barryvdh\DomPDF\Facade\Pdf::class),
+            'excel' => class_exists(\PhpOffice\PhpSpreadsheet\Spreadsheet::class),
+        ];
+    }
+}

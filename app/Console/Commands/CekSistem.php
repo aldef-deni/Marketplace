@@ -39,6 +39,9 @@ class CekSistem extends Command
         $this->periksaKolom();
         $this->periksaMigrasi();
 
+        $this->bagian('Paket & dependensi');
+        $this->periksaPaket();
+
         $this->bagian('Berkas & aset');
         $this->periksaAset();
         $this->periksaJalurBukti();
@@ -165,6 +168,34 @@ class CekSistem extends Command
         $tertunda === []
             ? $this->ok('Migrasi', count($berkas).' berkas, semuanya sudah dijalankan')
             : $this->salah('Migrasi tertunda', implode(', ', $tertunda));
+    }
+
+    /**
+     * Paket composer yang dibutuhkan fitur-fitur belakangan.
+     *
+     * Paket PHP tidak ikut di dalam paket rilis, jadi "composer install" yang
+     * terlewat baru ketahuan ketika penggunanya menekan tombol dan bertemu
+     * galat 500. Diperiksa di sini supaya ketahuan lebih dulu.
+     */
+    private function periksaPaket(): void
+    {
+        $wajib = [
+            'Masuk dengan Google' => \Laravel\Socialite\Facades\Socialite::class,
+            'Unduhan laporan PDF' => \Barryvdh\DomPDF\Facade\Pdf::class,
+            'Unduhan laporan Excel' => \PhpOffice\PhpSpreadsheet\Spreadsheet::class,
+        ];
+
+        $paket = [
+            'Masuk dengan Google' => 'laravel/socialite',
+            'Unduhan laporan PDF' => 'barryvdh/laravel-dompdf',
+            'Unduhan laporan Excel' => 'phpoffice/phpspreadsheet',
+        ];
+
+        foreach ($wajib as $fitur => $kelas) {
+            class_exists($kelas)
+                ? $this->ok('Paket '.$paket[$fitur], $fitur)
+                : $this->salah('Paket '.$paket[$fitur].' hilang', $fitur.' akan galat — jalankan composer install --no-dev');
+        }
     }
 
     private function periksaAset(): void
