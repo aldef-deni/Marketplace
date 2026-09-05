@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Pesanan;
+use Illuminate\Support\Carbon;
+
+class DashboardController extends Controller
+{
+    public function index()
+    {
+        $user = auth()->user();
+
+        if ($user->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        $stats = [
+            'total_pesanan' => $user->pesanans()->count(),
+            'menunggu_pembayaran' => $user->pesanans()->where('status', 'menunggu_pembayaran')->count(),
+            'dalam_perjalanan' => $user->pesanans()->where('status', 'dikirim')->count(),
+            'selesai' => $user->pesanans()->where('status', 'selesai')->count(),
+        ];
+
+        $pesananTerakhir = $user->pesanans()
+            ->with('items', 'pembayaran.metodePembayaran', 'pengiriman')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $aktivitasBulanIni = $user->pesanans()
+            ->where('created_at', '>=', Carbon::now()->startOfMonth())
+            ->count();
+
+        return view('dashboard', compact('user', 'stats', 'pesananTerakhir', 'aktivitasBulanIni'));
+    }
+}

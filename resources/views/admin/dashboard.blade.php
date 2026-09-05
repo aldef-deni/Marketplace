@@ -1,0 +1,130 @@
+<x-layouts.admin>
+    <x-slot name="title">Dashboard Admin</x-slot>
+
+    {{-- Kartu statistik --}}
+    <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
+        @foreach ([
+            ['💵', 'Pendapatan', rpSingkat($stats['pendapatan']), 'bg-emerald-50 ring-emerald-100', 'Total seluruh transaksi'],
+            ['📈', 'Bulan Ini', rpSingkat($stats['pendapatan_bulan_ini']), 'bg-indigo-50 ring-indigo-100', 'Pendapatan bulan berjalan'],
+            ['📦', 'Total Pesanan', $stats['pesanan'], 'bg-sky-50 ring-sky-100', 'Semua pesanan masuk'],
+            ['🆕', 'Pesanan Baru', $stats['pesanan_baru'], 'bg-amber-50 ring-amber-100', 'Menunggu tindakan admin'],
+        ] as [$ikon, $label, $nilai, $warna, $ket])
+            <div class="card p-5">
+                <div class="flex items-center justify-between">
+                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl text-xl ring-1 {{ $warna }}">{{ $ikon }}</span>
+                </div>
+                <p class="mt-4 text-2xl font-extrabold text-slate-900">{{ $nilai }}</p>
+                <p class="text-xs font-bold text-slate-500">{{ $label }}</p>
+                <p class="mt-0.5 text-[11px] text-slate-400">{{ $ket }}</p>
+            </div>
+        @endforeach
+    </div>
+
+    <div class="mt-4 grid grid-cols-2 gap-4 xl:grid-cols-4">
+        @foreach ([
+            ['🚚', 'Sedang Dikirim', $stats['dikirim'], 'bg-violet-50 ring-violet-100', 'Pesanan dalam perjalanan'],
+            ['🏷️', 'Produk Aktif', $stats['produk'], 'bg-fuchsia-50 ring-fuchsia-100', 'Jumlah produk di katalog'],
+            ['⚠️', 'Stok Menipis', $stats['stok_menipis'], 'bg-rose-50 ring-rose-100', 'Stok ≤ 5, perlu restok'],
+            ['✅', 'Verifikasi Bayar', $stats['menunggu_verifikasi'], 'bg-teal-50 ring-teal-100', 'Bukti pembayaran menunggu'],
+        ] as [$ikon, $label, $nilai, $warna, $ket])
+            <div class="card p-5">
+                <div class="flex items-center justify-between">
+                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl text-xl ring-1 {{ $warna }}">{{ $ikon }}</span>
+                </div>
+                <p class="mt-4 text-2xl font-extrabold text-slate-900">{{ $nilai }}</p>
+                <p class="text-xs font-bold text-slate-500">{{ $label }}</p>
+                <p class="mt-0.5 text-[11px] text-slate-400">{{ $ket }}</p>
+            </div>
+        @endforeach
+    </div>
+
+    <div class="mt-6 grid gap-6 xl:grid-cols-3">
+        {{-- Grafik penjualan --}}
+        <div class="card p-6 xl:col-span-2">
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-extrabold text-slate-900">📊 Penjualan 7 Hari Terakhir</h3>
+                <span class="badge bg-indigo-50 text-indigo-700 ring-indigo-200">Total: {{ rpSingkat($penjualan7Hari->sum('total')) }}</span>
+            </div>
+            <div class="mt-6 flex h-56 items-end justify-between gap-3">
+                @php $max = max(1, $penjualan7Hari->max('total')); @endphp
+                @foreach ($penjualan7Hari as $hari)
+                    <div class="flex flex-1 flex-col items-center gap-2">
+                        <p class="text-[10px] font-bold text-slate-500">{{ rpSingkat($hari['total']) }}</p>
+                        <div class="flex w-full flex-1 items-end">
+                            <div class="w-full rounded-t-xl bg-gradient-to-t from-indigo-600 to-violet-500 transition hover:from-indigo-700"
+                                 style="height: {{ max(4, round($hari['total'] / $max * 100)) }}%"
+                                 title="{{ rp($hari['total']) }}"></div>
+                        </div>
+                        <p class="text-xs font-bold text-slate-600">{{ $hari['label'] }}</p>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- Produk terlaris --}}
+        <div class="card p-6">
+            <h3 class="text-base font-extrabold text-slate-900">🏆 Produk Terlaris</h3>
+            @if ($produkLaris->isEmpty())
+                <p class="mt-6 text-sm text-slate-400">Belum ada penjualan tercatat.</p>
+            @else
+                <div class="mt-4 space-y-4">
+                    @foreach ($produkLaris as $i => $p)
+                        <div class="flex items-center gap-3">
+                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-sm font-extrabold {{ $i === 0 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600' }}">
+                                {{ $i + 1 }}
+                            </span>
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-sm font-bold text-slate-800">{{ $p->nama_produk }}</p>
+                                <p class="text-xs text-slate-400">{{ $p->terjual }} terjual • {{ rpSingkat($p->omzet) }}</p>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </div>
+
+    {{-- Pesanan terbaru --}}
+    <div class="card mt-6 overflow-hidden">
+        <div class="flex items-center justify-between p-6 pb-4">
+            <h3 class="text-base font-extrabold text-slate-900">📦 Pesanan Terbaru</h3>
+            <a href="{{ route('admin.pesanan.index') }}" class="text-sm font-bold text-indigo-600 hover:text-indigo-800">Lihat Semua →</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[720px]">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="table-head">Invoice</th>
+                        <th class="table-head">Pelanggan</th>
+                        <th class="table-head">Total</th>
+                        <th class="table-head">Metode</th>
+                        <th class="table-head">Status</th>
+                        <th class="table-head">Tanggal</th>
+                        <th class="table-head"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @foreach ($pesananTerbaru as $pesanan)
+                        <tr class="transition hover:bg-slate-50/60">
+                            <td class="table-cell font-extrabold text-indigo-700">{{ $pesanan->no_invoice }}</td>
+                            <td class="table-cell">
+                                <p class="font-bold text-slate-800">{{ $pesanan->user->name }}</p>
+                                <p class="text-xs text-slate-400">{{ $pesanan->user->email }}</p>
+                            </td>
+                            <td class="table-cell font-extrabold">{{ rp($pesanan->total) }}</td>
+                            <td class="table-cell">
+                                <span class="text-xs font-semibold text-slate-500">{{ $pesanan->pembayaran?->metodePembayaran?->nama ?? '-' }}</span>
+                            </td>
+                            <td class="table-cell"><span class="badge {{ $pesanan->status_warna }}">{{ $pesanan->status_label }}</span></td>
+                            <td class="table-cell text-xs text-slate-500">{{ tanggalIndo($pesanan->created_at) }}</td>
+                            <td class="table-cell">
+                                <a href="{{ route('admin.pesanan.show', $pesanan) }}" class="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100">Detail</a>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</x-layouts.admin>

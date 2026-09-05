@@ -1,0 +1,69 @@
+<x-guest-layout>
+    <div class="mx-auto flex min-h-[70vh] max-w-5xl items-center justify-center px-4 py-12 sm:px-6">
+        <div class="grid w-full overflow-hidden rounded-3xl bg-white shadow-2xl shadow-indigo-100 ring-1 ring-slate-200/70 lg:grid-cols-2">
+
+            {{-- Panel brand --}}
+            <div class="relative hidden overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 p-10 lg:block">
+                <div class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10 blur-2xl"></div>
+                <div class="pointer-events-none absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-cyan-300/20 blur-2xl"></div>
+                <div class="relative flex h-full flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 text-xl ring-1 ring-white/25">🛍️</span>
+                            <span class="text-lg font-extrabold text-white">Marketplace<span class="text-amber-300">Nusantara</span></span>
+                        </div>
+                        <h2 class="mt-10 text-3xl font-extrabold leading-tight text-white">Bergabunglah dengan kami! 🎉</h2>
+                        <p class="mt-3 text-sm leading-relaxed text-emerald-50">Buat akun gratis dan mulai pengalaman belanja online yang mudah, aman, dan menyenangkan.</p>
+                    </div>
+                    <div class="space-y-3">
+                        @foreach (['✨ Daftar gratis, tanpa biaya', '🎁 Dapatkan promo eksklusif', '📦 Lacak pesanan secara real-time'] as $fitur)
+                            <div class="flex items-center gap-3 rounded-2xl bg-white/10 px-4 py-3 text-sm font-semibold text-white ring-1 ring-white/15 backdrop-blur">
+                                <span>{{ $fitur }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            {{-- Form --}}
+            <div class="p-8 sm:p-12">
+                <h1 class="text-2xl font-extrabold text-slate-900">Buat Akun Baru</h1>
+                <p class="mt-1.5 text-sm text-slate-500">Sudah punya akun?
+                    <a href="{{ route('login') }}" class="font-bold text-indigo-600 hover:text-indigo-800">Masuk di sini</a>
+                </p>
+
+                <form method="POST" action="{{ route('register') }}" class="mt-8 space-y-5">
+                    @csrf
+
+                    <div>
+                        <x-input-label for="name" :value="__('Name')" class="!mb-1.5 !text-sm !font-semibold !text-slate-700" />
+                        <x-text-input id="name" class="input-field mt-1" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" placeholder="Nama lengkap Anda" />
+                        <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                    </div>
+
+                    <div>
+                        <x-input-label for="email" :value="__('Email')" class="!mb-1.5 !text-sm !font-semibold !text-slate-700" />
+                        <x-text-input id="email" class="input-field mt-1" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="nama@email.com" />
+                        <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                    </div>
+
+                    <div>
+                        <x-input-label for="password" :value="__('Password')" class="!mb-1.5 !text-sm !font-semibold !text-slate-700" />
+                        <x-text-input id="password" class="input-field mt-1" type="password" name="password" required autocomplete="new-password" placeholder="Minimal 8 karakter" />
+                        <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                    </div>
+
+                    <div>
+                        <x-input-label for="password_confirmation" :value="__('Confirm Password')" class="!mb-1.5 !text-sm !font-semibold !text-slate-700" />
+                        <x-text-input id="password_confirmation" class="input-field mt-1" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="Ulangi kata sandi" />
+                        <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+                    </div>
+
+                    <button type="submit" class="btn-primary w-full py-3.5 text-base">
+                        🚀 {{ __('Register') }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</x-guest-layout>

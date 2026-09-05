@@ -1,0 +1,118 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Pembayaran;
+use App\Models\Pesanan;
+use App\Models\Pengiriman;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+
+class PesananController extends Controller
+{
+    public function index()
+    {
+        $status = request('status');
+
+        $pesanans = auth()->user()->pesanans()
+            ->with('items', 'pembayaran.metodePembayaran', 'pengiriman')
+            ->when($status && array_key_exists($status, Pesanan::STATUS), fn ($q) => $q->where('status', $status))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('pesanan.index', compact('pesanans', 'status'));
+    }
+
+    public function show(string $noInvoice)
+    {
+        $pesanan = Pesanan::with([
+            'items', 'alamat', 'pembayaran.metodePembayaran', 'pengiriman',
+        ])->where('no_invoice', $noInvoice)->firstOrFail();
+
+        abort_if($pesanan->user_id !== auth()->id() && ! auth()->user()->isAdmin(), 403);
+
+        return view('pesanan.show', compact('pesanan'));
+    }
+
+    public function uploadBukti(Request $request, Pesanan $pesanan)
+    {
+        $this->authorizeOwn($pesanan);
+
+        abort_if($pesanan->status !== 'menunggu_pembayaran', 422, 'Pesanan tidak membutuhkan pembayaran lagi.');
+
+        $validated = $request->validate([
+            'bukti' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'nama_pengirim' => ['required', 'string', 'max:100'],
+        ]);
+
+        $file = $request->file('bukti')->store('bukti-pembayaran', 'uploads');
+
+        DB::transaction(function () use ($pesanan, $file, $validated) {
+            $pesanan->pembayaran->update([
+                'bukti' => $file,
+                'nama_pengirim' => $validated['nama_pengirim'],
+            ]);
+            $pesanan->update([
+                'status' => 'menunggu_konfirmasi',
+                'batas_pembayaran' => null,
+            ]);
+        });
+
+        return back()->with('success', 'Bukti pembayaran terkirim. Admin akan memverifikasi pesanan Anda.');
+    }
+
+    public function konfirmasiTerima(Pesanan $pesanan)
+    {
+        $this->authorizeOwn($pesanan);
+
+        abort_if($pesanan->status !== 'dikirim', 422, 'Pesanan belum dikirim.');
+
+        DB::transaction(function () use ($pesanan) {
+            $pesanan->update([
+                'status' => 'selesai',
+                'selesai_at' => Carbon::now(),
+            ]);
+            $pesanan->pengiriman?->update([
+                'status' => 'diterima',
+                'diterima_at' => Carbon::now(),
+            ]);
+        });
+
+        return back()->with('success', 'Terima kasih! Pesanan Anda telah selesai.');
+    }
+
+    public function batalkan(Pesanan $pesanan)
+    {
+        $this->authorizeOwn($pesanan);
+
+        abort_if(! in_array($pesanan->status, ['menunggu_pembayaran', 'menunggu_konfirmasi']), 422,
+            'Pesanan tidak dapat dibatalkan pada status ini.');
+
+        DB::transaction(function () use ($pesanan) {
+            foreach ($pesanan->items as $item) {
+                if ($item->produk) {
+                    $item->produk->increment('stok', $item->qty);
+                }
+            }
+            $pesanan->pembayaran?->update(['status' => 'dibatalkan']);
+            $pesanan->update(['status' => 'dibatalkan']);
+        });
+
+        return back()->with('success', 'Pesanan dibatalkan.');
+    }
+
+    public function cetak(Pesanan $pesanan)
+    {
+        abort_if($pesanan->user_id !== auth()->id() && ! auth()->user()->isAdmin(), 403);
+
+        return view('pesanan.cetak', compact('pesanan'));
+    }
+
+    private function authorizeOwn(Pesanan $pesanan): void
+    {
+        abort_if($pesanan->user_id !== auth()->id(), 403);
+    }
+}
