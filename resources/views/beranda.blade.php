@@ -47,40 +47,18 @@
                     </div>
                 </div>
                 <div class="hidden lg:block">
-                    <div class="relative mx-auto max-w-md">
-                        <div class="absolute inset-0 -rotate-6 rounded-[2rem] bg-gradient-to-br from-brand-500 to-accent-500 opacity-50 blur-md"></div>
-                        <div class="relative rotate-3 rounded-[2rem] bg-white/95 p-8 shadow-2xl backdrop-blur">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Pesanan Terbaru</p>
-                                    <p class="mt-1 text-xl font-extrabold text-slate-900">Pesanan #{{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(6)) }}</p>
-                                </div>
-                                <span class="badge bg-emerald-100 text-emerald-700 ring-emerald-200">✓ Selesai</span>
-                            </div>
-                            <div class="mt-6 space-y-4">
-                                <div class="flex items-center gap-4 rounded-2xl bg-slate-50 p-4">
-                                    <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-brand-100 to-accent-100 text-2xl"><x-ikon nama="kotak" kelas="h-6 w-6" /></span>
-                                    <div>
-                                        <p class="text-sm font-bold text-slate-800">Pesanan diproses</p>
-                                        <p class="text-xs text-slate-400">Pengepakan oleh kurir terpercaya</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-4 rounded-2xl bg-slate-50 p-4">
-                                    <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 text-2xl"><x-ikon nama="truk" kelas="h-6 w-6" /></span>
-                                    <div>
-                                        <p class="text-sm font-bold text-slate-800">Dalam pengiriman</p>
-                                        <p class="text-xs text-slate-400">Estimasi tiba 2-3 hari</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-4 rounded-2xl bg-slate-50 p-4">
-                                    <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-100 text-accent-700"><x-ikon nama="kartu" kelas="h-6 w-6" /></span>
-                                    <div>
-                                        <p class="text-sm font-bold text-slate-800">Bayar dengan mudah</p>
-                                        <p class="text-xs text-slate-400">Transfer, e-wallet, atau COD</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="relative mx-auto max-w-lg">
+                        {{-- Cahaya lembut di belakang ilustrasi, mengikuti warna merek. --}}
+                        <div class="pointer-events-none absolute inset-8 rounded-full bg-gradient-to-br from-brand-500/40 via-brand-400/20 to-accent-500/30 blur-3xl"></div>
+
+                        <picture>
+                            <source srcset="{{ asset('images/hero-market.webp') }}" type="image/webp">
+                            <img src="{{ asset('images/hero-market.png') }}"
+                                 alt="Belanja di {{ config('brand.nama') }} — pesanan diantar ke seluruh Indonesia"
+                                 width="1100" height="983"
+                                 fetchpriority="high" decoding="async"
+                                 class="relative w-full animate-float-soft drop-shadow-2xl">
+                        </picture>
                     </div>
                 </div>
             </div>
