@@ -14,9 +14,12 @@ class AlamatController extends Controller
         return view('alamat.index', compact('alamats'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('alamat.form', ['alamat' => new Alamat]);
+        return view('alamat.form', [
+            'alamat' => new Alamat,
+            'dari' => $request->query('dari'),
+        ]);
     }
 
     public function store(Request $request)
@@ -30,14 +33,17 @@ class AlamatController extends Controller
 
         auth()->user()->alamats()->create($data);
 
-        return redirect()->route('alamat.index')->with('success', 'Alamat berhasil ditambahkan.');
+        return $this->kembali($request, 'Alamat berhasil ditambahkan.');
     }
 
-    public function edit(Alamat $alamat)
+    public function edit(Request $request, Alamat $alamat)
     {
         $this->authorizeOwn($alamat);
 
-        return view('alamat.form', compact('alamat'));
+        return view('alamat.form', [
+            'alamat' => $alamat,
+            'dari' => $request->query('dari'),
+        ]);
     }
 
     public function update(Request $request, Alamat $alamat)
@@ -53,7 +59,25 @@ class AlamatController extends Controller
 
         $alamat->update($data);
 
-        return redirect()->route('alamat.index')->with('success', 'Alamat berhasil diperbarui.');
+        return $this->kembali($request, 'Alamat berhasil diperbarui.');
+
+    }
+
+    /**
+     * Antar pengguna kembali ke tempat asalnya.
+     *
+     * Alamat sering ditambahkan di tengah checkout. Tanpa ini pengguna
+     * ditinggalkan di buku alamat tanpa jalan kembali, dan pesanan yang sudah
+     * hampir jadi terbengkalai.
+     */
+    private function kembali(Request $request, string $pesan)
+    {
+        $keCheckout = $request->input('dari') === 'checkout'
+            && auth()->user()->keranjangs()->exists();
+
+        return $keCheckout
+            ? redirect()->route('checkout.index')->with('success', $pesan)
+            : redirect()->route('alamat.index')->with('success', $pesan);
     }
 
     public function destroy(Alamat $alamat)

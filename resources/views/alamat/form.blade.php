@@ -13,6 +13,12 @@
             @csrf
             @if ($alamat->exists) @method('PATCH') @endif
 
+            {{-- Penanda asal ikut terkirim agar setelah tersimpan pengguna
+                 dikembalikan ke checkout, bukan ditinggalkan di buku alamat. --}}
+            @if (($dari ?? null) === 'checkout')
+                <input type="hidden" name="dari" value="checkout">
+            @endif
+
             <div class="grid gap-5 sm:grid-cols-2">
                 <div>
                     <label class="label-field">Label Alamat</label>
@@ -74,8 +80,14 @@
             </label>
 
             <div class="flex items-center gap-3 border-t border-slate-100 pt-5">
-                <button type="submit" class="btn-primary">{{ $alamat->exists ? 'Simpan Perubahan' : 'Simpan Alamat' }}</button>
-                <a href="{{ route('alamat.index') }}" class="btn-secondary">Batal</a>
+                <button type="submit" class="btn-primary">
+                    {{ ($dari ?? null) === 'checkout'
+                        ? 'Simpan & Lanjut Checkout'
+                        : ($alamat->exists ? 'Simpan Perubahan' : 'Simpan Alamat') }}
+                </button>
+
+                <a href="{{ ($dari ?? null) === 'checkout' ? route('checkout.index') : route('alamat.index') }}"
+                   class="btn-secondary">Batal</a>
             </div>
         </form>
     </div>

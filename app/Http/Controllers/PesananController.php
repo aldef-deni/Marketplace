@@ -6,6 +6,7 @@ use App\Models\Pembayaran;
 use App\Models\Pesanan;
 use App\Models\Pengiriman;
 use App\Support\Notifikasi;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -33,7 +34,9 @@ class PesananController extends Controller
             'items', 'alamat', 'pembayaran.metodePembayaran', 'pengiriman',
         ])->where('no_invoice', $noInvoice)->firstOrFail();
 
-        abort_if($pesanan->user_id !== auth()->id() && ! auth()->user()->isAdmin(), 403);
+        if ($milikOrangLain = $this->bukanMilikSendiri($pesanan)) {
+            return $milikOrangLain;
+        }
 
         return view('pesanan.show', compact('pesanan'));
     }
@@ -119,9 +122,30 @@ class PesananController extends Controller
             'items', 'alamat', 'pembayaran.metodePembayaran', 'pengiriman',
         ])->where('no_invoice', $noInvoice)->firstOrFail();
 
-        abort_if($pesanan->user_id !== auth()->id() && ! auth()->user()->isAdmin(), 403);
+        if ($milikOrangLain = $this->bukanMilikSendiri($pesanan)) {
+            return $milikOrangLain;
+        }
 
         return view('pesanan.cetak', compact('pesanan'));
+    }
+
+    /**
+     * Kembalikan pengalihan bila pesanan bukan milik pengguna ini.
+     *
+     * Halaman pesanan dibuka lewat tautan, dan tautan bisa basi — misalnya
+     * tersimpan di riwayat peramban dari sesi akun lain. Menampilkan halaman
+     * 403 kosong membuat pengguna buntu; mengantarnya ke daftar pesanan
+     * sendiri sama amannya tetapi jauh lebih menolong.
+     */
+    private function bukanMilikSendiri(Pesanan $pesanan): ?RedirectResponse
+    {
+        if ($pesanan->user_id === auth()->id() || auth()->user()->isAdmin()) {
+            return null;
+        }
+
+        return redirect()
+            ->route('pesanan.index')
+            ->with('error', 'Pesanan tersebut bukan milik akun Anda. Berikut daftar pesanan Anda sendiri.');
     }
 
     private function authorizeOwn(Pesanan $pesanan): void

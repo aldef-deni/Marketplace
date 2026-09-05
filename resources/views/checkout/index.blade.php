@@ -38,13 +38,13 @@
                                 <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-extrabold text-white">1</span>
                                 Alamat Pengiriman
                             </h3>
-                            <a href="{{ route('alamat.create') }}" class="text-sm font-bold text-brand-600 hover:text-brand-800">+ Tambah Alamat</a>
+                            <a href="{{ route('alamat.create', ['dari' => 'checkout']) }}" class="text-sm font-bold text-brand-600 hover:text-brand-800">+ Tambah Alamat</a>
                         </div>
 
                         @if ($alamats->isEmpty())
                             <div class="mt-5 rounded-2xl border-2 border-dashed border-slate-300 p-8 text-center">
                                 <p class="text-sm font-semibold text-slate-500">Belum ada alamat tersimpan.</p>
-                                <a href="{{ route('alamat.create') }}" class="btn-primary mt-4">Tambah Alamat Baru</a>
+                                <a href="{{ route('alamat.create', ['dari' => 'checkout']) }}" class="btn-primary mt-4">Tambah Alamat Baru</a>
                             </div>
                         @else
                             <div class="mt-5 grid gap-3 sm:grid-cols-2">
