@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pembayaran;
+use App\Support\Notifikasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -47,14 +48,19 @@ class PembayaranController extends Controller
                     'diproses_at' => Carbon::now(),
                 ]);
 
-                $pesanan->pengiriman()?->create([
-                    'kurir' => $pesanan->kurir,
-                    'layanan' => $pesanan->layanan_kurir,
-                    'ongkir' => $pesanan->ongkir,
-                    'status' => 'menunggu',
-                ]);
+                $pesanan->pengiriman()->firstOrCreate(
+                    ['pesanan_id' => $pesanan->id],
+                    [
+                        'kurir' => $pesanan->kurir,
+                        'layanan' => $pesanan->layanan_kurir,
+                        'ongkir' => $pesanan->ongkir,
+                        'status' => 'menunggu',
+                    ],
+                );
             }
         });
+
+        Notifikasi::kePembeli($pembayaran->pesanan, 'pembayaran_diverifikasi');
 
         return back()->with('success', 'Pembayaran diverifikasi. Pesanan diproses.');
     }
@@ -76,6 +82,9 @@ class PembayaranController extends Controller
                 $pesanan->update(['status' => 'menunggu_pembayaran']);
             }
         });
+
+        Notifikasi::kePembeli($pembayaran->pesanan, 'pembayaran_ditolak',
+            "Bukti pembayaran {$pembayaran->pesanan->no_invoice} ditolak: {$keterangan}");
 
         return back()->with('success', 'Pembayaran ditolak. Pengguna diminta mengunggah ulang bukti.');
     }

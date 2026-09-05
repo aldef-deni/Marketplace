@@ -7,6 +7,7 @@ use App\Models\MetodePembayaran;
 use App\Models\Pembayaran;
 use App\Models\Pesanan;
 use App\Models\PesananItem;
+use App\Support\Notifikasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -115,6 +116,10 @@ class CheckoutController extends Controller
             ]);
 
             auth()->user()->keranjangs()->delete();
+
+            $pesanan->load('user');
+            Notifikasi::kePembeli($pesanan, 'pesanan_dibuat');
+            Notifikasi::keAdmin($pesanan, 'pesanan_baru');
 
             return redirect()->route('pesanan.show', $pesanan->no_invoice)
                 ->with('success', 'Pesanan berhasil dibuat. Silakan selesaikan pembayaran Anda.');

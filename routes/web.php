@@ -5,6 +5,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\KeranjangController;
+use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\PesananController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TokoController;
@@ -58,6 +59,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{pesanan}/terima', [PesananController::class, 'konfirmasiTerima'])->name('terima');
         Route::post('/{pesanan}/batalkan', [PesananController::class, 'batalkan'])->name('batalkan');
         Route::get('/{noInvoice}/cetak', [PesananController::class, 'cetak'])->name('cetak');
+    });
+
+    /*
+    | Notifikasi — dipakai semua peran, termasuk admin dan superadmin.
+    */
+    Route::prefix('notifikasi')->name('notifikasi.')->group(function () {
+        Route::get('/', [NotifikasiController::class, 'index'])->name('index');
+        Route::get('/data', [NotifikasiController::class, 'data'])->name('data');
+        Route::get('/{id}/baca', [NotifikasiController::class, 'baca'])->name('baca');
+        Route::post('/baca-semua', [NotifikasiController::class, 'bacaSemua'])->name('baca-semua');
+        Route::delete('/terbaca', [NotifikasiController::class, 'hapusTerbaca'])->name('hapus-terbaca');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

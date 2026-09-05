@@ -94,6 +94,8 @@
             </div>
 
             <div class="ml-auto flex items-center gap-3">
+                <x-lonceng-notifikasi :gelap="false" />
+
                 <a href="{{ route('toko.index') }}" class="hidden rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 sm:block">Toko</a>
                 <div class="flex items-center gap-2.5 rounded-full bg-slate-50 py-1.5 pl-1.5 pr-4 ring-1 ring-slate-200">
                     <span class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-accent-500 text-xs font-bold text-white">
@@ -120,6 +122,8 @@
         </footer>
     </div>
 </div>
+
+@stack('skrip')
 
 </body>
 </html>

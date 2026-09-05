@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pesanan;
+use App\Support\Notifikasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -55,13 +56,18 @@ class PesananController extends Controller
                 'dibayar_at' => Carbon::now(),
             ]);
 
-            $pesanan->pengiriman()?->create([
-                'kurir' => $pesanan->kurir,
-                'layanan' => $pesanan->layanan_kurir,
-                'ongkir' => $pesanan->ongkir,
-                'status' => 'menunggu',
-            ]);
+            $pesanan->pengiriman()->firstOrCreate(
+                ['pesanan_id' => $pesanan->id],
+                [
+                    'kurir' => $pesanan->kurir,
+                    'layanan' => $pesanan->layanan_kurir,
+                    'ongkir' => $pesanan->ongkir,
+                    'status' => 'menunggu',
+                ],
+            );
         });
+
+        Notifikasi::kePembeli($pesanan, 'pesanan_diproses');
 
         return back()->with('success', 'Pesanan diterima dan sedang diproses.');
     }
@@ -92,6 +98,8 @@ class PesananController extends Controller
             );
         });
 
+        Notifikasi::kePembeli($pesanan->fresh('pengiriman'), 'pesanan_dikirim');
+
         return back()->with('success', 'Pesanan ditandai sebagai dikirim.');
     }
 
@@ -109,6 +117,8 @@ class PesananController extends Controller
                 'diterima_at' => Carbon::now(),
             ]);
         });
+
+        Notifikasi::kePembeli($pesanan, 'pesanan_selesai');
 
         return back()->with('success', 'Pesanan ditandai selesai.');
     }
@@ -134,6 +144,9 @@ class PesananController extends Controller
                 'catatan' => $keterangan ?: $pesanan->catatan,
             ]);
         });
+
+        Notifikasi::kePembeli($pesanan, 'pesanan_dibatalkan',
+            $keterangan ? "Pesanan {$pesanan->no_invoice} dibatalkan: {$keterangan}" : null);
 
         return back()->with('success', 'Pesanan dibatalkan dan stok dikembalikan.');
     }

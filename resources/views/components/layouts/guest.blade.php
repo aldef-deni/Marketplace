@@ -52,6 +52,8 @@
             </a>
 
             @auth
+                <x-lonceng-notifikasi />
+
                 <a href="{{ route('keranjang.index') }}"
                    class="relative rounded-lg p-2.5 text-ink-300 transition hover:bg-white/5 hover:text-white" title="Keranjang">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
@@ -168,6 +170,8 @@
         </p>
     </div>
 </footer>
+
+@stack('skrip')
 
 </body>
 </html>

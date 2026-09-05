@@ -113,6 +113,10 @@
                 </div>
             </div>
         </div>
-    </div>
 
+        {{-- Notifikasi terbaru --}}
+        <div class="mt-6">
+            @include('partials.panel-notifikasi')
+        </div>
+    </div>
 </x-layouts.app>

@@ -38,6 +38,25 @@
         @endforeach
     </div>
 
+    {{-- Antrean tindakan: apa yang menunggu dikerjakan admin sekarang --}}
+    <div class="mt-6 grid gap-4 sm:grid-cols-3">
+        @foreach ($perluTindakan as $tugas)
+            <a href="{{ $tugas['url'] }}"
+               class="card flex items-center gap-4 p-5 transition hover:-translate-y-0.5 hover:shadow-md
+                      {{ $tugas['jumlah'] > 0 ? 'ring-brand-200' : '' }}">
+                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl {{ $tugas['nada'] }}">
+                    <x-ikon :nama="$tugas['ikon']" kelas="h-5 w-5" />
+                </span>
+                <div class="min-w-0">
+                    <p class="text-2xl font-extrabold {{ $tugas['jumlah'] > 0 ? 'text-slate-900' : 'text-slate-300' }}">
+                        {{ $tugas['jumlah'] }}
+                    </p>
+                    <p class="text-xs font-semibold leading-snug text-slate-500">{{ $tugas['label'] }}</p>
+                </div>
+            </a>
+        @endforeach
+    </div>
+
     <div class="mt-6 grid gap-6 xl:grid-cols-3">
         {{-- Grafik penjualan --}}
         <div class="card p-6 xl:col-span-2">
@@ -125,6 +144,11 @@
                 </tbody>
             </table>
         </div>
+    </div>
+
+    {{-- Notifikasi terbaru --}}
+    <div class="mt-6">
+        @include('partials.panel-notifikasi')
     </div>
 
 </x-layouts.admin>

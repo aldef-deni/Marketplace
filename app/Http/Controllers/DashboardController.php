@@ -32,6 +32,10 @@ class DashboardController extends Controller
             ->where('created_at', '>=', Carbon::now()->startOfMonth())
             ->count();
 
-        return view('dashboard', compact('user', 'stats', 'pesananTerakhir', 'aktivitasBulanIni'));
+        $notifikasiTerbaru = $user->notifications()->take(5)->get();
+
+        return view('dashboard', compact(
+            'user', 'stats', 'pesananTerakhir', 'aktivitasBulanIni', 'notifikasiTerbaru',
+        ));
     }
 }

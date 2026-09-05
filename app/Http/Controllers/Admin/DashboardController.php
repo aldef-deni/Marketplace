@@ -34,6 +34,36 @@ class DashboardController extends Controller
             'menunggu_verifikasi' => Pembayaran::where('status', 'menunggu')
                 ->whereHas('pesanan', fn ($q) => $q->where('status', 'menunggu_konfirmasi'))
                 ->count(),
+            'perlu_dikirim' => Pesanan::where('status', 'diproses')->count(),
+        ];
+
+        /*
+        | Antrean pekerjaan: hal-hal yang menunggu tindakan admin sekarang.
+        | Dashboard yang hanya menampilkan angka membuat admin harus menebak
+        | apa yang harus dikerjakan berikutnya.
+        */
+        $perluTindakan = [
+            [
+                'label' => 'Bukti bayar menunggu verifikasi',
+                'jumlah' => $stats['menunggu_verifikasi'],
+                'ikon' => 'kartu',
+                'nada' => 'bg-accent-100 text-accent-700',
+                'url' => route('admin.pembayaran.index', ['status' => 'menunggu']),
+            ],
+            [
+                'label' => 'Pesanan siap dikirim',
+                'jumlah' => $stats['perlu_dikirim'],
+                'ikon' => 'truk',
+                'nada' => 'bg-brand-100 text-brand-700',
+                'url' => route('admin.pesanan.index', ['status' => 'diproses']),
+            ],
+            [
+                'label' => 'Produk dengan stok menipis',
+                'jumlah' => $stats['stok_menipis'],
+                'ikon' => 'peringatan',
+                'nada' => 'bg-rose-100 text-rose-700',
+                'url' => route('admin.produk.index'),
+            ],
         ];
 
         $pesananTerbaru = Pesanan::with('user')->latest()->take(8)->get();
@@ -58,6 +88,11 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'pesananTerbaru', 'penjualan7Hari', 'produkLaris'));
+        $notifikasiTerbaru = auth()->user()->notifications()->take(5)->get();
+
+        return view('admin.dashboard', compact(
+            'stats', 'pesananTerbaru', 'penjualan7Hari', 'produkLaris',
+            'perluTindakan', 'notifikasiTerbaru',
+        ));
     }
 }

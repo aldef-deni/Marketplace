@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Pembayaran;
 use App\Models\Pesanan;
 use App\Models\Pengiriman;
+use App\Support\Notifikasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -61,6 +62,8 @@ class PesananController extends Controller
             ]);
         });
 
+        Notifikasi::keAdmin($pesanan, 'bukti_diunggah');
+
         return back()->with('success', 'Bukti pembayaran terkirim. Admin akan memverifikasi pesanan Anda.');
     }
 
@@ -81,6 +84,8 @@ class PesananController extends Controller
             ]);
         });
 
+        Notifikasi::keAdmin($pesanan, 'pesanan_diterima_pembeli');
+
         return back()->with('success', 'Terima kasih! Pesanan Anda telah selesai.');
     }
 
@@ -100,6 +105,8 @@ class PesananController extends Controller
             $pesanan->pembayaran?->update(['status' => 'dibatalkan']);
             $pesanan->update(['status' => 'dibatalkan']);
         });
+
+        Notifikasi::keAdmin($pesanan, 'pesanan_dibatalkan_pembeli');
 
         return back()->with('success', 'Pesanan dibatalkan.');
     }
