@@ -178,6 +178,19 @@ php artisan optimize                              # membangun ulang cache
 php artisan up
 ```
 
+Setelah selesai, pastikan hasilnya benar-benar lengkap:
+
+```bash
+php artisan sistem:cek
+```
+
+Perintah ini memeriksa keadaan sebenarnya — tabel, kolom, migrasi tertunda,
+kecocokan aset dengan manifest, izin tulis, dan konfigurasi — bukan sekadar
+pesan yang muncul di layar. Berguna terutama karena `migrate` menjawab
+**"Nothing to migrate"** untuk dua keadaan yang berlawanan: migrasinya memang
+sudah dijalankan, atau berkasnya tidak ikut terekstrak sehingga Laravel tidak
+melihat apa pun untuk dijalankan.
+
 `php artisan optimize` menyegarkan cache config, rute, dan view sekaligus.
 Melewatkannya adalah penyebab paling umum "kenapa perubahan saya tidak muncul".
 
