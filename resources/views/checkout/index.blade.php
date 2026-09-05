@@ -18,10 +18,14 @@
                       @endforeach
                   },
                   beratGram: {{ $beratGram }},
+                  alamat: '{{ old('alamat_id', $alamats->firstWhere('is_default', true)?->id ?? $alamats->first()?->id) }}',
+                  metode: '{{ old('metode_pembayaran_id') }}',
+                  mengirim: false,
                   get ongkir() { return this.tarif[this.kurir] ?? 0; },
-                  get total() { return {{ $subtotal }} + this.ongkir; }
+                  get total() { return {{ $subtotal }} + this.ongkir; },
+                  get siap() { return this.alamat !== '' && this.metode !== ''; }
               }"
-              @submit="document.getElementById('btn-bayar').disabled = true; document.getElementById('btn-bayar').textContent = 'Memproses...';">
+              @submit="mengirim = true">
             @csrf
 
             <div class="grid gap-6 lg:grid-cols-3">
@@ -45,13 +49,11 @@
                         @else
                             <div class="mt-5 grid gap-3 sm:grid-cols-2">
                                 @foreach ($alamats as $alamat)
-                                    <label class="relative block cursor-pointer rounded-2xl border-2 p-4 transition {{ old('alamat_id', $alamats->firstWhere('is_default', true)?->id ?? $alamats->first()->id) == $alamat->id ? 'border-brand-500 bg-brand-50/50' : 'border-slate-200 bg-white hover:border-brand-200' }}">
-                                        <input type="radio" name="alamat_id" value="{{ $alamat->id }}"
-                                               class="peer sr-only"
-                                               {{ old('alamat_id', $alamats->firstWhere('is_default', true)?->id ?? $alamats->first()->id) == $alamat->id ? 'checked' : '' }}>
-                                        <span class="pointer-events-none absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border-2 border-slate-300 peer-checked:border-brand-600">
-                                            <span class="h-2.5 w-2.5 rounded-full bg-brand-600 peer-checked:block" style="display: {{ old('alamat_id', $alamats->firstWhere('is_default', true)?->id ?? $alamats->first()->id) == $alamat->id ? 'block' : 'none' }}"></span>
-                                        </span>
+                                    <label class="relative block cursor-pointer rounded-2xl border-2 p-4 transition"
+                                           x-bind:class="alamat === '{{ $alamat->id }}' ? 'border-brand-500 bg-brand-50/50' : 'border-slate-200 bg-white hover:border-brand-200'">
+                                        <input type="radio" name="alamat_id" value="{{ $alamat->id }}" x-model="alamat" class="sr-only">
+                                        <span class="pointer-events-none absolute right-3 top-3 h-5 w-5 rounded-full bg-white transition"
+                                              x-bind:class="alamat === '{{ $alamat->id }}' ? 'border-[6px] border-brand-600' : 'border-2 border-slate-300'"></span>
                                         <div class="pr-6">
                                             <div class="flex items-center gap-2">
                                                 <span class="badge bg-brand-50 text-brand-700 ring-brand-200">{{ $alamat->label }}</span>
@@ -108,6 +110,13 @@
                             Metode Pembayaran
                         </h3>
 
+                        @if ($metodes->isEmpty())
+                            <div class="mt-5 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50/60 p-6 text-center">
+                                <p class="text-sm font-semibold text-amber-800">Belum ada metode pembayaran yang aktif.</p>
+                                <p class="mt-1 text-xs text-amber-700">Hubungi pengelola toko untuk mengaktifkannya.</p>
+                            </div>
+                        @endif
+
                         <div class="mt-5 space-y-3">
                             @foreach ($metodes->groupBy('tipe') as $tipe => $kelompok)
                                 <div class="mb-2 flex items-center gap-2">
@@ -116,10 +125,12 @@
                                 </div>
                                 <div class="grid gap-3 sm:grid-cols-2">
                                     @foreach ($kelompok as $metode)
-                                        <label class="relative block cursor-pointer rounded-2xl border-2 p-4 transition {{ old('metode_pembayaran_id') == $metode->id ? 'border-brand-500 bg-brand-50/50' : 'border-slate-200 bg-white hover:border-brand-200' }}">
-                                            <input type="radio" name="metode_pembayaran_id" value="{{ $metode->id }}"
-                                                   class="sr-only" {{ old('metode_pembayaran_id') == $metode->id ? 'checked' : '' }}>
-                                            <div class="flex items-center gap-3">
+                                        <label class="relative block cursor-pointer rounded-2xl border-2 p-4 transition"
+                                               x-bind:class="metode === '{{ $metode->id }}' ? 'border-brand-500 bg-brand-50/50' : 'border-slate-200 bg-white hover:border-brand-200'">
+                                            <input type="radio" name="metode_pembayaran_id" value="{{ $metode->id }}" x-model="metode" class="sr-only">
+                                            <span class="pointer-events-none absolute right-3 top-3 h-5 w-5 rounded-full bg-white transition"
+                                                  x-bind:class="metode === '{{ $metode->id }}' ? 'border-[6px] border-brand-600' : 'border-2 border-slate-300'"></span>
+                                            <div class="flex items-center gap-3 pr-6">
                                                 <span class="flex h-11 w-11 items-center justify-center rounded-xl text-xl {{ match ($metode->tipe) { 'transfer' => 'bg-blue-50', 'ewallet' => 'bg-emerald-50', 'cod' => 'bg-amber-50', default => 'bg-slate-50' } }}">
                                                     <x-ikon :nama="match ($metode->tipe) { 'transfer' => 'bank', 'ewallet' => 'ponsel', 'cod' => 'uang', default => 'kartu' }" kelas="h-5 w-5 text-slate-700" />
                                                 </span>
@@ -196,7 +207,12 @@
                             Dengan melanjutkan, Anda menyetujui bahwa pesanan akan diproses sesuai kebijakan toko.
                         </div>
 
-                        <button type="submit" id="btn-bayar" class="btn-primary mt-5 w-full py-3.5 text-base" {{ $alamats->isEmpty() ? 'disabled' : '' }}>
+                        {{-- Dimatikan sampai alamat dan metode pembayaran terpilih, supaya
+                             pengguna tidak menekan tombol lalu dilempar balik oleh validasi. --}}
+                        <button type="submit" id="btn-bayar" class="btn-primary mt-5 w-full py-3.5 text-base"
+                                x-bind:disabled="mengirim || ! siap"
+                                x-text="mengirim ? 'Memproses…' : (siap ? 'Buat Pesanan' : 'Pilih alamat & metode pembayaran')"
+                                {{ $alamats->isEmpty() || $metodes->isEmpty() ? 'disabled' : '' }}>
                             Buat Pesanan
                         </button>
                     </div>
