@@ -149,9 +149,7 @@
             <div class="card p-6">
                 <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-500">Pelanggan</h3>
                 <div class="mt-3 flex items-center gap-3">
-                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-accent-500 text-sm font-bold text-white">
-                        {{ initials($pesanan->user->name) }}
-                    </span>
+                    <x-avatar :user="$pesanan->user" ukuran="h-11 w-11" teks="text-sm" cincin="ring-1 ring-slate-200" />
                     <div>
                         <p class="text-sm font-extrabold text-slate-800">{{ $pesanan->user->name }}</p>
                         <p class="text-xs text-slate-400">{{ $pesanan->user->email }}</p>

@@ -9,23 +9,8 @@
     </x-slot>
 
     <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {{-- Kartu selamat datang --}}
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-800 via-brand-600 to-accent-500 p-8">
-            <div class="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-2xl"></div>
-            <div class="pointer-events-none absolute -bottom-16 right-24 h-40 w-40 rounded-full bg-accent-300/20 blur-2xl"></div>
-            <div class="relative flex flex-wrap items-center justify-between gap-6">
-                <div>
-                    <h3 class="text-xl font-extrabold text-white sm:text-2xl">Siap belanja hari ini? <x-ikon nama="toko" kelas="h-5 w-5" /></h3>
-                    <p class="mt-1.5 max-w-md text-sm text-brand-100">
-                        Kamu {{ $aktivitasBulanIni ? "sudah membuat {$aktivitasBulanIni} pesanan bulan ini" : 'belum berbelanja bulan ini' }}.
-                        Yuk temukan produk favoritmu!
-                    </p>
-                </div>
-                <div class="flex gap-3">
-                    <a href="{{ route('toko.index') }}" class="rounded-2xl bg-white px-6 py-3 text-sm font-bold text-brand-700 shadow-lg transition hover:-translate-y-0.5">Mulai Belanja →</a>
-                </div>
-            </div>
-        </div>
+        {{-- Profil pengguna --}}
+        @include('partials.kartu-profil')
 
         {{-- Statistik --}}
         <div class="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">

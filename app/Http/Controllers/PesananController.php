@@ -49,7 +49,9 @@ class PesananController extends Controller
             'nama_pengirim' => ['required', 'string', 'max:100'],
         ]);
 
-        $file = $request->file('bukti')->store('bukti-pembayaran', 'uploads');
+        // Awalan "uploads/" disimpan ikut, seperti kolom gambar produk, supaya
+        // asset() di tampilan menghasilkan URL yang benar.
+        $file = 'uploads/'.$request->file('bukti')->store('bukti-pembayaran', 'uploads');
 
         DB::transaction(function () use ($pesanan, $file, $validated) {
             $pesanan->pembayaran->update([

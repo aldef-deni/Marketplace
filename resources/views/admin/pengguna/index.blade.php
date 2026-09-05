@@ -35,9 +35,7 @@
                         <tr class="transition hover:bg-slate-50/60">
                             <td class="table-cell">
                                 <div class="flex items-center gap-3">
-                                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-accent-500 text-xs font-bold text-white">
-                                        {{ initials($pengguna->name) }}
-                                    </span>
+                                    <x-avatar :user="$pengguna" ukuran="h-10 w-10" cincin="ring-1 ring-slate-200" />
                                     <div>
                                         <p class="font-bold text-slate-800">{{ $pengguna->name }} {!! $pengguna->id === auth()->id() ? '<span class="text-xs text-brand-500">(Anda)</span>' : '' !!}</p>
                                         <p class="text-xs text-slate-400">{{ $pengguna->email }}</p>

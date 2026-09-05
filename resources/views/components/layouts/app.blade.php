@@ -43,9 +43,7 @@
                 <div x-data="{ open: false }" class="relative">
                     <button @click="open = !open" :aria-expanded="open"
                             class="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 transition hover:bg-white/5">
-                        <span class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-accent-500 text-xs font-bold text-white ring-1 ring-white/15">
-                            {{ initials(auth()->user()->name) }}
-                        </span>
+                        <x-avatar :user="auth()->user()" />
                         <span class="hidden max-w-[9rem] truncate text-sm font-semibold text-ink-200 sm:block">{{ auth()->user()->name }}</span>
                         <svg class="h-4 w-4 text-ink-400 transition" :class="open && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>

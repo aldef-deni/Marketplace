@@ -56,6 +56,37 @@ class User extends Authenticatable
     }
 
     /**
+     * Alamat gambar avatar yang siap dipasang di atribut src.
+     *
+     * Avatar bisa berasal dari dua sumber: URL penuh milik Google, atau berkas
+     * yang diunggah sendiri dan tersimpan relatif terhadap folder public.
+     * Keduanya harus menghasilkan URL yang benar tanpa pemanggil perlu tahu
+     * asalnya.
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (blank($this->avatar)) {
+            return null;
+        }
+
+        return str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')
+            ? $this->avatar
+            : asset($this->avatar);
+    }
+
+    /**
+     * Avatar berupa berkas milik sendiri, bukan tautan dari Google.
+     *
+     * Hanya berkas seperti ini yang boleh dihapus dari penyimpanan.
+     */
+    public function avatarDiunggahSendiri(): bool
+    {
+        return filled($this->avatar)
+            && ! str_starts_with($this->avatar, 'http://')
+            && ! str_starts_with($this->avatar, 'https://');
+    }
+
+    /**
      * Akun yang mendaftar lewat Google belum tentu punya kata sandi. Dipakai
      * untuk menentukan apakah formulir meminta kata sandi lama atau tidak.
      */
