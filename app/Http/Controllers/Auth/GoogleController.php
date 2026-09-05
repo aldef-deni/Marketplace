@@ -119,6 +119,15 @@ class GoogleController extends Controller
      */
     private function siap(): bool
     {
+        // Paket Socialite dipasang lewat composer dan tidak ikut di dalam paket
+        // rilis. Bila "composer install" terlewat di server, kelasnya tidak ada
+        // dan pengguna harus melihat pesan yang wajar, bukan galat 500.
+        if (! class_exists(Socialite::class)) {
+            Log::error('Paket laravel/socialite belum terpasang. Jalankan "composer install --no-dev" di server.');
+
+            return false;
+        }
+
         return filled(config('services.google.client_id'))
             && filled(config('services.google.client_secret'));
     }

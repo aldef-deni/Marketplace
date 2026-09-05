@@ -238,12 +238,27 @@ class PaketRilis extends Command
         $daftar = implode("\n", array_map(fn ($b) => '  - '.$b, array_slice($berkas, 0, 200)));
         $sisa = count($berkas) > 200 ? "\n  ... dan ".(count($berkas) - 200)." berkas lain" : '';
 
+        // Langkah yang ditulis sebagai opsional gampang terlewat, dan akibatnya
+        // baru terasa sebagai galat 500 di halaman yang memakai paket baru.
+        $wajib = '';
+
+        if (in_array('composer.json', $berkas, true) || in_array('composer.lock', $berkas, true)) {
+            $wajib .= "!! PAKET INI MENGUBAH DEPENDENSI\n"
+                ."   \"composer install --no-dev --optimize-autoloader\" WAJIB dijalankan.\n"
+                ."   Tanpa itu, halaman yang memakai paket baru akan galat 500.\n\n";
+        }
+
+        if (array_filter($berkas, fn ($b) => str_starts_with($b, 'database/migrations/'))) {
+            $wajib .= "!! PAKET INI BERISI MIGRASI BARU\n"
+                ."   \"php artisan migrate --force\" WAJIB dijalankan.\n\n";
+        }
+
         return <<<TXT
         Market ArahInn — paket rilis
         Dibuat: {$this->waktu()}
         Tujuan: https://market.arahinn.com
 
-        LANGKAH DEPLOY
+        {$wajib}LANGKAH DEPLOY
         --------------
         1. Backup dulu folder aplikasi dan database di server.
         2. Ekstrak isi ZIP ini ke ROOT aplikasi di server (menimpa berkas lama).
@@ -254,7 +269,9 @@ class PaketRilis extends Command
                php artisan migrate --force
                php artisan optimize
 
-           (composer install hanya perlu bila composer.json ikut berubah)
+           Jalankan "php artisan optimize" SETELAH seluruh berkas terekstrak.
+           Perintah itu meng-cache config, rute, dan view sekaligus; menjalankannya
+           lebih dulu membuat rute baru tidak ikut terbaca.
 
         4. Pastikan storage/ dan bootstrap/cache/ dapat ditulis oleh web server:
 

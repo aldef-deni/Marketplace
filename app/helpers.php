@@ -90,7 +90,11 @@ if (! function_exists('googleAktif')) {
      */
     function googleAktif(): bool
     {
-        return filled(config('services.google.client_id'))
+        // Keberadaan kelasnya ikut diperiksa: bila "composer install" belum
+        // dijalankan di server, paket Socialite tidak ada dan pemanggilannya
+        // akan melempar galat fatal alih-alih sekadar menonaktifkan tombol.
+        return class_exists(\Laravel\Socialite\Facades\Socialite::class)
+            && filled(config('services.google.client_id'))
             && filled(config('services.google.client_secret'));
     }
 }
