@@ -23,6 +23,9 @@ class CekGoogleSso extends Command
 
     private const URL_OTORISASI = 'https://accounts.google.com/o/oauth2/v2/auth';
 
+    /** Nilai APP_URL yang seharusnya, bila yang salah hanya skemanya. */
+    private ?string $salahSkema = null;
+
     public function handle(): int
     {
         $this->newLine();
@@ -84,8 +87,20 @@ class CekGoogleSso extends Command
         // Kesalahan paling sering: URI-nya benar, tetapi host atau skemanya
         // berbeda dengan APP_URL sehingga tidak cocok dengan yang didaftarkan.
         if (! str_starts_with($redirect, $appUrl.'/')) {
-            $this->baris(false, 'Kecocokan APP_URL', 'redirect URI tidak berawalan APP_URL ('.$appUrl.')');
             $lolos = false;
+            $hostApp = parse_url($appUrl, PHP_URL_HOST);
+            $hostRedirect = parse_url($redirect, PHP_URL_HOST);
+            $skemaApp = parse_url($appUrl, PHP_URL_SCHEME);
+            $skemaRedirect = parse_url($redirect, PHP_URL_SCHEME);
+
+            // Host sama tapi skema beda hampir selalu berarti APP_URL yang
+            // tertinggal di http, bukan redirect URI-nya yang keliru.
+            if ($hostApp === $hostRedirect && $skemaApp !== $skemaRedirect) {
+                $this->baris(false, 'Kecocokan APP_URL', 'APP_URL memakai '.$skemaApp.'://, redirect URI memakai '.$skemaRedirect.'://');
+                $this->salahSkema = $skemaRedirect.'://'.$hostRedirect;
+            } else {
+                $this->baris(false, 'Kecocokan APP_URL', 'redirect URI tidak berawalan APP_URL ('.$appUrl.')');
+            }
         } else {
             $this->baris(true, 'Kecocokan APP_URL', $appUrl);
         }
@@ -269,11 +284,28 @@ class CekGoogleSso extends Command
     private function petunjukEnv(): void
     {
         $this->newLine();
+
+        if ($this->salahSkema !== null) {
+            $this->line('  Redirect URI sudah benar. Yang perlu diperbaiki justru <options=bold>APP_URL</>,');
+            $this->line('  karena situs ini dilayani lewat HTTPS. Ubah di <options=bold>.env</>:');
+            $this->newLine();
+            $this->line('  <fg=green>APP_URL='.$this->salahSkema.'</>');
+            $this->newLine();
+            $this->line('  Lalu jalankan <options=bold>php artisan config:clear</> dan ulangi perintah ini.');
+            $this->newLine();
+
+            return;
+        }
+
+        // Contoh redirect memakai skema yang sama dengan APP_URL saat ini,
+        // supaya tidak justru menyarankan turun ke http.
+        $dasar = rtrim((string) config('app.url'), '/');
+
         $this->line('  Isi di <options=bold>.env</> lalu jalankan <options=bold>php artisan config:clear</>:');
         $this->newLine();
         $this->line('  <fg=gray>GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com</>');
         $this->line('  <fg=gray>GOOGLE_CLIENT_SECRET=GOCSPX-xxxxx</>');
-        $this->line('  <fg=gray>GOOGLE_REDIRECT_URI='.rtrim((string) config('app.url'), '/').'/auth/google/callback</>');
+        $this->line('  <fg=gray>GOOGLE_REDIRECT_URI='.$dasar.'/auth/google/callback</>');
         $this->newLine();
     }
 }

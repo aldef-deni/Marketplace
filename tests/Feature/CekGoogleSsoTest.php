@@ -108,4 +108,22 @@ class CekGoogleSsoTest extends TestCase
 
         Http::assertNothingSent();
     }
+
+    /**
+     * Host sama tetapi skema berbeda: yang salah hampir pasti APP_URL yang
+     * tertinggal di http, bukan redirect URI-nya. Petunjuknya harus mengarah
+     * ke sana, bukan menyarankan menurunkan redirect URI ke http.
+     */
+    public function test_app_url_masih_http_diarahkan_untuk_dinaikkan_ke_https(): void
+    {
+        Http::fake();
+        config(['app.url' => 'http://market.arahinn.com']);
+
+        $this->artisan('google:cek')
+            ->expectsOutputToContain('APP_URL memakai http://, redirect URI memakai https://')
+            ->expectsOutputToContain('APP_URL=https://market.arahinn.com')
+            ->assertFailed();
+
+        Http::assertNothingSent();
+    }
 }
