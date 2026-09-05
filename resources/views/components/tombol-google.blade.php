@@ -1,8 +1,12 @@
 @props(['teks' => 'Lanjutkan dengan Google'])
 
 {{-- Disembunyikan bila kredensial Google belum diisi, supaya tidak ada tombol
-     yang pasti gagal saat ditekan. --}}
-@if (googleAktif())
+     yang pasti gagal saat ditekan.
+
+     Keberadaan rutenya ikut diperiksa: bila cache rute di server masih versi
+     lama, route() akan melempar galat dan menjatuhkan seluruh halaman masuk.
+     Kehilangan tombolnya jauh lebih ringan daripada kehilangan halamannya. --}}
+@if (googleAktif() && Route::has('google.redirect'))
     <a href="{{ route('google.redirect') }}"
        {{ $attributes->merge(['class' => 'group flex w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2']) }}>
         {{-- Lambang "G" resmi Google, empat warna. --}}

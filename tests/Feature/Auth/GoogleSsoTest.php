@@ -164,4 +164,26 @@ class GoogleSsoTest extends TestCase
         $this->assertNull($pengguna->fresh());
         $this->assertGuest();
     }
+
+    /**
+     * Reproduksi kegagalan di server: cache rute masih versi lama sehingga
+     * google.redirect belum terdaftar, sementara kredensialnya sudah terisi.
+     * Halaman masuk harus tetap tampil, hanya tanpa tombolnya.
+     */
+    public function test_halaman_masuk_tetap_tampil_saat_rute_sso_belum_terdaftar(): void
+    {
+        \Illuminate\Support\Facades\Route::setRoutes(
+            tap(new \Illuminate\Routing\RouteCollection, function ($koleksi) {
+                foreach (\Illuminate\Support\Facades\Route::getRoutes() as $rute) {
+                    if ($rute->getName() !== 'google.redirect') {
+                        $koleksi->add($rute);
+                    }
+                }
+            })
+        );
+
+        $this->get('/login')
+            ->assertOk()
+            ->assertDontSee('Masuk dengan Google');
+    }
 }
