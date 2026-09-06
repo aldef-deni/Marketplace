@@ -196,6 +196,66 @@ class PromoTest extends TestCase
             ->assertSessionHasNoErrors();
     }
 
+    /* ---------- Jalan menuju pemilihan produk ---------- */
+
+    public function test_pemilik_toko_langsung_diantar_memilih_produk_sesudah_membuat_promo(): void
+    {
+        // Memilih produk adalah langkah berikutnya yang pasti; menurunkan
+        // pemilik toko di daftar lain membuat langkah itu seperti tidak ada.
+        $this->actingAs($this->pemilikA)
+            ->post(route('admin.promo.kampanye.store'), [
+                'nama' => 'Promo Gajian',
+                'mulai_at' => Carbon::now()->format('Y-m-d H:i'),
+                'selesai_at' => Carbon::now()->addDay()->format('Y-m-d H:i'),
+                'tipe_diskon' => 'nominal',
+                'nilai_diskon' => 15000,
+            ])
+            ->assertRedirect(route('admin.promo.kelola', Promo::firstWhere('nama', 'Promo Gajian')));
+    }
+
+    public function test_superadmin_kembali_ke_daftar_kampanyenya_sesudah_membuat_promo(): void
+    {
+        // Promo platform belum punya produk untuk dipilih; yang dipilih toko.
+        $this->actingAs($this->superadmin)
+            ->post(route('admin.promo.kampanye.store'), [
+                'nama' => 'Promo Nasional',
+                'mulai_at' => Carbon::now()->format('Y-m-d H:i'),
+                'selesai_at' => Carbon::now()->addDay()->format('Y-m-d H:i'),
+                'tipe_diskon' => 'persen',
+                'nilai_diskon' => 15,
+            ])
+            ->assertRedirect(route('admin.promo.kampanye.index'));
+    }
+
+    public function test_promo_toko_yang_masih_draf_tetap_bisa_dipilihkan_produknya(): void
+    {
+        $promo = Promo::create([
+            'nama' => 'Promo Draf', 'slug' => 'promo-draf',
+            'toko_id' => $this->tokoA->id, 'dibuat_oleh' => $this->pemilikA->id,
+            'tipe_diskon' => 'persen', 'nilai_diskon' => 10, 'aktif' => false,
+            'mulai_at' => Carbon::now(), 'selesai_at' => Carbon::now()->addDay(),
+        ]);
+
+        // Menyiapkan isi promo sebelum menerbitkannya justru urutan yang wajar.
+        $html = $this->actingAs($this->pemilikA)
+            ->get(route('admin.promo.kampanye.index'))->assertOk()->getContent();
+
+        $this->assertStringContainsString(route('admin.promo.kelola', $promo), $html,
+            'Tombol pilih produk seharusnya tersedia walau promonya masih draf.');
+
+        $this->actingAs($this->pemilikA)->get(route('admin.promo.kelola', $promo))->assertOk();
+    }
+
+    public function test_promo_platform_yang_belum_terbit_belum_terjangkau_toko(): void
+    {
+        // Berbeda dari promo sendiri: toko tidak boleh menyiapkan keikutsertaan
+        // pada kampanye platform yang belum diumumkan.
+        $promo = $this->buatPromo(['aktif' => false]);
+
+        $this->actingAs($this->pemilikA)
+            ->get(route('admin.promo.kelola', $promo))->assertNotFound();
+    }
+
     /* ---------- Notifikasi ---------- */
 
     public function test_menerbitkan_promo_platform_memberi_tahu_setiap_pemilik_toko(): void

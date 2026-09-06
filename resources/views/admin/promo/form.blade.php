@@ -15,7 +15,7 @@
             <p class="mt-0.5 text-sm text-slate-500">
                 {{ $superadmin
                     ? 'Promo baru tersimpan sebagai draf. Terbitkan agar pemilik toko diberi tahu dan dapat mengikutinya.'
-                    : 'Promo baru tersimpan sebagai draf. Terbitkan lalu pilih produk yang disertakan.' }}
+                    : 'Sesudah disimpan Anda langsung diantar memilih produk yang disertakan. Promo baru berjalan setelah diterbitkan.' }}
             </p>
         </div>
 

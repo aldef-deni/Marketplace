@@ -93,8 +93,14 @@
 
                     <a href="{{ route('admin.promo.kampanye.edit', $promo) }}" class="btn-secondary btn-sm">Edit</a>
 
-                    @if ($promo->aktif)
-                        <a href="{{ route('admin.promo.kelola', $promo) }}" class="btn-secondary btn-sm">
+                    {{-- Promo milik toko sendiri boleh diisi produknya sejak
+                         masih draf: menyiapkan isinya sebelum menerbitkan
+                         justru urutan yang wajar. Kampanye platform baru
+                         terjangkau setelah terbit, karena sebelum itu belum
+                         ada yang boleh diikuti toko. --}}
+                    @if (! $promo->milikPlatform() || $promo->aktif)
+                        <a href="{{ route('admin.promo.kelola', $promo) }}"
+                           class="{{ $promo->aktif ? 'btn-secondary' : 'btn-primary' }} btn-sm">
                             {{ $superadmin ? 'Lihat Produk' : 'Pilih Produk' }}
                         </a>
                     @endif

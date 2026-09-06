@@ -73,11 +73,19 @@ class PromoController extends Controller
         $data['dibuat_oleh'] = auth()->id();
         $data['toko_id'] = auth()->user()->isSuperadmin() ? null : $this->tokoSaya()?->id;
 
-        Promo::create($data);
+        $promo = Promo::create($data);
 
-        return redirect()->route('admin.promo.index')->with('success', auth()->user()->isSuperadmin()
-            ? 'Promo dibuat. Terbitkan agar pemilik toko diberi tahu dan dapat mengikutinya.'
-            : 'Promo dibuat. Terbitkan lalu pilih produk yang disertakan.');
+        // Pemilik toko diantar langsung ke pemilihan produk: itu langkah
+        // berikutnya yang pasti, dan promo tanpa produk tidak berarti apa-apa.
+        // Superadmin tidak punya produk untuk dipilih di sini — yang memilih
+        // adalah tokonya masing-masing — jadi ia kembali ke daftar kampanye.
+        if (! auth()->user()->isSuperadmin()) {
+            return redirect()->route('admin.promo.kelola', $promo)
+                ->with('success', 'Promo dibuat. Sekarang pilih produk yang disertakan, lalu terbitkan.');
+        }
+
+        return redirect()->route('admin.promo.kampanye.index')
+            ->with('success', 'Promo dibuat. Terbitkan agar pemilik toko diberi tahu dan dapat mengikutinya.');
     }
 
     public function edit(Promo $promo)
