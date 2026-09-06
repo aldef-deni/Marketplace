@@ -87,11 +87,26 @@ export default {
                     '0%, 100%': { transform: 'translateY(0)' },
                     '50%': { transform: 'translateY(-8px)' },
                 },
+                /* Kilatan petir: gelap hampir sepanjang siklus, lalu berkedip
+                   dua kali singkat seperti halilintar sungguhan. */
+                'kilat': {
+                    '0%, 86%, 100%': { opacity: '0' },
+                    '88%': { opacity: '0.5' },
+                    '90%': { opacity: '0.06' },
+                    '93%': { opacity: '0.34' },
+                    '96%': { opacity: '0.04' },
+                },
+                'denyut-petir': {
+                    '0%, 100%': { transform: 'scale(1)', filter: 'drop-shadow(0 0 0 rgba(245,147,0,0))' },
+                    '50%': { transform: 'scale(1.14)', filter: 'drop-shadow(0 0 9px rgba(245,147,0,0.85))' },
+                },
             },
 
             animation: {
                 'sheen-sweep': 'sheen-sweep 2.6s ease-in-out infinite',
                 'float-soft': 'float-soft 6s ease-in-out infinite',
+                'kilat': 'kilat 6s ease-in-out infinite',
+                'denyut-petir': 'denyut-petir 2.4s ease-in-out infinite',
             },
         },
     },

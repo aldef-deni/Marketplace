@@ -337,7 +337,23 @@ class FlashSaleTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee($kampanye->nama)
-            ->assertSee('Flash Sale');
+            ->assertSee('Flash Sale')
+            // Rel geser, bukan kisi kaku, dan hitung mundurnya menyertakan hari.
+            ->assertSee('rel-geser', false)
+            ->assertSee("'Hari', this.angka(this.sisa / 86400)", false)
+            ->assertSee($this->produk->nama);
+    }
+
+    public function test_kartu_produk_memisahkan_tautan_dari_tombol_keranjang(): void
+    {
+        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $this->sertakanProduk($kampanye);
+
+        $html = $this->get('/')->assertOk()->getContent();
+
+        // Tombol keranjang tidak boleh berada di dalam tautan produk, sebab
+        // kliknya akan ikut membuka halaman produk alih-alih menambah ke keranjang.
+        $this->assertStringNotContainsString('<button', explode('</a>', explode('<a href="'.route('toko.show', $this->produk->slug).'"', $html)[1])[0]);
     }
 
     public function test_beranda_tidak_menampilkan_kampanye_tanpa_produk(): void
