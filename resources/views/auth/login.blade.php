@@ -81,7 +81,7 @@
                                 </a>
                             @endif
                         </div>
-                        <x-text-input id="password" class="input-field mt-1" type="password" name="password" required autocomplete="current-password" placeholder="••••••••" />
+                        <x-input-sandi id="password" pembungkus="mt-1" name="password" required autocomplete="current-password" placeholder="••••••••" />
                         <x-input-error :messages="$errors->get('password')" class="mt-2" />
                     </div>
 

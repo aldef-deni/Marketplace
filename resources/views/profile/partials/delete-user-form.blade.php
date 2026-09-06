@@ -37,8 +37,8 @@
             <div class="mt-6">
                 @if ($sudahPunyaSandi)
                     <label for="password" class="sr-only">Kata Sandi</label>
-                    <input id="password" name="password" type="password" class="input-field"
-                           placeholder="Kata sandi Anda" autocomplete="current-password">
+                    <x-input-sandi id="password" name="password"
+                                   placeholder="Kata sandi Anda" autocomplete="current-password" />
                     <x-input-error :messages="$errors->userDeletion->get('password')" class="mt-2" />
                 @else
                     <label for="email_konfirmasi" class="sr-only">Alamat Email</label>

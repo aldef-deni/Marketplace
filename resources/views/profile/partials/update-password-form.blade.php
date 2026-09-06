@@ -26,23 +26,23 @@
         @if ($sudahPunyaSandi)
             <div>
                 <label for="update_password_current_password" class="label-field">Kata Sandi Saat Ini</label>
-                <input id="update_password_current_password" name="current_password" type="password"
-                       class="input-field" autocomplete="current-password">
+                <x-input-sandi id="update_password_current_password" name="current_password"
+                               autocomplete="current-password" />
                 <x-input-error :messages="$errors->updatePassword->get('current_password')" class="mt-2" />
             </div>
         @endif
 
         <div>
             <label for="update_password_password" class="label-field">Kata Sandi Baru</label>
-            <input id="update_password_password" name="password" type="password"
-                   class="input-field" autocomplete="new-password">
+            <x-input-sandi id="update_password_password" name="password"
+                           autocomplete="new-password" />
             <x-input-error :messages="$errors->updatePassword->get('password')" class="mt-2" />
         </div>
 
         <div>
             <label for="update_password_password_confirmation" class="label-field">Ulangi Kata Sandi Baru</label>
-            <input id="update_password_password_confirmation" name="password_confirmation" type="password"
-                   class="input-field" autocomplete="new-password">
+            <x-input-sandi id="update_password_password_confirmation" name="password_confirmation"
+                           autocomplete="new-password" />
             <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-2" />
         </div>
 
