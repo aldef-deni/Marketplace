@@ -3,10 +3,16 @@
 
     @php
         $terkunci = $flashSale->sudahBerakhir();
+
+        // Superadmin tidak punya menu keikutsertaan; ia tiba di sini dari kartu
+        // kampanye, jadi tautan kembalinya pun mengarah ke sana.
+        $rutaKembali = auth()->user()->isSuperadmin()
+            ? route('admin.flash-sale.kampanye.index')
+            : route('admin.flash-sale.index');
     @endphp
 
     <div class="mb-6">
-        <a href="{{ route('admin.flash-sale.index') }}"
+        <a href="{{ $rutaKembali }}"
            class="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-brand-700">
             &larr; Kembali ke daftar kampanye
         </a>
@@ -200,7 +206,7 @@
             @unless ($terkunci)
                 <div class="flex flex-wrap items-center gap-3 border-t border-slate-100 p-6">
                     <button class="btn-primary">Simpan Pilihan Produk</button>
-                    <a href="{{ route('admin.flash-sale.index') }}" class="btn-secondary">Batal</a>
+                    <a href="{{ $rutaKembali }}" class="btn-secondary">Batal</a>
 
                     <p class="ml-auto text-xs text-slate-400">
                         Harga flash harus lebih murah dari harga normal, dan kuota tidak boleh melebihi stok.

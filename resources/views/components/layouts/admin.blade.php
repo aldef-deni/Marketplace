@@ -39,15 +39,18 @@
                 <x-ikon nama="truk" kelas="h-5 w-5" /> Pengiriman
             </a>
 
-            <a href="{{ route('admin.flash-sale.index') }}"
-               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.flash-sale.index') || request()->routeIs('admin.flash-sale.kelola') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
-                <x-ikon nama="api" kelas="h-5 w-5" /> Flash Sale
-            </a>
-
+            {{-- Satu menu flash sale per peran. Superadmin menyusun kampanye dan
+                 masuk ke daftar produknya lewat tombol di kartu kampanye; admin
+                 toko hanya perlu halaman keikutsertaan. --}}
             @if (auth()->user()->isSuperadmin())
                 <a href="{{ route('admin.flash-sale.kampanye.index') }}"
-                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.flash-sale.kampanye.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.flash-sale.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
                     <x-ikon nama="petir" kelas="h-5 w-5" /> Kampanye Flash Sale
+                </a>
+            @else
+                <a href="{{ route('admin.flash-sale.index') }}"
+                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.flash-sale.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                    <x-ikon nama="api" kelas="h-5 w-5" /> Flash Sale
                 </a>
             @endif
 
