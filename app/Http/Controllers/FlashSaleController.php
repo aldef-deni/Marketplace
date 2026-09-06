@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\FlashSale;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -15,19 +17,32 @@ use Illuminate\Support\Collection;
  */
 class FlashSaleController extends Controller
 {
-    public function index()
+    /**
+     * Kartu per halaman. Kelipatan empat agar baris terakhir tidak menyisakan
+     * kartu tunggal yang menggantung pada kisi empat kolom.
+     */
+    private const PER_HALAMAN = 12;
+
+    public function index(Request $request)
     {
         $kampanyes = FlashSale::berlangsung()
             ->with(['produks.produk.kategori', 'produks.produk.toko'])
             ->orderBy('selesai_at')
-            ->get()
-            ->map(function (FlashSale $kampanye) {
-                $kampanye->setRelation('produks', $this->barisTersedia($kampanye));
+            ->get();
 
-                return $kampanye;
-            })
-            ->filter(fn (FlashSale $kampanye) => $kampanye->produks->isNotEmpty())
+        /*
+        | Seluruh baris promo dari semua kampanye berjalan digabung jadi satu
+        | daftar, bukan dipisah per kampanye. Halaman ini menjual harga, dan
+        | pemisahan per kampanye membuat satu halaman berisi beberapa potongan
+        | pendek yang masing-masing tidak penuh — persis yang membuat paginasi
+        | dua belas kartu mustahil ditepati.
+        */
+        $baris = $kampanyes
+            ->flatMap(fn (FlashSale $kampanye) => $this->barisTersedia($kampanye))
+            ->sortByDesc(fn ($item) => $item->persen_hemat)
             ->values();
+
+        $produks = $this->halamani($baris, $request);
 
         // Kampanye terjadwal berikutnya dipakai mengisi halaman saat tidak ada
         // promo berjalan, supaya pengunjung punya alasan untuk kembali.
@@ -37,9 +52,35 @@ class FlashSaleController extends Controller
             ->orderBy('mulai_at')
             ->first();
 
-        $jumlahProduk = $kampanyes->sum(fn (FlashSale $kampanye) => $kampanye->produks->count());
+        return view('flash-sale', [
+            'produks' => $produks,
+            'jumlahProduk' => $baris->count(),
+            'jumlahKampanye' => $kampanyes->count(),
+            // Kampanye yang paling cepat berakhir; itulah tenggat yang paling
+            // mendesak bagi pembeli, jadi itu yang dihitung mundur.
+            'kampanyeTerdekat' => $kampanyes->first(fn (FlashSale $k) => $this->barisTersedia($k)->isNotEmpty()),
+            'berikutnya' => $berikutnya,
+        ]);
+    }
 
-        return view('flash-sale', compact('kampanyes', 'berikutnya', 'jumlahProduk'));
+    /**
+     * Ubah koleksi menjadi paginator supaya tautan halamannya lengkap.
+     *
+     * Baris promo lahir dari penyaringan di PHP — kuota dan status toko tidak
+     * dapat disaring seluruhnya lewat kueri — sehingga paginasinya dibangun
+     * dari koleksi, bukan dari kueri basis data.
+     */
+    private function halamani(Collection $baris, Request $request): LengthAwarePaginator
+    {
+        $halaman = LengthAwarePaginator::resolveCurrentPage();
+
+        return new LengthAwarePaginator(
+            $baris->forPage($halaman, self::PER_HALAMAN)->values(),
+            $baris->count(),
+            self::PER_HALAMAN,
+            $halaman,
+            ['path' => $request->url(), 'query' => $request->query()],
+        );
     }
 
     private function barisTersedia(FlashSale $kampanye): Collection
@@ -52,7 +93,6 @@ class FlashSaleController extends Controller
                 // tanpa ini lapak bermasalah tetap terpajang di halaman utama.
                 && $baris->produk->toko?->aktif()
                 && ! $baris->kuotaHabis())
-            ->sortByDesc(fn ($baris) => $baris->persen_hemat)
             ->values();
     }
 }

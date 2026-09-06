@@ -439,6 +439,32 @@ class FlashSaleTest extends TestCase
             ->assertDontSee($biasa->nama);
     }
 
+    public function test_halaman_flash_sale_membatasi_dua_belas_kartu_per_halaman(): void
+    {
+        $kampanye = $this->buatKampanyeDiikuti();
+
+        // Lima belas produk berpromo: dua belas di halaman pertama, tiga sisanya
+        // wajib pindah ke halaman kedua, bukan ikut menumpuk di halaman satu.
+        for ($i = 1; $i <= 15; $i++) {
+            $produk = Produk::create([
+                'toko_id' => $this->toko->id,
+                'kategori_id' => $this->produk->kategori_id,
+                'nama' => "Produk Promo {$i}", 'slug' => "produk-promo-{$i}", 'deskripsi' => 'Uji.',
+                'harga' => 200000, 'stok' => 20, 'berat' => 300, 'status' => 'aktif',
+            ]);
+
+            $kampanye->produks()->create([
+                'produk_id' => $produk->id, 'harga_flash' => 150000, 'kuota' => 5,
+            ]);
+        }
+
+        $satu = $this->get(route('flash-sale.index'))->assertOk();
+        $this->assertSame(12, substr_count($satu->getContent(), 'kartu-flash'));
+
+        $dua = $this->get(route('flash-sale.index', ['page' => 2]))->assertOk();
+        $this->assertSame(3, substr_count($dua->getContent(), 'kartu-flash'));
+    }
+
     public function test_halaman_flash_sale_melewatkan_produk_yang_kuotanya_habis(): void
     {
         $kampanye = $this->buatKampanyeDiikuti();

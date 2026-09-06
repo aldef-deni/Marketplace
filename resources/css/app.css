@@ -223,6 +223,34 @@
         @apply absolute top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-lg ring-1 ring-slate-200 backdrop-blur transition hover:bg-white hover:text-brand-700 md:flex;
     }
 
+    /* ---------- Kartu flash sale ---------- */
+    /* Lebih besar daripada kartu katalog karena halamannya hanya memuat empat
+       per baris. Gerakannya ditumpuk pada satu isyarat: kartu terangkat, gambar
+       mendekat, dan seberkas cahaya melintas sekali — bukan beberapa animasi
+       yang berjalan sendiri-sendiri dan saling berebut perhatian. */
+    .kartu-flash {
+        @apply relative flex h-full flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/70 transition duration-300 ease-out;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    }
+
+    .kartu-flash:hover {
+        @apply -translate-y-1.5 ring-accent-200;
+        box-shadow: 0 26px 50px -24px rgba(244, 63, 94, 0.45);
+    }
+
+    /* Sapuan cahaya di atas gambar, sekali tiap kursor masuk. */
+    .kartu-flash .kilau-flash {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.55) 50%, transparent 62%);
+        transform: translateX(-120%);
+    }
+
+    .kartu-flash:hover .kilau-flash {
+        animation: kilat-tombol 0.9s ease-out;
+    }
+
     /* ---------- Lencana metode pembayaran ---------- */
     /* Warna khas tiap penyedia dikirim lewat properti kustom --warna-merchant
        dari Blade, sehingga daftar merchant bisa diubah di config/brand.php

@@ -32,55 +32,47 @@
 
                         <p class="mt-3 max-w-xl text-sm leading-relaxed text-slate-600">
                             @if ($jumlahProduk > 0)
-                                {{ $jumlahProduk }} produk sedang berpromo. Harga khusus hanya berlaku selama
-                                kampanye berjalan dan kuotanya masih ada.
+                                {{ number_format($jumlahProduk) }} produk sedang berpromo{{ $jumlahKampanye > 1 ? ' dari '.$jumlahKampanye.' kampanye' : '' }}.
+                                Harga khusus hanya berlaku selama kampanye berjalan dan kuotanya masih ada.
                             @else
                                 Belum ada promo yang berjalan saat ini.
                             @endif
                         </p>
                     </div>
 
-                    @if ($kampanyes->isNotEmpty())
-                        @include('partials.flash-hitung-mundur', [
-                            'flashSale' => $kampanyes->first(),
-                            'label' => $kampanyes->count() > 1 ? 'Kampanye terdekat berakhir' : 'Berakhir dalam',
-                        ])
+                    {{-- Nama kampanye tetap disebut meski kartunya digabung jadi
+                         satu daftar: pembeli perlu tahu tenggat mana yang sedang
+                         dihitung mundur di sebelahnya. --}}
+                    @if ($kampanyeTerdekat)
+                        <div class="shrink-0">
+                            <p class="mb-2 text-sm font-extrabold text-slate-800 lg:text-right">
+                                {{ $kampanyeTerdekat->nama }}
+                            </p>
+
+                            @include('partials.flash-hitung-mundur', [
+                                'flashSale' => $kampanyeTerdekat,
+                                'label' => $jumlahKampanye > 1 ? 'Kampanye terdekat berakhir' : 'Berakhir dalam',
+                            ])
+                        </div>
                     @endif
                 </div>
             </div>
 
-            {{-- Kampanye berjalan --}}
-            @forelse ($kampanyes as $kampanye)
-                <section class="mt-10">
-                    <div class="flex flex-wrap items-end justify-between gap-4 border-b border-slate-200/80 pb-4">
-                        <div class="min-w-0">
-                            <div class="flex flex-wrap items-center gap-2.5">
-                                <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
-                                    {{ $kampanye->nama }}
-                                </h2>
-                                <span class="badge bg-rose-100 text-rose-700 ring-rose-200">
-                                    <x-ikon nama="petir" kelas="h-3 w-3" />
-                                    Hemat sampai {{ $kampanye->produks->max(fn ($b) => $b->persen_hemat) }}%
-                                </span>
-                            </div>
+            {{-- Kisi produk: empat per baris di layar lebar, dua belas per
+                 halaman sehingga baris terakhir selalu genap. --}}
+            @if ($produks->isNotEmpty())
+                <div class="mt-10 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+                    @foreach ($produks as $baris)
+                        @include('partials.kartu-flash', ['baris' => $baris])
+                    @endforeach
+                </div>
 
-                            @if ($kampanye->deskripsi)
-                                <p class="mt-1.5 max-w-2xl text-sm text-slate-500">{{ $kampanye->deskripsi }}</p>
-                            @endif
-                        </div>
-
-                        <p class="text-xs font-semibold text-slate-400">
-                            Berakhir {{ tanggalIndo($kampanye->selesai_at, true) }}
-                        </p>
+                @if ($produks->hasPages())
+                    <div class="mt-10">
+                        {{ $produks->links('vendor.pagination.brand') }}
                     </div>
-
-                    <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                        @foreach ($kampanye->produks as $baris)
-                            @include('partials.kartu-produk', ['produk' => $baris->produk])
-                        @endforeach
-                    </div>
-                </section>
-            @empty
+                @endif
+            @else
                 {{-- Kosong tanpa promo berjalan. Ditawarkan jadwal berikutnya bila
                      ada, sebab "kosong" saja tidak memberi alasan untuk kembali. --}}
                 <div class="mt-10 rounded-3xl border-2 border-dashed border-slate-300 bg-white/70 p-12 text-center backdrop-blur sm:p-16">
@@ -103,11 +95,11 @@
 
                     <a href="{{ route('produk.index') }}" class="btn-primary btn-kilat mt-7">Jelajahi Katalog</a>
                 </div>
-            @endforelse
+            @endif
 
             {{-- Cara kerja promo. Aturannya dijelaskan terbuka supaya pembeli
                  tidak merasa dikelabui saat harga kembali normal. --}}
-            @if ($kampanyes->isNotEmpty())
+            @if ($produks->isNotEmpty())
                 <div class="mt-12 grid gap-4 sm:grid-cols-3">
                     @foreach ([
                         ['jam', 'Berlaku selama kampanye', 'Harga promo otomatis kembali normal begitu waktunya habis.'],
