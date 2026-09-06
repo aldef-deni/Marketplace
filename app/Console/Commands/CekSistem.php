@@ -32,6 +32,9 @@ class CekSistem extends Command
         $this->newLine();
         $this->line('  <options=bold>Pemeriksaan Kondisi Market ArahInn</>');
 
+        $this->bagian('Versi terpasang');
+        $this->periksaVersi();
+
         $this->bagian('Basis data');
         $this->periksaKoneksi();
         $this->periksaTipeAngka();
@@ -252,6 +255,41 @@ class CekSistem extends Command
             is_writable($jalur)
                 ? $this->ok('Dapat ditulis', $folder)
                 : $this->salah('Tidak dapat ditulis', $folder.' — jalankan chmod -R 775 pada folder ini');
+        }
+    }
+
+    /**
+     * Rilis mana yang benar-benar terpasang di sini.
+     *
+     * RILIS.txt dibuat oleh "rilis:paket" dan ikut di dalam ZIP. Tanpa penanda
+     * ini, satu-satunya cara memastikan sebuah deploy sudah masuk adalah
+     * menebak dari tampilan — dan tebakan itu sering keliru.
+     */
+    private function periksaVersi(): void
+    {
+        $berkas = base_path('RILIS.txt');
+
+        if (! is_file($berkas)) {
+            $this->peringatan('RILIS.txt', 'tidak ada — paket lama, atau ZIP belum terekstrak ke root aplikasi');
+
+            return;
+        }
+
+        $isi = [];
+
+        foreach (preg_split('/\R/', (string) file_get_contents($berkas), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $baris) {
+            [$kunci, $nilai] = array_pad(explode('=', $baris, 2), 2, '');
+            $isi[trim($kunci)] = trim($nilai);
+        }
+
+        $this->ok('Commit', substr($isi['commit'] ?? '?', 0, 12));
+
+        if (($isi['judul'] ?? '') !== '') {
+            $this->ok('Perubahan terakhir', $isi['judul']);
+        }
+
+        if (($isi['dibuat'] ?? '') !== '') {
+            $this->ok('Paket dibuat', $isi['dibuat']);
         }
     }
 

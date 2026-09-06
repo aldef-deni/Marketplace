@@ -28,3 +28,4 @@ Thumbs.db
 # dihasilkan seeder dan diperlukan agar katalog contoh tampil setelah deploy.
 /public/uploads/avatar
 /public/uploads/bukti-pembayaran
+RILIS.txt

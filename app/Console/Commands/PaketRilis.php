@@ -99,6 +99,11 @@ class PaketRilis extends Command
         }
 
         $zip->addFromString('CARA-DEPLOY.txt', $this->catatanDeploy($berkas, $this->daftarCommit($akar, $sejak)));
+
+        // Penanda versi ikut terkirim supaya "php artisan sistem:cek" di server
+        // dapat menyebut rilis mana yang benar-benar terpasang. Tanpa itu, satu-
+        // satunya cara memastikan deploy sudah masuk adalah menebak dari tampilan.
+        $zip->addFromString('RILIS.txt', $this->penandaVersi($akar));
         $zip->close();
 
         $this->newLine();
@@ -366,6 +371,25 @@ class PaketRilis extends Command
     /**
      * Daftar commit yang tercakup paket ini, untuk ditulis di catatan deploy.
      */
+    /**
+     * Isi RILIS.txt — versi yang dibawa paket ini.
+     */
+    private function penandaVersi(string $akar): string
+    {
+        $jalankan = fn (string $perintah) => $this->adaGit($akar)
+            ? trim((string) Process::path($akar)->run($perintah)->output())
+            : '';
+
+        $sha = $jalankan('git rev-parse HEAD');
+
+        return implode(PHP_EOL, [
+            'commit='.($sha !== '' ? $sha : 'tidak diketahui'),
+            'judul='.$jalankan('git log -1 --format=%s'),
+            'dibuat='.$this->waktu(),
+            '',
+        ]);
+    }
+
     private function daftarCommit(string $akar, ?string $sejak): string
     {
         if (! $sejak || ! $this->adaGit($akar)) {
