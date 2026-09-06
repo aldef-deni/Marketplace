@@ -41,6 +41,8 @@
             </div>
 
             <div class="flex flex-col items-end gap-3">
+                @include('admin._pemilih-toko')
+
                 <span class="rounded-2xl bg-accent-500 px-5 py-2.5 text-lg font-extrabold text-ink-950 shadow-accent">
                     −{{ $flashSale->label_diskon }}
                 </span>

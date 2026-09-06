@@ -49,7 +49,12 @@ class FlashSalePartisipasiController extends Controller
             'diikuti' => $diikutiIds->count(),
         ];
 
-        return view('admin.flash-sale.partisipasi-index', compact('kampanyes', 'jumlah', 'toko'));
+        return view('admin.flash-sale.partisipasi-index', [
+            'kampanyes' => $kampanyes,
+            'jumlah' => $jumlah,
+            'toko' => $toko,
+            'tokos' => $this->tokoTersedia(),
+        ]);
     }
 
     public function show(FlashSale $flashSale)
@@ -73,7 +78,13 @@ class FlashSalePartisipasiController extends Controller
 
         $diikuti = $flashSale->diikutiOleh($toko);
 
-        return view('admin.flash-sale.partisipasi-show', compact('flashSale', 'produks', 'toko', 'diikuti'));
+        return view('admin.flash-sale.partisipasi-show', [
+            'flashSale' => $flashSale,
+            'produks' => $produks,
+            'toko' => $toko,
+            'diikuti' => $diikuti,
+            'tokos' => $this->tokoTersedia(),
+        ]);
     }
 
     /**

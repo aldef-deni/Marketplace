@@ -6,7 +6,8 @@
         <div class="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-accent-500/25 blur-3xl"></div>
         <div class="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-accent-500/60 to-transparent"></div>
 
-        <div class="relative">
+        <div class="relative flex flex-wrap items-start justify-between gap-5">
+            <div class="min-w-0">
             <span class="badge bg-accent-500/15 text-accent-300 ring-accent-500/30">Program Promo</span>
             <h1 class="mt-3 text-2xl font-extrabold text-white">Flash Sale</h1>
             <p class="mt-1.5 max-w-xl text-sm text-ink-300">
@@ -14,6 +15,9 @@
                 <span class="font-bold text-white">{{ $toko->nama }}</span> ikut serta,
                 lalu memilih produk mana yang disertakan beserta harga dan kuotanya.
             </p>
+            </div>
+
+            @include('admin._pemilih-toko')
         </div>
     </div>
 

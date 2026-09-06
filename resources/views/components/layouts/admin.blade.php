@@ -24,7 +24,11 @@
         <nav class="flex-1 space-y-1 overflow-y-auto p-4">
             @php
                 $pengelola = auth()->user()->isAdmin();
-                $punyaToko = \App\Models\Toko::where('user_id', auth()->id())->exists();
+                // Pengelola platform bertindak atas nama toko mana pun yang
+                // aktif; penjual hanya atas nama lapaknya sendiri.
+                $kelolaToko = $pengelola
+                    ? \App\Models\Toko::tampil()->exists()
+                    : \App\Models\Toko::where('user_id', auth()->id())->exists();
             @endphp
 
             {{-- Penjual tidak diberi menu tingkat platform. Rutenya pun sudah
@@ -64,11 +68,13 @@
 
             @endif
 
+            {{-- Judulnya ikut disembunyikan saat tidak ada satu pun menu di
+                 bawahnya; kepala seksi yang menggantung kosong terbaca sebagai
+                 halaman yang rusak. --}}
+            @if ($kelolaToko || auth()->user()->isSuperadmin())
             <p class="px-3 pb-2 pt-5 text-[10px] font-bold uppercase tracking-widest text-ink-500">Promo</p>
 
-            {{-- Halaman keikutsertaan hanya berguna bagi orang yang punya lapak;
-                 pengelola platform tanpa toko cukup melihat penyusunannya. --}}
-            @if ($punyaToko)
+            @if ($kelolaToko)
                 <a href="{{ route('admin.flash-sale.index') }}"
                    class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.flash-sale.index') || request()->routeIs('admin.flash-sale.kelola') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
                     <x-ikon nama="api" kelas="h-5 w-5" /> Flash Sale
@@ -87,12 +93,17 @@
                 </a>
             @endif
 
-            @if (auth()->user()->isSuperadmin() || $punyaToko)
+            @if (auth()->user()->isSuperadmin() || $kelolaToko)
                 <a href="{{ route('admin.promo.kampanye.index') }}"
                    class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.promo.kampanye.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
                     <x-ikon nama="tambah" kelas="h-5 w-5" />
-                    {{ auth()->user()->isSuperadmin() ? 'Kampanye Promo' : 'Promo Saya' }}
+                    @if (auth()->user()->isSuperadmin())
+                        Kampanye Promo
+                    @else
+                        {{ $pengelola ? 'Promo Toko' : 'Promo Saya' }}
+                    @endif
                 </a>
+            @endif
             @endif
 
             <p class="px-3 pb-2 pt-5 text-[10px] font-bold uppercase tracking-widest text-ink-500">Katalog</p>

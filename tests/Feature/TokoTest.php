@@ -211,6 +211,44 @@ class TokoTest extends TestCase
         }
     }
 
+    public function test_pengelola_tanpa_toko_tetap_dapat_membuka_menu_promo(): void
+    {
+        // Admin platform tidak memiliki lapak, tetapi bertindak atas nama toko
+        // aktif mana pun. Sebelumnya menunya hilang dan menyisakan judul kosong.
+        $this->actingAs($this->admin)
+            ->get(route('admin.promo.index'))
+            ->assertOk()
+            ->assertSee('Lapak Alfa');
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.flash-sale.index'))
+            ->assertOk();
+    }
+
+    public function test_pengelola_dapat_berpindah_toko_yang_dikelola(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('admin.promo.index', ['toko' => $this->tokoB->slug]))
+            ->assertOk()
+            ->assertSee('Lapak Beta');
+
+        // Pilihan bertahan pada permintaan berikutnya tanpa parameter, supaya
+        // kiriman formulir mengenai lapak yang sama.
+        $this->actingAs($this->admin)
+            ->get(route('admin.promo.index'))
+            ->assertOk()
+            ->assertSee('Lapak Beta');
+    }
+
+    public function test_penjual_tidak_dapat_berpindah_ke_toko_lain(): void
+    {
+        $this->actingAs($this->penjualA)
+            ->get(route('admin.promo.index', ['toko' => $this->tokoB->slug]))
+            ->assertOk()
+            ->assertSee('Lapak Alfa')
+            ->assertDontSee('Lapak Beta');
+    }
+
     /* ---------- Pengelola platform ---------- */
 
     public function test_pengelola_melihat_seluruh_toko(): void

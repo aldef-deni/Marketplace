@@ -52,7 +52,13 @@ class PromoPartisipasiController extends Controller
             'sendiri' => $sendiri->count(),
         ];
 
-        return view('admin.promo.partisipasi-index', compact('platform', 'sendiri', 'jumlah', 'toko'));
+        return view('admin.promo.partisipasi-index', [
+            'platform' => $platform,
+            'sendiri' => $sendiri,
+            'jumlah' => $jumlah,
+            'toko' => $toko,
+            'tokos' => $this->tokoTersedia(),
+        ]);
     }
 
     public function show(Promo $promo)
@@ -75,7 +81,13 @@ class PromoPartisipasiController extends Controller
 
         $diikuti = $promo->berlakuUntukToko($toko);
 
-        return view('admin.promo.partisipasi-show', compact('promo', 'produks', 'toko', 'diikuti'));
+        return view('admin.promo.partisipasi-show', [
+            'promo' => $promo,
+            'produks' => $produks,
+            'toko' => $toko,
+            'diikuti' => $diikuti,
+            'tokos' => $this->tokoTersedia(),
+        ]);
     }
 
     public function toggleIkut(Promo $promo)

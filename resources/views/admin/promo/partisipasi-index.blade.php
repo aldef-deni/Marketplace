@@ -17,11 +17,15 @@
                 </p>
             </div>
 
-            <a href="{{ route('admin.promo.kampanye.create') }}"
-               class="inline-flex items-center gap-2 rounded-xl bg-accent-500 px-5 py-3 text-sm font-bold text-ink-950 shadow-accent transition hover:-translate-y-0.5 hover:bg-accent-400">
-                <x-ikon nama="tambah" kelas="h-4 w-4" />
-                Buat Promo Sendiri
-            </a>
+            <div class="flex flex-wrap items-center gap-3">
+                @include('admin._pemilih-toko')
+
+                <a href="{{ route('admin.promo.kampanye.create') }}"
+                   class="inline-flex items-center gap-2 rounded-xl bg-accent-500 px-5 py-3 text-sm font-bold text-ink-950 shadow-accent transition hover:-translate-y-0.5 hover:bg-accent-400">
+                    <x-ikon nama="tambah" kelas="h-4 w-4" />
+                    Buat Promo Sendiri
+                </a>
+            </div>
         </div>
     </div>
 
