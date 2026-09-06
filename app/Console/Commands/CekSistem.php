@@ -115,7 +115,7 @@ class CekSistem extends Command
             'pengirimans', 'notifications', 'sessions',
             // Tabel rilis terbaru ikut diperiksa; tanpa ini "12 tabel lengkap"
             // tetap hijau walau fitur terbarunya belum ada sama sekali.
-            'flash_sales', 'flash_sale_produk', 'tokos',
+            'flash_sales', 'flash_sale_produk', 'tokos', 'produk_gambars',
         ];
 
         $hilang = array_values(array_filter($wajib, fn ($t) => ! Schema::hasTable($t)));

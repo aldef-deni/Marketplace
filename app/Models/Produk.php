@@ -45,6 +45,33 @@ class Produk extends Model
     }
 
     /**
+     * Seluruh gambar produk, berurut sesuai susunan di panel.
+     */
+    public function gambars(): HasMany
+    {
+        return $this->hasMany(ProdukGambar::class)->orderBy('urutan')->orderBy('id');
+    }
+
+    /**
+     * Jalur gambar untuk dipajang: yang bawaan selalu berada di depan.
+     *
+     * Produk lama yang galerinya belum terisi tetap mengembalikan gambar
+     * tunggalnya, jadi halaman detail tidak perlu memeriksa dua sumber.
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    public function galeri(): \Illuminate\Support\Collection
+    {
+        $jalur = $this->gambars->pluck('jalur');
+
+        if ($this->gambar) {
+            $jalur = $jalur->reject(fn ($j) => $j === $this->gambar)->prepend($this->gambar);
+        }
+
+        return $jalur->values();
+    }
+
+    /**
      * Baris flash sale yang harganya berlaku untuk produk ini sekarang.
      *
      * Tiga syarat: kampanyenya berjalan, toko pemilik produk ikut serta, dan

@@ -12,15 +12,34 @@
         </nav>
 
         <div class="grid gap-10 lg:grid-cols-2">
-            {{-- Gambar --}}
-            <div>
+            {{-- Gambar. Galeri selalu diawali gambar utama, jadi tampilan
+                 pertama halaman ini sama dengan yang dilihat pembeli di kartu
+                 produk dan keranjangnya. --}}
+            @php $galeri = $produk->galeri(); @endphp
+            <div x-data="{ aktif: 0 }">
                 <div class="overflow-hidden rounded-3xl bg-slate-100 ring-1 ring-slate-200">
-                    @if ($produk->gambar)
-                        <img src="{{ asset($produk->gambar) }}" alt="{{ $produk->nama }}" class="aspect-square w-full object-cover">
+                    @if ($galeri->isNotEmpty())
+                        @foreach ($galeri as $i => $jalur)
+                            <img src="{{ asset($jalur) }}" alt="{{ $produk->nama }}"
+                                 x-show="aktif === {{ $i }}" {{ $i ? 'x-cloak' : '' }}
+                                 class="aspect-square w-full object-cover">
+                        @endforeach
                     @else
                         <div class="flex aspect-square w-full items-center justify-center bg-gradient-to-br from-brand-100 to-accent-100 text-8xl"><x-ikon nama="toko" kelas="h-5 w-5" /></div>
                     @endif
                 </div>
+
+                @if ($galeri->count() > 1)
+                    <div class="mt-3 grid grid-cols-5 gap-2.5">
+                        @foreach ($galeri as $i => $jalur)
+                            <button type="button" @click="aktif = {{ $i }}"
+                                    class="overflow-hidden rounded-xl bg-slate-100 ring-1 transition hover:-translate-y-0.5"
+                                    :class="aktif === {{ $i }} ? 'ring-2 ring-brand-500' : 'ring-slate-200 hover:ring-brand-300'">
+                                <img src="{{ asset($jalur) }}" alt="" class="aspect-square w-full object-cover">
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
                 <div class="mt-4 grid grid-cols-3 gap-4">
                     @foreach ([['truk', 'Pengiriman cepat', 'Ke seluruh Indonesia'], ['perisai', 'Garansi kualitas', 'Produk 100% original'], ['papan', 'Mudah dikembalikan', 'Jika produk tidak sesuai']] as [$ikon, $judul, $ket])
                         <div class="rounded-2xl bg-white p-3 text-center shadow-sm ring-1 ring-slate-200/70">

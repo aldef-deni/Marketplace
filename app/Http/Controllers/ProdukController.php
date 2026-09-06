@@ -57,7 +57,7 @@ class ProdukController extends Controller
     public function show(string $slug)
     {
         $produk = Produk::aktif()
-            ->with('kategori', 'toko')
+            ->with('kategori', 'toko', 'gambars')
             ->whereHas('toko', fn ($q) => $q->tampil())
             ->where('slug', $slug)
             ->firstOrFail();
