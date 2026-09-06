@@ -127,14 +127,6 @@
                     {{ config('brand.deskripsi') }}
                 </p>
 
-                <p class="mt-7 text-[11px] font-bold uppercase tracking-widest text-ink-500">Metode Pembayaran</p>
-                {{-- Grid 4 kolom agar seluruh kartu berukuran sama dan tersusun rapi,
-                     alih-alih membungkus dengan satu kartu tersisa di baris bawah. --}}
-                <div class="mx-auto mt-3.5 grid max-w-xs grid-cols-4 gap-2">
-                    @foreach (config('brand.metode_bayar') ?? [] as $metode)
-                        <span class="kartu-merchant" style="--warna-merchant: {{ $metode['warna'] }}">{{ $metode['nama'] }}</span>
-                    @endforeach
-                </div>
             </div>
 
             <div class="md:col-span-2">
@@ -179,7 +171,20 @@
             </div>
         </div>
 
-        <div class="divider-brand mt-12"></div>
+        {{-- Metode pembayaran sebagai satu deret di atas garis penutup. Tanpa
+             judul: nama-nama seperti BCA dan GoPay sudah menjelaskan dirinya,
+             dan label di atasnya hanya menambah baris tanpa menambah arti. --}}
+        @php ($metodeBayar = config('brand.metode_bayar') ?? [])
+
+        @if ($metodeBayar !== [])
+            <div class="mt-12 flex flex-wrap items-center justify-center gap-2">
+                @foreach ($metodeBayar as $metode)
+                    <span class="kartu-merchant" style="--warna-merchant: {{ $metode['warna'] }}">{{ $metode['nama'] }}</span>
+                @endforeach
+            </div>
+        @endif
+
+        <div class="divider-brand mt-8"></div>
 
         <p class="mt-6 text-center text-xs text-white">
             &copy; {{ date('Y') }} {{ config('brand.nama') }}. Seluruh hak cipta dilindungi.
