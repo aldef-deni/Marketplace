@@ -64,6 +64,31 @@ return [
             ]) : [],
         ],
 
+        /*
+        | Basis data sistem induk ArahInn, dibaca saja.
+        |
+        | Dipakai agar pengguna yang sudah terdaftar di ArahInn dapat langsung
+        | masuk ke marketplace tanpa mendaftar ulang. Host dan kredensialnya
+        | mengikuti koneksi utama secara baku karena keduanya berada pada satu
+        | server MySQL; yang wajib diisi hanyalah nama databasenya. Dikosongkan
+        | berarti jembatan akunnya mati dan login berjalan seperti biasa.
+        */
+        'arahinn' => [
+            'driver' => env('ARAHINN_DB_CONNECTION', 'mysql'),
+            'host' => env('ARAHINN_DB_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('ARAHINN_DB_PORT', env('DB_PORT', '3306')),
+            'database' => env('ARAHINN_DB_DATABASE'),
+            'username' => env('ARAHINN_DB_USERNAME', env('DB_USERNAME')),
+            'password' => env('ARAHINN_DB_PASSWORD', env('DB_PASSWORD')),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

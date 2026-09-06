@@ -44,6 +44,19 @@
                     <a href="{{ route('register') }}" class="font-bold text-brand-600 hover:text-brand-800">Daftar sekarang</a>
                 </p>
 
+                {{-- Hanya ditampilkan bila jembatannya memang hidup; menjanjikan
+                     akun ArahInn bisa dipakai padahal koneksinya belum disetel
+                     akan mengirim orang ke kegagalan yang tidak ia mengerti. --}}
+                @if (\App\Support\AkunArahInn::aktif())
+                    <div class="mt-5 flex items-start gap-3 rounded-2xl bg-brand-50 p-4 ring-1 ring-brand-100">
+                        <x-ikon nama="perisai" kelas="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+                        <p class="text-xs leading-relaxed text-brand-900">
+                            Sudah punya akun <span class="font-bold">ArahInn</span>? Masuk saja dengan
+                            surel dan kata sandi yang sama — tidak perlu mendaftar lagi di sini.
+                        </p>
+                    </div>
+                @endif
+
                 <x-auth-session-status class="mb-4" :status="session('status')" />
 
                 <div class="mt-8">

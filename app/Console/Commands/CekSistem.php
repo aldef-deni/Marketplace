@@ -42,6 +42,8 @@ class CekSistem extends Command
         $this->periksaKolom();
         $this->periksaMigrasi();
 
+        $this->periksaAkunInduk();
+
         $this->bagian('Paket & dependensi');
         $this->periksaPaket();
 
@@ -184,6 +186,31 @@ class CekSistem extends Command
      * terlewat baru ketahuan ketika penggunanya menekan tombol dan bertemu
      * galat 500. Diperiksa di sini supaya ketahuan lebih dulu.
      */
+    /**
+     * Jembatan akun ke sistem induk ArahInn.
+     *
+     * Diperiksa dengan kueri sungguhan, bukan sekadar keberadaan konfigurasi:
+     * kredensial yang salah atau hak akses yang belum diberikan hanya ketahuan
+     * saat koneksinya benar-benar dipakai.
+     */
+    private function periksaAkunInduk(): void
+    {
+        if (! \App\Support\AkunArahInn::aktif()) {
+            $this->peringatan('Akun ArahInn', 'tidak disetel — pengguna ArahInn harus mendaftar ulang di sini');
+
+            return;
+        }
+
+        try {
+            $jumlah = \Illuminate\Support\Facades\DB::connection('arahinn')->table('users')->count();
+
+            $this->ok('Akun ArahInn', number_format($jumlah).' akun terbaca dari sistem induk');
+        } catch (\Throwable $e) {
+            $this->salah('Akun ArahInn', 'koneksi gagal — '.\Illuminate\Support\Str::limit($e->getMessage(), 70));
+            $this->petunjuk('Beri hak SELECT pada database ArahInn untuk pengguna MySQL marketplace, lalu ulangi.');
+        }
+    }
+
     private function periksaPaket(): void
     {
         $wajib = [

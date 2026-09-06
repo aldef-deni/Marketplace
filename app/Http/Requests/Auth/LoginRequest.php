@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Support\AkunArahInn;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -42,15 +43,29 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+        if (Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+            RateLimiter::clear($this->throttleKey());
 
-            throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
-            ]);
+            return;
         }
 
-        RateLimiter::clear($this->throttleKey());
+        // Gagal di sini belum tentu salah kata sandi: bisa jadi akunnya memang
+        // milik sistem induk ArahInn dan belum pernah dipakai di marketplace.
+        // Dicoba sesudah percobaan lokal, bukan sebelumnya, supaya pengguna
+        // marketplace tidak pernah bergantung pada koneksi induk.
+        if ($pengguna = AkunArahInn::masuk($this->string('email')->value(), $this->string('password')->value())) {
+            Auth::login($pengguna, $this->boolean('remember'));
+
+            RateLimiter::clear($this->throttleKey());
+
+            return;
+        }
+
+        RateLimiter::hit($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'email' => trans('auth.failed'),
+        ]);
     }
 
     /**
