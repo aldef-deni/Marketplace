@@ -31,20 +31,6 @@
                             Jelajahi Kategori
                         </a>
                     </div>
-                    <div class="mt-10 grid max-w-md grid-cols-3 gap-4">
-                        <div class="rounded-2xl bg-white/10 p-4 text-center ring-1 ring-white/15 backdrop-blur">
-                            <p class="text-2xl font-extrabold text-white">1000+</p>
-                            <p class="mt-1 text-xs font-medium text-brand-100">Produk Pilihan</p>
-                        </div>
-                        <div class="rounded-2xl bg-white/10 p-4 text-center ring-1 ring-white/15 backdrop-blur">
-                            <p class="text-2xl font-extrabold text-white">7+</p>
-                            <p class="mt-1 text-xs font-medium text-brand-100">Metode Bayar</p>
-                        </div>
-                        <div class="rounded-2xl bg-white/10 p-4 text-center ring-1 ring-white/15 backdrop-blur">
-                            <p class="text-2xl font-extrabold text-white">34</p>
-                            <p class="mt-1 text-xs font-medium text-brand-100">Provinsi Terjangkau</p>
-                        </div>
-                    </div>
                 </div>
                 <div class="hidden lg:block">
                     <div class="relative mx-auto max-w-lg">
