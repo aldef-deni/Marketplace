@@ -136,7 +136,7 @@
 
             </div>
 
-            <div class="col-span-1 md:col-span-2">
+            <div class="col-span-1 text-center md:col-span-2 md:text-left">
                 <h4 class="text-xs font-bold uppercase tracking-widest text-white">Belanja</h4>
                 <ul class="mt-4 space-y-2.5 text-sm">
                     <li><a href="{{ route('toko.index') }}" class="text-ink-400 transition hover:text-accent-400">Daftar Toko</a></li>
@@ -147,7 +147,7 @@
                 </ul>
             </div>
 
-            <div class="col-span-1 md:col-span-2">
+            <div class="col-span-1 text-center md:col-span-2 md:text-left">
                 <h4 class="text-xs font-bold uppercase tracking-widest text-white">Akun</h4>
                 <ul class="mt-4 space-y-2.5 text-sm">
                     @auth
