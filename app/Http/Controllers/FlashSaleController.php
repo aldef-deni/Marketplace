@@ -18,7 +18,7 @@ class FlashSaleController extends Controller
     public function index()
     {
         $kampanyes = FlashSale::berlangsung()
-            ->with(['produks.produk.kategori'])
+            ->with(['produks.produk.kategori', 'produks.produk.toko'])
             ->orderBy('selesai_at')
             ->get()
             ->map(function (FlashSale $kampanye) {
@@ -48,6 +48,9 @@ class FlashSaleController extends Controller
             ->filter(fn ($baris) => $baris->produk
                 && $baris->produk->status === 'aktif'
                 && $baris->produk->stok > 0
+                // Toko yang ditangguhkan ikut menarik produknya dari promo;
+                // tanpa ini lapak bermasalah tetap terpajang di halaman utama.
+                && $baris->produk->toko?->aktif()
                 && ! $baris->kuotaHabis())
             ->sortByDesc(fn ($baris) => $baris->persen_hemat)
             ->values();

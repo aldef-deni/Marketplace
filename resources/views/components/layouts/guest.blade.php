@@ -25,7 +25,7 @@
         </a>
 
         {{-- Pencarian (desktop) --}}
-        <form action="{{ route('toko.index') }}" method="GET" class="hidden flex-1 justify-center md:flex">
+        <form action="{{ route('produk.index') }}" method="GET" class="hidden flex-1 justify-center md:flex">
             <div class="relative w-full max-w-lg">
                 <input type="search" name="q" value="{{ request('q') }}"
                        placeholder="Cari produk, merek, atau kategori…"
@@ -61,6 +61,11 @@
                 Toko
             </a>
 
+            <a href="{{ route('produk.index') }}"
+               class="hidden rounded-lg px-3 py-2 text-sm font-semibold text-ink-300 transition hover:bg-white/5 hover:text-white sm:block">
+                Katalog
+            </a>
+
             @auth
                 <x-lonceng-notifikasi />
 
@@ -94,7 +99,7 @@
 
     {{-- Pencarian mobile, muncul saat ikon ditekan --}}
     <div x-show="cari" x-cloak x-transition class="border-t border-white/5 px-4 py-3 md:hidden">
-        <form action="{{ route('toko.index') }}" method="GET">
+        <form action="{{ route('produk.index') }}" method="GET">
             <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari produk…"
                    class="w-full rounded-full border-white/10 bg-white/[0.06] px-4 py-2.5 text-sm text-white placeholder:text-ink-400 focus:border-accent-500/60 focus:ring-1 focus:ring-accent-500/50">
         </form>
@@ -135,9 +140,10 @@
             <div class="md:col-span-2">
                 <h4 class="text-xs font-bold uppercase tracking-widest text-white">Belanja</h4>
                 <ul class="mt-4 space-y-2.5 text-sm">
-                    <li><a href="{{ route('toko.index') }}" class="text-ink-400 transition hover:text-accent-400">Semua Produk</a></li>
-                    <li><a href="{{ route('toko.index', ['urutkan' => 'termurah']) }}" class="text-ink-400 transition hover:text-accent-400">Harga Termurah</a></li>
-                    <li><a href="{{ route('toko.index', ['urutkan' => 'terbaru']) }}" class="text-ink-400 transition hover:text-accent-400">Produk Terbaru</a></li>
+                    <li><a href="{{ route('toko.index') }}" class="text-ink-400 transition hover:text-accent-400">Daftar Toko</a></li>
+                    <li><a href="{{ route('produk.index') }}" class="text-ink-400 transition hover:text-accent-400">Semua Produk</a></li>
+                    <li><a href="{{ route('produk.index', ['urutkan' => 'termurah']) }}" class="text-ink-400 transition hover:text-accent-400">Harga Termurah</a></li>
+                    <li><a href="{{ route('produk.index', ['urutkan' => 'terbaru']) }}" class="text-ink-400 transition hover:text-accent-400">Produk Terbaru</a></li>
                     <li><a href="{{ route('beranda') }}#kategori" class="text-ink-400 transition hover:text-accent-400">Kategori</a></li>
                 </ul>
             </div>

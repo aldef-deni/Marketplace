@@ -15,6 +15,12 @@ class DashboardController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
+        // Penjual belum punya dashboard sendiri selama pesanan masih menyatu
+        // lintas toko; daftar produknya adalah halaman kerja yang bermakna.
+        if ($user->isPenjual()) {
+            return redirect()->route('admin.produk.index');
+        }
+
         $stats = [
             'total_pesanan' => $user->pesanans()->count(),
             'menunggu_pembayaran' => $user->pesanans()->where('status', 'menunggu_pembayaran')->count(),

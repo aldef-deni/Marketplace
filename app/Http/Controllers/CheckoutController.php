@@ -29,7 +29,7 @@ class CheckoutController extends Controller
         $items = auth()->user()->keranjangs()->with('produk.kategori')->get();
 
         if ($items->isEmpty()) {
-            return redirect()->route('toko.index')->with('info', 'Keranjang Anda masih kosong.');
+            return redirect()->route('produk.index')->with('info', 'Keranjang Anda masih kosong.');
         }
 
         $alamats = auth()->user()->alamats()->get();
@@ -46,7 +46,7 @@ class CheckoutController extends Controller
         $items = auth()->user()->keranjangs()->with('produk')->get();
 
         if ($items->isEmpty()) {
-            return redirect()->route('toko.index')->with('info', 'Keranjang Anda masih kosong.');
+            return redirect()->route('produk.index')->with('info', 'Keranjang Anda masih kosong.');
         }
 
         $validated = $request->validate([

@@ -6,6 +6,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -133,11 +134,30 @@ class User extends Authenticatable
         return $this->role === 'pengguna';
     }
 
+    public function isPenjual(): bool
+    {
+        return $this->role === 'penjual';
+    }
+
+    /**
+     * Siapa pun yang punya panel pengelolaan: pengelola platform maupun penjual.
+     */
+    public function isPengelola(): bool
+    {
+        return in_array($this->role, ['superadmin', 'admin', 'penjual'], true);
+    }
+
+    public function toko(): HasOne
+    {
+        return $this->hasOne(Toko::class);
+    }
+
     public function getRoleLabelAttribute(): string
     {
         return match ($this->role) {
             'superadmin' => 'Superadmin',
             'admin' => 'Admin',
+            'penjual' => 'Penjual',
             default => 'Pengguna',
         };
     }
@@ -147,6 +167,7 @@ class User extends Authenticatable
         return match ($this->role) {
             'superadmin' => 'bg-purple-100 text-purple-700 ring-purple-200',
             'admin' => 'bg-blue-100 text-blue-700 ring-blue-200',
+            'penjual' => 'bg-accent-100 text-accent-700 ring-accent-200',
             default => 'bg-gray-100 text-gray-700 ring-gray-200',
         };
     }

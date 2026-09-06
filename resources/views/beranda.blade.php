@@ -24,7 +24,7 @@
                         Dikirim cepat ke seluruh Indonesia.
                     </p>
                     <div class="mt-8 flex flex-wrap gap-3">
-                        <a href="{{ route('toko.index') }}" class="rounded-2xl bg-accent-500 px-7 py-3.5 text-sm font-bold text-ink-950 shadow-accent transition hover:-translate-y-0.5 hover:bg-accent-400">
+                        <a href="{{ route('produk.index') }}" class="rounded-2xl bg-accent-500 px-7 py-3.5 text-sm font-bold text-ink-950 shadow-accent transition hover:-translate-y-0.5 hover:bg-accent-400">
                             Belanja Sekarang
                         </a>
                         <a href="#kategori" class="rounded-2xl bg-white/10 px-7 py-3.5 text-sm font-bold text-white ring-1 ring-white/30 backdrop-blur transition hover:bg-white/20">
@@ -74,12 +74,12 @@
                 <h2 class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Jelajahi <span class="teks-gradien">Kategori</span></h2>
                 <p class="mt-2 text-sm text-slate-500">Temukan produk sesuai kebutuhanmu</p>
             </div>
-            <a href="{{ route('toko.index') }}" class="hidden text-sm font-bold text-brand-600 transition hover:text-brand-800 sm:block">Lihat Semua →</a>
+            <a href="{{ route('produk.index') }}" class="hidden text-sm font-bold text-brand-600 transition hover:text-brand-800 sm:block">Lihat Semua →</a>
         </div>
 
         <div class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             @forelse ($kategoris as $kategori)
-                <a href="{{ route('toko.index', ['kategori' => $kategori->slug]) }}"
+                <a href="{{ route('produk.index', ['kategori' => $kategori->slug]) }}"
                    class="group rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200/70 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-100 hover:ring-brand-200">
                     <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-50 to-accent-50 text-4xl ring-1 ring-brand-100 transition group-hover:scale-110">
                         <x-ikon :nama="$kategori->ikon" kelas="h-7 w-7 text-brand-700 transition group-hover:text-accent-500" />
@@ -93,6 +93,31 @@
         </div>
     </section>
 
+    {{-- Toko pilihan --}}
+    @if ($tokos->isNotEmpty())
+        <section class="bg-white py-14">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="flex items-end justify-between">
+                    <div>
+                        <h2 class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+                            Toko <span class="teks-gradien">Pilihan</span>
+                        </h2>
+                        <p class="mt-2 text-sm text-slate-500">Lapak terpercaya dengan koleksi paling lengkap</p>
+                    </div>
+                    <a href="{{ route('toko.index') }}" class="text-sm font-bold text-brand-600 transition hover:text-brand-800">
+                        Lihat Semua &rarr;
+                    </a>
+                </div>
+
+                <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    @foreach ($tokos->take(4) as $toko)
+                        @include('partials.kartu-toko', ['toko' => $toko])
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+
     {{-- Produk terbaru --}}
     <section class="bg-white py-14">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -101,12 +126,12 @@
                     <h2 class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Produk <span class="teks-gradien">Terbaru</span></h2>
                     <p class="mt-2 text-sm text-slate-500">Koleksi pilihan terbaru di toko kami</p>
                 </div>
-                <a href="{{ route('toko.index') }}" class="text-sm font-bold text-brand-600 transition hover:text-brand-800">Lihat Semua →</a>
+                <a href="{{ route('produk.index') }}" class="text-sm font-bold text-brand-600 transition hover:text-brand-800">Lihat Semua →</a>
             </div>
 
             <div class="mt-8 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
                 @foreach ($produkTerbaru as $produk)
-                    @include('toko._kartu-produk', ['produk' => $produk])
+                    @include('partials.kartu-produk', ['produk' => $produk])
                 @endforeach
             </div>
         </div>
@@ -124,14 +149,14 @@
                         <h2 class="relative mt-3 text-2xl font-extrabold text-white sm:text-3xl">Hemat Besar Hari Ini</h2>
                         <p class="relative mt-2 max-w-md text-sm text-ink-300">Jangan lewatkan produk dengan penawaran terbaik. Stok terbatas.</p>
                     </div>
-                    <a href="{{ route('toko.index', ['urutkan' => 'termurah']) }}"
+                    <a href="{{ route('produk.index', ['urutkan' => 'termurah']) }}"
                        class="relative rounded-2xl bg-accent-500 px-7 py-3.5 text-sm font-bold text-ink-950 shadow-accent transition hover:-translate-y-0.5 hover:bg-accent-400">
                         Lihat Semua Promo →
                     </a>
                 </div>
                 <div class="relative mt-8 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4">
                     @foreach ($produkDiskon as $produk)
-                        @include('toko._kartu-produk', ['produk' => $produk])
+                        @include('partials.kartu-produk', ['produk' => $produk])
                     @endforeach
                 </div>
             </div>

@@ -7,6 +7,7 @@ use App\Models\FlashSale;
 use App\Models\Kategori;
 use App\Models\MetodePembayaran;
 use App\Models\Produk;
+use App\Models\Toko;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -24,6 +25,8 @@ class FlashSaleTest extends TestCase
 
     private Produk $produk;
 
+    private Toko $toko;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -36,7 +39,14 @@ class FlashSaleTest extends TestCase
             'nama' => 'Elektronik', 'slug' => 'elektronik', 'ikon' => 'ponsel', 'aktif' => true,
         ]);
 
+        $this->toko = Toko::create([
+            'user_id' => $this->admin->id,
+            'nama' => 'Toko Uji', 'slug' => 'toko-uji',
+            'status' => 'aktif', 'disetujui_at' => now(),
+        ]);
+
         $this->produk = Produk::create([
+            'toko_id' => $this->toko->id,
             'kategori_id' => $kategori->id,
             'nama' => 'Produk Flash', 'slug' => 'produk-flash', 'deskripsi' => 'Uji.',
             'harga' => 200000, 'stok' => 20, 'berat' => 500, 'status' => 'aktif',
@@ -353,7 +363,7 @@ class FlashSaleTest extends TestCase
 
         // Tombol keranjang tidak boleh berada di dalam tautan produk, sebab
         // kliknya akan ikut membuka halaman produk alih-alih menambah ke keranjang.
-        $this->assertStringNotContainsString('<button', explode('</a>', explode('<a href="'.route('toko.show', $this->produk->slug).'"', $html)[1])[0]);
+        $this->assertStringNotContainsString('<button', explode('</a>', explode('<a href="'.route('produk.show', $this->produk->slug).'"', $html)[1])[0]);
     }
 
     public function test_beranda_tidak_menampilkan_kampanye_tanpa_produk(): void
@@ -371,6 +381,7 @@ class FlashSaleTest extends TestCase
         $this->sertakanProduk($kampanye);
 
         $biasa = Produk::create([
+            'toko_id' => $this->toko->id,
             'kategori_id' => $this->produk->kategori_id,
             'nama' => 'Produk Tanpa Promo', 'slug' => 'produk-tanpa-promo', 'deskripsi' => 'Uji.',
             'harga' => 90000, 'stok' => 10, 'berat' => 300, 'status' => 'aktif',

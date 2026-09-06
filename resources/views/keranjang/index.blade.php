@@ -16,7 +16,7 @@
                 <span class="text-7xl"><x-ikon nama="keranjang" kelas="h-5 w-5" /></span>
                 <h3 class="mt-6 text-xl font-extrabold text-slate-900">Keranjangmu masih kosong</h3>
                 <p class="mt-2 max-w-sm text-sm text-slate-500">Yuk mulai belanja! Temukan produk favoritmu dengan harga terbaik.</p>
-                <a href="{{ route('toko.index') }}" class="btn-primary mt-8">Mulai Belanja →</a>
+                <a href="{{ route('produk.index') }}" class="btn-primary mt-8">Mulai Belanja →</a>
             </div>
         @else
             <div class="grid gap-6 lg:grid-cols-3">
@@ -24,7 +24,7 @@
                 <div class="space-y-4 lg:col-span-2">
                     @foreach ($items as $item)
                         <div class="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
-                            <a href="{{ route('toko.show', $item->produk->slug) }}" class="shrink-0 overflow-hidden rounded-2xl bg-slate-100">
+                            <a href="{{ route('produk.show', $item->produk->slug) }}" class="shrink-0 overflow-hidden rounded-2xl bg-slate-100">
                                 @if ($item->produk->gambar)
                                     <img src="{{ asset($item->produk->gambar) }}" alt="{{ $item->produk->nama }}" class="h-24 w-24 object-cover sm:h-28 sm:w-28">
                                 @else
@@ -32,7 +32,7 @@
                                 @endif
                             </a>
                             <div class="min-w-0 flex-1">
-                                <a href="{{ route('toko.show', $item->produk->slug) }}" class="line-clamp-2 text-sm font-bold text-slate-800 hover:text-brand-700">{{ $item->produk->nama }}</a>
+                                <a href="{{ route('produk.show', $item->produk->slug) }}" class="line-clamp-2 text-sm font-bold text-slate-800 hover:text-brand-700">{{ $item->produk->nama }}</a>
                                 <p class="mt-1 text-xs font-medium text-slate-400">{{ $item->produk->kategori?->nama }}</p>
                                 <p class="mt-2 text-sm font-extrabold text-brand-700">{{ rp($item->produk->harga) }}</p>
                             </div>
@@ -88,7 +88,7 @@
                         </dl>
                         <div class="mt-5 border-t border-dashed border-slate-200 pt-4">
                             <a href="{{ route('checkout.index') }}" class="btn-primary w-full py-3.5 text-base">Lanjut ke Checkout →</a>
-                            <a href="{{ route('toko.index') }}" class="mt-3 block text-center text-sm font-bold text-brand-600 hover:text-brand-800">← Lanjut Belanja</a>
+                            <a href="{{ route('produk.index') }}" class="mt-3 block text-center text-sm font-bold text-brand-600 hover:text-brand-800">← Lanjut Belanja</a>
                         </div>
                     </div>
                 </div>

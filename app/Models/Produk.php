@@ -10,11 +10,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Produk extends Model
 {
     protected $fillable = [
-        'kategori_id', 'nama', 'slug', 'deskripsi', 'harga', 'harga_coret',
+        'toko_id', 'kategori_id', 'nama', 'slug', 'deskripsi', 'harga', 'harga_coret',
         'stok', 'berat', 'gambar', 'status',
     ];
 
     protected $casts = [
+        'toko_id' => 'integer',
         'kategori_id' => 'integer',
         'harga' => 'decimal:0',
         'harga_coret' => 'decimal:0',
@@ -25,6 +26,11 @@ class Produk extends Model
     public function kategori(): BelongsTo
     {
         return $this->belongsTo(Kategori::class);
+    }
+
+    public function toko(): BelongsTo
+    {
+        return $this->belongsTo(Toko::class);
     }
 
     public function flashSaleItems(): HasMany

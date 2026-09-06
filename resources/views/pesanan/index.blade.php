@@ -28,7 +28,7 @@
                 <span class="text-7xl"><x-ikon nama="kotak" kelas="h-5 w-5" /></span>
                 <h3 class="mt-6 text-xl font-extrabold text-slate-900">Belum ada pesanan</h3>
                 <p class="mt-2 max-w-sm text-sm text-slate-500">Ayo mulai belanja dan lihat pesananmu tampil di sini.</p>
-                <a href="{{ route('toko.index') }}" class="btn-primary mt-8">Mulai Belanja →</a>
+                <a href="{{ route('produk.index') }}" class="btn-primary mt-8">Mulai Belanja →</a>
             </div>
         @else
             <div class="mt-6 space-y-4">

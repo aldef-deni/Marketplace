@@ -21,7 +21,7 @@
             <div class="flex items-center gap-1 sm:gap-1.5">
                 <x-lonceng-notifikasi />
 
-                <a href="{{ route('toko.index') }}"
+                <a href="{{ route('produk.index') }}"
                    class="hidden rounded-lg px-3 py-2 text-sm font-semibold text-ink-300 transition hover:bg-white/5 hover:text-white sm:block">
                     Toko
                 </a>

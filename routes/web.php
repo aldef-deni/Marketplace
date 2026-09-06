@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\KeranjangController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\PesananController;
+use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TokoController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,11 @@ Route::get('/', [HomeController::class, 'index'])->name('beranda');
 
 Route::get('/flash-sale', [FlashSaleController::class, 'index'])->name('flash-sale.index');
 
+/* Katalog produk lintas toko. */
+Route::get('/produk', [ProdukController::class, 'index'])->name('produk.index');
+Route::get('/produk/{slug}', [ProdukController::class, 'show'])->name('produk.show');
+
+/* Etalase toko: daftar lapak, lalu halaman tiap lapak. */
 Route::get('/toko', [TokoController::class, 'index'])->name('toko.index');
 Route::get('/toko/{slug}', [TokoController::class, 'show'])->name('toko.show');
 
@@ -88,8 +94,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:superadmin,admin'])->group(function () {
-    Route::get('/', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:superadmin,admin,penjual'])->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\DashboardController::class, 'index'])
+        ->middleware('role:superadmin,admin')->name('dashboard');
 
     Route::prefix('produk')->name('produk.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\ProdukController::class, 'index'])->name('index');
@@ -101,7 +108,22 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
         Route::delete('/{produk}', [App\Http\Controllers\Admin\ProdukController::class, 'destroy'])->name('destroy');
     });
 
-    Route::prefix('kategori')->name('kategori.')->group(function () {
+    /*
+    | Toko. Pengelola melihat semuanya dan menyetujui pendaftaran baru; penjual
+    | hanya menyentuh tokonya sendiri — pembatasnya di controller, bukan di rute,
+    | supaya satu kendali tidak bisa terlewat saat rutenya berubah.
+    */
+    Route::prefix('toko')->name('toko.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\TokoController::class, 'index'])->name('index');
+        Route::get('/tambah', [App\Http\Controllers\Admin\TokoController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Admin\TokoController::class, 'store'])->name('store');
+        Route::get('/{toko}/edit', [App\Http\Controllers\Admin\TokoController::class, 'edit'])->name('edit');
+        Route::patch('/{toko}', [App\Http\Controllers\Admin\TokoController::class, 'update'])->name('update');
+        Route::patch('/{toko}/status', [App\Http\Controllers\Admin\TokoController::class, 'toggleStatus'])->name('status');
+        Route::delete('/{toko}', [App\Http\Controllers\Admin\TokoController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('kategori')->name('kategori.')->middleware('role:superadmin,admin')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\KategoriController::class, 'index'])->name('index');
         Route::post('/', [App\Http\Controllers\Admin\KategoriController::class, 'store'])->name('store');
         Route::patch('/{kategori}', [App\Http\Controllers\Admin\KategoriController::class, 'update'])->name('update');
@@ -109,7 +131,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
         Route::delete('/{kategori}', [App\Http\Controllers\Admin\KategoriController::class, 'destroy'])->name('destroy');
     });
 
-    Route::prefix('pesanan')->name('pesanan.')->group(function () {
+    Route::prefix('pesanan')->name('pesanan.')->middleware('role:superadmin,admin')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\PesananController::class, 'index'])->name('index');
         Route::get('/{pesanan}', [App\Http\Controllers\Admin\PesananController::class, 'show'])->name('show');
         Route::post('/{pesanan}/proses', [App\Http\Controllers\Admin\PesananController::class, 'proses'])->name('proses');
@@ -118,13 +140,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
         Route::post('/{pesanan}/batalkan', [App\Http\Controllers\Admin\PesananController::class, 'batalkan'])->name('batalkan');
     });
 
-    Route::prefix('pembayaran')->name('pembayaran.')->group(function () {
+    Route::prefix('pembayaran')->name('pembayaran.')->middleware('role:superadmin,admin')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\PembayaranController::class, 'index'])->name('index');
         Route::post('/{pembayaran}/verifikasi', [App\Http\Controllers\Admin\PembayaranController::class, 'verifikasi'])->name('verifikasi');
         Route::post('/{pembayaran}/tolak', [App\Http\Controllers\Admin\PembayaranController::class, 'tolak'])->name('tolak');
     });
 
-    Route::prefix('pengiriman')->name('pengiriman.')->group(function () {
+    Route::prefix('pengiriman')->name('pengiriman.')->middleware('role:superadmin,admin')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\PengirimanController::class, 'index'])->name('index');
     });
 
@@ -132,7 +154,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     | Flash sale. Kampanye disusun superadmin; admin memutuskan keikutsertaan
     | toko dan memilih produk yang disertakan.
     */
-    Route::prefix('flash-sale')->name('flash-sale.')->group(function () {
+    Route::prefix('flash-sale')->name('flash-sale.')->middleware('role:superadmin,admin')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'index'])->name('index');
         Route::get('/{flashSale}/kelola', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'show'])->name('kelola');
         Route::post('/{flashSale}/ikut', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'toggleIkut'])->name('ikut');
@@ -153,7 +175,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     | Laporan transaksi terbuka bagi admin dan superadmin; laporan toko —
     | kondisi katalog dan kinerja produk — khusus superadmin.
     */
-    Route::prefix('laporan')->name('laporan.')->group(function () {
+    Route::prefix('laporan')->name('laporan.')->middleware('role:superadmin,admin')->group(function () {
         Route::get('/transaksi', [App\Http\Controllers\Admin\LaporanController::class, 'transaksi'])->name('transaksi');
         Route::get('/transaksi/pdf', [App\Http\Controllers\Admin\LaporanController::class, 'transaksiPdf'])->name('transaksi.pdf');
         Route::get('/transaksi/excel', [App\Http\Controllers\Admin\LaporanController::class, 'transaksiExcel'])->name('transaksi.excel');

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Kategori;
 use App\Models\Produk;
+use App\Models\Toko;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -74,9 +75,32 @@ class ProdukSeeder extends Seeder
             ['Tas Ransel Sekolah Anti Air', 'Buku & Alat Tulis', 219000, 299000, 17, 800, '🎒', 'Tas ransel anti air dengan banyak kantong dan sandaran empuk.' ],
         ];
 
+        // Tiap kategori dititipkan ke satu toko agar isi lapaknya masuk akal:
+        // elektronik di toko elektronik, bukan tersebar acak.
+        $tokoPerKategori = [
+            'Elektronik' => 'Sentra Elektronik Bekasi',
+            'Fashion Pria' => 'Rumah Mode Nusantara',
+            'Fashion Wanita' => 'Rumah Mode Nusantara',
+            'Kesehatan & Kecantikan' => 'Rumah Mode Nusantara',
+            'Makanan & Minuman' => 'Dapur & Griya Sejahtera',
+            'Rumah Tangga' => 'Dapur & Griya Sejahtera',
+            'Olahraga' => 'Arena Sport & Hobi',
+            'Otomotif' => 'Arena Sport & Hobi',
+            'Buku & Alat Tulis' => 'Arena Sport & Hobi',
+        ];
+
+        $tokos = Toko::pluck('id', 'nama');
+        $tokoCadangan = $tokos->first();
+
         foreach ($produks as [$nama, $kategoriNama, $harga, $hargaCoret, $stok, $berat, $emoji, $deskripsi]) {
             $kategori = Kategori::where('nama', $kategoriNama)->first();
             if (! $kategori) {
+                continue;
+            }
+
+            $tokoId = $tokos[$tokoPerKategori[$kategoriNama] ?? ''] ?? $tokoCadangan;
+
+            if (! $tokoId) {
                 continue;
             }
 
@@ -86,6 +110,7 @@ class ProdukSeeder extends Seeder
             Produk::updateOrCreate(
                 ['slug' => $slug],
                 [
+                    'toko_id' => $tokoId,
                     'kategori_id' => $kategori->id,
                     'nama' => $nama,
                     'deskripsi' => $deskripsi,

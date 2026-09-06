@@ -20,7 +20,7 @@
 
         <x-kartu-profil :aktivitas="$ringkasanAktivitas">
 
-            <a href="{{ route('toko.index') }}"
+            <a href="{{ route('produk.index') }}"
                class="inline-flex items-center justify-center gap-2 rounded-xl bg-accent-500 px-5 py-2.5 text-sm font-bold text-ink-950 shadow-accent transition hover:-translate-y-0.5 hover:bg-accent-400">
                 <x-ikon nama="toko" kelas="h-4 w-4" />
                 Mulai Belanja
@@ -63,7 +63,7 @@
                         <div class="flex flex-col items-center py-14 text-center">
                             <span class="text-5xl"><x-ikon nama="kotak" kelas="h-10 w-10" /></span>
                             <p class="mt-3 text-sm font-semibold text-slate-500">Belum ada pesanan. Yuk mulai belanja!</p>
-                            <a href="{{ route('toko.index') }}" class="btn-primary mt-5">Belanja Sekarang</a>
+                            <a href="{{ route('produk.index') }}" class="btn-primary mt-5">Belanja Sekarang</a>
                         </div>
                     @else
                         <div class="mt-4 space-y-3">
@@ -94,7 +94,7 @@
                     <h3 class="text-base font-extrabold text-slate-900">Akses Cepat</h3>
                     <div class="mt-4 space-y-2">
                         @foreach ([
-                            [route('toko.index'), 'toko', 'Belanja Produk', 'Jelajahi katalog lengkap'],
+                            [route('produk.index'), 'toko', 'Belanja Produk', 'Jelajahi katalog lengkap'],
                             [route('keranjang.index'), 'keranjang', 'Keranjang Saya', 'Periksa item belanjaan'],
                             [route('pesanan.index'), 'kotak', 'Pesanan Saya', 'Pantau status pesanan'],
                             [route('alamat.index'), 'lokasi', 'Buku Alamat', 'Kelola alamat pengiriman'],

@@ -1,7 +1,9 @@
 {{-- Pita flash sale di beranda. Hanya dirender bila ada kampanye berjalan
      yang benar-benar punya produk, sehingga tidak pernah tampil kosong. --}}
 @php
-    $barisFlash = $flashSale?->produks->filter(fn ($b) => $b->produk && ! $b->kuotaHabis()) ?? collect();
+    $barisFlash = $flashSale?->produks->filter(
+        fn ($b) => $b->produk && $b->produk->toko?->aktif() && ! $b->kuotaHabis()
+    ) ?? collect();
 @endphp
 
 @if ($flashSale && $barisFlash->isNotEmpty())
@@ -102,7 +104,7 @@
                          @dragstart.prevent
                          @click.capture="klik($event)">
                         @foreach ($barisFlash as $baris)
-                            @include('toko._kartu-produk', ['produk' => $baris->produk])
+                            @include('partials.kartu-produk', ['produk' => $baris->produk])
                         @endforeach
                     </div>
 

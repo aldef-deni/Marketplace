@@ -76,7 +76,7 @@
 
                     <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                         @foreach ($kampanye->produks as $baris)
-                            @include('toko._kartu-produk', ['produk' => $baris->produk])
+                            @include('partials.kartu-produk', ['produk' => $baris->produk])
                         @endforeach
                     </div>
                 </section>
@@ -101,7 +101,7 @@
                         </p>
                     @endif
 
-                    <a href="{{ route('toko.index') }}" class="btn-primary btn-kilat mt-7">Jelajahi Katalog</a>
+                    <a href="{{ route('produk.index') }}" class="btn-primary btn-kilat mt-7">Jelajahi Katalog</a>
                 </div>
             @endforelse
 

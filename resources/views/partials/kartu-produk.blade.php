@@ -7,7 +7,7 @@
      dalam tautan bukan hanya markup tak sah — kliknya ikut membuka halaman
      produk sehingga barangnya tak pernah sampai ke keranjang. --}}
 <div class="kartu-produk group relative flex flex-col">
-    <a href="{{ route('toko.show', $produk->slug) }}" class="absolute inset-0 z-10">
+    <a href="{{ route('produk.show', $produk->slug) }}" class="absolute inset-0 z-10">
         <span class="sr-only">Lihat {{ $produk->nama }}</span>
     </a>
 
@@ -45,7 +45,12 @@
         <p class="line-clamp-2 text-sm font-bold leading-snug text-slate-800 transition group-hover:text-brand-700">
             {{ $produk->nama }}
         </p>
-        <p class="mt-0.5 truncate text-xs font-medium text-slate-400">{{ $produk->kategori?->nama }}</p>
+        {{-- Nama toko lebih berguna daripada kategori di katalog lintas lapak:
+             pembeli perlu tahu dari siapa barangnya sebelum menekan kartu. --}}
+        <p class="mt-1 flex items-center gap-1 text-xs font-medium text-slate-400">
+            <x-ikon nama="toko" kelas="h-3.5 w-3.5 shrink-0" />
+            <span class="truncate">{{ $produk->toko?->nama ?? $produk->kategori?->nama }}</span>
+        </p>
 
         <div class="mt-auto flex flex-wrap items-baseline gap-x-2 gap-y-0.5 pt-2">
             <p class="whitespace-nowrap text-base font-extrabold {{ $barisFlash ? 'text-rose-600' : 'text-brand-700' }}">

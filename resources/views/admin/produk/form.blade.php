@@ -20,6 +20,26 @@
                     <input type="text" name="nama" value="{{ old('nama', $produk->nama) }}" class="input-field" required placeholder="Contoh: Smart TV 43 Inch Ultra HD">
                     @error('nama') <p class="mt-1 text-xs font-semibold text-rose-600">{{ $message }}</p> @enderror
                 </div>
+                {{-- Pemilihan toko hanya ditawarkan kepada pengelola platform.
+                     Penjual dikunci ke tokonya sendiri di sisi server, jadi
+                     menampilkan pilihan di sini hanya akan menyesatkan. --}}
+                @if (auth()->user()->isAdmin())
+                    <div class="sm:col-span-2">
+                        <label class="label-field">Toko Pemilik *</label>
+                        <select name="toko_id" class="input-field" required>
+                            <option value="">— Pilih Toko —</option>
+                            @foreach ($tokos as $item)
+                                <option value="{{ $item->id }}" @selected(old('toko_id', $produk->toko_id) == $item->id)>
+                                    {{ $item->nama }}@if (! $item->aktif()) — {{ $item->status_label }} @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('toko_id') <p class="mt-1 text-xs font-semibold text-rose-600">{{ $message }}</p> @enderror
+                    </div>
+                @else
+                    <input type="hidden" name="toko_id" value="{{ $tokos->first()?->id }}">
+                @endif
+
                 <div>
                     <label class="label-field">Kategori *</label>
                     <select name="kategori_id" class="input-field" required>

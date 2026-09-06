@@ -5,14 +5,27 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Kategori;
 use App\Models\Produk;
+use App\Models\Toko;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
+/**
+ * Katalog produk di panel.
+ *
+ * Penjual hanya menyentuh produk tokonya sendiri. Pembatasnya dipasang di
+ * kueri dan di setiap aksi tunggal, bukan sekadar disembunyikan dari tampilan.
+ */
 class ProdukController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Produk::with('kategori');
+        $query = Produk::with('kategori', 'toko');
+
+        if ($tokoId = $this->tokoPenjual()) {
+            $query->where('toko_id', $tokoId);
+        } elseif ($request->filled('toko')) {
+            $query->where('toko_id', $request->toko);
+        }
 
         if ($request->filled('q')) {
             $query->where('nama', 'like', '%'.trim($request->q).'%');
@@ -26,15 +39,18 @@ class ProdukController extends Controller
 
         $produks = $query->latest()->paginate(15)->withQueryString();
         $kategoris = Kategori::orderBy('nama')->get();
+        $tokos = $this->tokoTersedia();
 
-        return view('admin.produk.index', compact('produks', 'kategoris'));
+        return view('admin.produk.index', compact('produks', 'kategoris', 'tokos'));
     }
 
     public function create()
     {
-        $kategoris = Kategori::orderBy('nama')->get();
-
-        return view('admin.produk.form', ['produk' => new Produk, 'kategoris' => $kategoris]);
+        return view('admin.produk.form', [
+            'produk' => new Produk,
+            'kategoris' => Kategori::orderBy('nama')->get(),
+            'tokos' => $this->tokoTersedia(),
+        ]);
     }
 
     public function store(Request $request)
@@ -43,7 +59,9 @@ class ProdukController extends Controller
         $data['slug'] = $this->buatSlug($request->nama);
 
         if ($request->hasFile('gambar')) {
-            $data['gambar'] = $request->file('gambar')->store('produk', 'uploads');
+            // Awalan "uploads/" ikut disimpan supaya asset() menghasilkan URL
+            // yang benar; tanpa ini gambar produk berujung 404.
+            $data['gambar'] = 'uploads/'.$request->file('gambar')->store('produk', 'uploads');
         }
 
         Produk::create($data);
@@ -53,18 +71,26 @@ class ProdukController extends Controller
 
     public function edit(Produk $produk)
     {
-        $kategoris = Kategori::orderBy('nama')->get();
+        $this->pastikanBoleh($produk);
 
-        return view('admin.produk.form', compact('produk', 'kategoris'));
+        return view('admin.produk.form', [
+            'produk' => $produk,
+            'kategoris' => Kategori::orderBy('nama')->get(),
+            'tokos' => $this->tokoTersedia(),
+        ]);
     }
 
     public function update(Request $request, Produk $produk)
     {
+        $this->pastikanBoleh($produk);
+
         $data = $this->validated($request);
         $data['slug'] = $this->buatSlug($request->nama, $produk->id);
 
         if ($request->hasFile('gambar')) {
-            $data['gambar'] = $request->file('gambar')->store('produk', 'uploads');
+            // Awalan "uploads/" ikut disimpan supaya asset() menghasilkan URL
+            // yang benar; tanpa ini gambar produk berujung 404.
+            $data['gambar'] = 'uploads/'.$request->file('gambar')->store('produk', 'uploads');
         }
 
         $produk->update($data);
@@ -74,6 +100,8 @@ class ProdukController extends Controller
 
     public function destroy(Produk $produk)
     {
+        $this->pastikanBoleh($produk);
+
         $produk->delete();
 
         return back()->with('success', 'Produk dihapus.');
@@ -81,14 +109,41 @@ class ProdukController extends Controller
 
     public function toggleStatus(Produk $produk)
     {
+        $this->pastikanBoleh($produk);
+
         $produk->update(['status' => $produk->status === 'aktif' ? 'nonaktif' : 'aktif']);
 
         return back()->with('success', 'Status produk diperbarui.');
     }
 
+    /* ---------- Kepemilikan toko ---------- */
+
+    /**
+     * Id toko milik penjual yang sedang masuk; null bagi pengelola platform.
+     */
+    private function tokoPenjual(): ?int
+    {
+        return auth()->user()->isAdmin() ? null : auth()->user()->toko?->id;
+    }
+
+    private function tokoTersedia()
+    {
+        return auth()->user()->isAdmin()
+            ? Toko::orderBy('nama')->get()
+            : Toko::where('user_id', auth()->id())->get();
+    }
+
+    private function pastikanBoleh(Produk $produk): void
+    {
+        $tokoId = $this->tokoPenjual();
+
+        abort_unless($tokoId === null || $produk->toko_id === $tokoId, 403);
+    }
+
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
+            'toko_id' => ['required', 'exists:tokos,id'],
             'kategori_id' => ['required', 'exists:kategoris,id'],
             'nama' => ['required', 'string', 'max:150'],
             'deskripsi' => ['nullable', 'string'],
@@ -99,6 +154,14 @@ class ProdukController extends Controller
             'status' => ['required', 'in:aktif,nonaktif'],
             'gambar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
+
+        // Penjual tidak boleh menitipkan produk ke toko orang lain, berapa pun
+        // nilai yang dikirim formulirnya.
+        if ($tokoId = $this->tokoPenjual()) {
+            $data['toko_id'] = $tokoId;
+        }
+
+        return $data;
     }
 
     private function buatSlug(string $nama, ?int $kecuali = null): string

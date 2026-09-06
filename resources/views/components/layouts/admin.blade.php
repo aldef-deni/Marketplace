@@ -14,13 +14,20 @@
            class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-ink-950 text-ink-300 transition-transform duration-300 lg:translate-x-0">
 
         <div class="flex h-[4.5rem] items-center gap-3 border-b border-white/5 px-5">
-            <a href="{{ route('admin.dashboard') }}" class="flex items-center transition hover:opacity-90">
+            <a href="{{ auth()->user()->isAdmin() ? route('admin.dashboard') : route('admin.produk.index') }}"
+               class="flex items-center transition hover:opacity-90">
                 <x-logo varian="landscape" kelas="h-8 w-auto" />
             </a>
-            <span class="rounded-md bg-accent-500/15 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-accent-400 ring-1 ring-accent-500/25">Admin</span>
+            <span class="rounded-md bg-accent-500/15 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-accent-400 ring-1 ring-accent-500/25">{{ auth()->user()->isPenjual() ? 'Penjual' : 'Admin' }}</span>
         </div>
 
         <nav class="flex-1 space-y-1 overflow-y-auto p-4">
+            @php ($pengelola = auth()->user()->isAdmin())
+
+            {{-- Penjual tidak diberi menu tingkat platform. Rutenya pun sudah
+                 dikunci di sisi server; ini hanya agar sidebarnya tidak
+                 menampilkan pintu yang pasti tertutup. --}}
+            @if ($pengelola)
             <p class="px-3 pb-2 text-[10px] font-bold uppercase tracking-widest text-ink-500">Menu Utama</p>
             <a href="{{ route('admin.dashboard') }}"
                class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.dashboard') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
@@ -66,15 +73,25 @@
                 </a>
             @endif
 
+            @endif
+
             <p class="px-3 pb-2 pt-5 text-[10px] font-bold uppercase tracking-widest text-ink-500">Katalog</p>
+
+            <a href="{{ route('admin.toko.index') }}"
+               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.toko.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                <x-ikon nama="toko" kelas="h-5 w-5" /> {{ $pengelola ? 'Toko' : 'Toko Saya' }}
+            </a>
+
             <a href="{{ route('admin.produk.index') }}"
                class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.produk.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
                 <x-ikon nama="label" kelas="h-5 w-5" /> Produk
             </a>
-            <a href="{{ route('admin.kategori.index') }}"
-               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.kategori.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
-                <x-ikon nama="folder" kelas="h-5 w-5" /> Kategori
-            </a>
+            @if ($pengelola)
+                <a href="{{ route('admin.kategori.index') }}"
+                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.kategori.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                    <x-ikon nama="folder" kelas="h-5 w-5" /> Kategori
+                </a>
+            @endif
 
             @if (auth()->user()->isSuperadmin())
                 <p class="px-3 pb-2 pt-5 text-[10px] font-bold uppercase tracking-widest text-ink-500">Manajemen</p>
@@ -123,7 +140,7 @@
             <div class="ml-auto flex items-center gap-3">
                 <x-lonceng-notifikasi :gelap="false" />
 
-                <a href="{{ route('toko.index') }}" class="hidden rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 sm:block">Toko</a>
+                <a href="{{ route('produk.index') }}" class="hidden rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 sm:block">Toko</a>
                 <div class="flex items-center gap-2.5 rounded-full bg-slate-50 py-1.5 pl-1.5 pr-4 ring-1 ring-slate-200">
                     <x-avatar :user="auth()->user()" ukuran="h-8 w-8" cincin="ring-1 ring-slate-200" />
                     <div class="hidden sm:block">
