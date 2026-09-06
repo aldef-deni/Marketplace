@@ -79,31 +79,6 @@
         </div>
     </section>
 
-    {{-- Toko pilihan --}}
-    @if ($tokos->isNotEmpty())
-        <section class="bg-white py-14">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div class="flex items-end justify-between">
-                    <div>
-                        <h2 class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
-                            Toko <span class="teks-gradien">Pilihan</span>
-                        </h2>
-                        <p class="mt-2 text-sm text-slate-500">Lapak terpercaya dengan koleksi paling lengkap</p>
-                    </div>
-                    <a href="{{ route('toko.index') }}" class="text-sm font-bold text-brand-600 transition hover:text-brand-800">
-                        Lihat Semua &rarr;
-                    </a>
-                </div>
-
-                <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    @foreach ($tokos->take(4) as $toko)
-                        @include('partials.kartu-toko', ['toko' => $toko])
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
-
     {{-- Produk terbaru --}}
     <section class="bg-white py-14">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

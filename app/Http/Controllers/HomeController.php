@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kategori;
-use App\Models\Toko;
 use App\Models\FlashSale;
 use App\Models\Produk;
 
@@ -23,14 +22,6 @@ class HomeController extends Controller
             ->take(8)
             ->get();
 
-        // Toko dengan katalog paling berisi ditampilkan lebih dulu: lapak
-        // kosong di beranda memberi kesan pasar yang sepi.
-        $tokos = Toko::tampil()
-            ->withCount(['produks' => fn ($q) => $q->where('status', 'aktif')])
-            ->orderByDesc('produks_count')
-            ->take(8)
-            ->get();
-
         // Kampanye yang sudah terbit dan berada dalam rentang waktunya.
         // Keikutsertaan toko disaring di tingkat produk, bukan di sini: satu
         // kampanye kini dapat diikuti sebagian lapak saja.
@@ -39,6 +30,6 @@ class HomeController extends Controller
             ->orderBy('selesai_at')
             ->first();
 
-        return view('beranda', compact('kategoris', 'produkTerbaru', 'flashSale', 'tokos'));
+        return view('beranda', compact('kategoris', 'produkTerbaru', 'flashSale'));
     }
 }
