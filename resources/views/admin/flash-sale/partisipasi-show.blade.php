@@ -9,6 +9,9 @@
         $rutaKembali = auth()->user()->isSuperadmin()
             ? route('admin.flash-sale.kampanye.index')
             : route('admin.flash-sale.index');
+
+        $masukanBaris = session('masukan_baris');
+        $jumlahDisertakan = $flashSale->produks->count();
     @endphp
 
     <div class="mb-6">
@@ -81,138 +84,193 @@
         </div>
     @endif
 
-    {{-- Pemilihan produk --}}
-    <form method="POST" action="{{ route('admin.flash-sale.produk', $flashSale) }}" class="mt-6"
-          x-data="{ cari: '', hanyaTerpilih: false }">
-        @csrf
-
-        <div class="card overflow-hidden">
-            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 p-6">
-                <div>
-                    <h2 class="text-base font-extrabold text-slate-900">Produk yang Disertakan</h2>
-                    <p class="mt-0.5 text-xs text-slate-400">
-                        Centang produk, tentukan harga flash dan kuotanya. Kuota membatasi berapa unit
-                        yang dijual dengan harga promo.
-                    </p>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2">
-                    <input type="search" x-model="cari" placeholder="Cari produk…"
-                           class="input-field !w-56 !py-2 text-sm">
-
-                    <label class="flex cursor-pointer items-center gap-2 rounded-xl bg-slate-50 px-3.5 py-2 ring-1 ring-slate-200">
-                        <input type="checkbox" x-model="hanyaTerpilih"
-                               class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
-                        <span class="text-xs font-semibold text-slate-600">Hanya terpilih</span>
-                    </label>
-                </div>
+    {{-- Pemilihan produk. Setiap baris berdiri sendiri: harganya sudah terisi
+         potongan kampanye, dan tombolnya menempel di kanan baris itu sendiri
+         sehingga daftar panjang tidak perlu digulung sampai ujung halaman. --}}
+    <div class="card mt-6 overflow-hidden" x-data="{ cari: '', hanyaTerpilih: false }">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 p-6">
+            <div>
+                <h2 class="text-base font-extrabold text-slate-900">Produk yang Disertakan</h2>
+                <p class="mt-0.5 text-xs text-slate-400">
+                    Harga flash sudah terisi otomatis −{{ $flashSale->diskon_persen }}% dari harga normal.
+                    Ubah bila perlu, lalu tekan tombol di kanan barisnya.
+                </p>
             </div>
 
-            <div class="max-h-[38rem] overflow-auto">
-                <table class="w-full min-w-[860px]">
-                    <thead class="sticky top-0 z-10 bg-slate-50">
-                        <tr>
-                            <th class="table-head w-12"></th>
-                            <th class="table-head">Produk</th>
-                            <th class="table-head text-right">Harga Normal</th>
-                            <th class="table-head text-center">Stok</th>
-                            <th class="table-head">Harga Flash</th>
-                            <th class="table-head">Kuota</th>
-                            <th class="table-head text-center">Hemat</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @forelse ($produks as $item)
-                            @php
-                                $produk = $item['model'];
-                                $baris = $item['baris'];
-                                $usulan = (int) round($produk->harga * (100 - $flashSale->diskon_persen) / 100);
-                                $kunciHarga = "produk.{$produk->id}.harga_flash";
-                                $kunciKuota = "produk.{$produk->id}.kuota";
-                                $hargaAwal = old($kunciHarga, $baris?->harga_flash ?? $usulan);
-                                $kuotaAwal = old($kunciKuota, $baris?->kuota ?? min(10, $produk->stok));
-                            @endphp
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="rounded-xl bg-accent-50 px-3.5 py-2 text-xs font-bold text-accent-700 ring-1 ring-accent-200">
+                    {{ $jumlahDisertakan }} diikuti
+                </span>
 
-                            <tr x-data="{ ikut: {{ old("produk.{$produk->id}.ikut", $baris ? 'true' : 'false') }} }"
-                                x-show="(cari === '' || '{{ Str::lower($produk->nama).' '.Str::lower($produk->kategori?->nama) }}'.includes(cari.toLowerCase()))
-                                        && (! hanyaTerpilih || ikut)"
-                                class="transition"
-                                :class="ikut && 'bg-accent-50/40'">
+                <input type="search" x-model="cari" placeholder="Cari produk…"
+                       class="input-field !w-56 !py-2 text-sm">
 
-                                <td class="table-cell">
-                                    <input type="checkbox" x-model="ikut" value="1"
-                                           name="produk[{{ $produk->id }}][ikut]"
-                                           @disabled($terkunci)
-                                           class="h-5 w-5 rounded border-slate-300 text-accent-500 focus:ring-accent-500">
-                                </td>
-
-                                <td class="table-cell">
-                                    <p class="font-bold text-slate-800">{{ $produk->nama }}</p>
-                                    <p class="text-xs text-slate-400">{{ $produk->kategori?->nama }}</p>
-                                </td>
-
-                                <td class="table-cell text-right font-semibold">{{ rp($produk->harga) }}</td>
-
-                                <td class="table-cell text-center">
-                                    <span class="font-bold {{ $produk->stok <= 0 ? 'text-rose-600' : ($produk->stok <= 5 ? 'text-amber-600' : 'text-slate-700') }}">
-                                        {{ $produk->stok }}
-                                    </span>
-                                </td>
-
-                                <td class="table-cell">
-                                    <input type="number" name="produk[{{ $produk->id }}][harga_flash]"
-                                           value="{{ $hargaAwal }}" min="0" step="1000"
-                                           x-bind:disabled="! ikut || {{ $terkunci ? 'true' : 'false' }}"
-                                           class="input-field !w-36 !py-1.5 text-sm disabled:bg-slate-50 disabled:text-slate-400">
-                                    <x-input-error :messages="$errors->get($kunciHarga)" class="mt-1" />
-                                </td>
-
-                                <td class="table-cell">
-                                    <input type="number" name="produk[{{ $produk->id }}][kuota]"
-                                           value="{{ $kuotaAwal }}" min="1" max="{{ $produk->stok }}"
-                                           x-bind:disabled="! ikut || {{ $terkunci ? 'true' : 'false' }}"
-                                           class="input-field !w-24 !py-1.5 text-sm disabled:bg-slate-50 disabled:text-slate-400">
-                                    <x-input-error :messages="$errors->get($kunciKuota)" class="mt-1" />
-
-                                    @if ($baris && $baris->terjual > 0)
-                                        <p class="mt-1 text-[11px] font-semibold text-emerald-600">
-                                            {{ $baris->terjual }} terjual
-                                        </p>
-                                    @endif
-                                </td>
-
-                                <td class="table-cell text-center">
-                                    @if ($baris)
-                                        <span class="badge bg-accent-100 text-accent-700 ring-accent-200">
-                                            −{{ $baris->persen_hemat }}%
-                                        </span>
-                                    @else
-                                        <span class="text-xs text-slate-300">—</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="py-14 text-center">
-                                    <p class="text-sm font-semibold text-slate-500">Belum ada produk di katalog.</p>
-                                    <a href="{{ route('admin.produk.create') }}" class="btn-primary mt-4">Tambah Produk</a>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                <label class="flex cursor-pointer items-center gap-2 rounded-xl bg-slate-50 px-3.5 py-2 ring-1 ring-slate-200">
+                    <input type="checkbox" x-model="hanyaTerpilih"
+                           class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                    <span class="text-xs font-semibold text-slate-600">Hanya terpilih</span>
+                </label>
             </div>
-
-            @unless ($terkunci)
-                <div class="flex flex-wrap items-center gap-3 border-t border-slate-100 p-6">
-                    <button class="btn-primary">Simpan Pilihan Produk</button>
-                    <a href="{{ $rutaKembali }}" class="btn-secondary">Batal</a>
-
-                    <p class="ml-auto text-xs text-slate-400">
-                        Harga flash harus lebih murah dari harga normal, dan kuota tidak boleh melebihi stok.
-                    </p>
-                </div>
-            @endunless
         </div>
-    </form>
+
+        <div class="max-h-[38rem] overflow-auto">
+            <table class="w-full min-w-[900px]">
+                <thead class="sticky top-0 z-20 bg-slate-50">
+                    <tr>
+                        <th class="table-head">Produk</th>
+                        <th class="table-head text-right">Harga Normal</th>
+                        <th class="table-head text-center">Stok</th>
+                        <th class="table-head">Harga Flash</th>
+                        <th class="table-head">Kuota</th>
+                        <th class="table-head text-center">Hemat</th>
+                        <th class="table-head sticky right-0 bg-slate-50 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse ($produks as $item)
+                        @php
+                            $produk = $item['model'];
+                            $baris = $item['baris'];
+
+                            $usulan = (int) round($produk->harga * (100 - $flashSale->diskon_persen) / 100);
+                            $galat = $errors->getBag('baris'.$produk->id);
+                            $punyaMasukan = ($masukanBaris['id'] ?? null) === $produk->id;
+
+                            $hargaAwal = $punyaMasukan ? $masukanBaris['harga_flash'] : ($baris?->harga_flash ?? $usulan);
+                            $kuotaAwal = $punyaMasukan ? $masukanBaris['kuota'] : ($baris?->kuota ?? max(1, min(10, $produk->stok)));
+
+                            $formId = 'fs-'.$produk->id;
+                            $latar = $baris ? 'bg-accent-50/40' : 'bg-white';
+                            $kataCari = Str::lower($produk->nama.' '.$produk->kategori?->nama);
+                            $kabar = match (true) {
+                                session('baris_tersimpan') === $produk->id => 'diikuti',
+                                session('baris_dilepas') === $produk->id => 'dibatalkan',
+                                default => '',
+                            };
+                        @endphp
+
+                        <tr id="produk-{{ $produk->id }}"
+                            x-data="{
+                                harga: {{ (int) $hargaAwal }},
+                                kabar: '{{ $kabar }}',
+                                init() { if (this.kabar) setTimeout(() => this.kabar = '', 3200) },
+                            }"
+                            x-show="'{{ $kataCari }}'.includes(cari.toLowerCase())
+                                    && (! hanyaTerpilih || {{ $baris ? 'true' : 'false' }})"
+                            class="scroll-mt-20 {{ $latar }}">
+
+                            <td class="table-cell">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="h-2 w-2 shrink-0 rounded-full {{ $baris ? 'bg-accent-500' : 'bg-slate-200' }}"></span>
+                                    <div class="min-w-0">
+                                        <p class="font-bold text-slate-800">{{ $produk->nama }}</p>
+                                        <p class="text-xs text-slate-400">{{ $produk->kategori?->nama }}</p>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="table-cell text-right font-semibold">{{ rp($produk->harga) }}</td>
+
+                            <td class="table-cell text-center">
+                                <span class="font-bold {{ $produk->stok <= 0 ? 'text-rose-600' : ($produk->stok <= 5 ? 'text-amber-600' : 'text-slate-700') }}">
+                                    {{ $produk->stok }}
+                                </span>
+                            </td>
+
+                            <td class="table-cell">
+                                <input type="number" name="harga_flash" form="{{ $formId }}"
+                                       x-model.number="harga"
+                                       value="{{ $hargaAwal }}" min="1" step="1"
+                                       @disabled($terkunci)
+                                       class="input-field !w-36 !py-1.5 text-sm disabled:bg-slate-50 disabled:text-slate-400
+                                              {{ $galat->has('harga_flash') ? '!border-rose-400' : '' }}">
+                                @if ($galat->has('harga_flash'))
+                                    <p class="mt-1 text-[11px] font-semibold text-rose-600">{{ $galat->first('harga_flash') }}</p>
+                                @endif
+                            </td>
+
+                            <td class="table-cell">
+                                <input type="number" name="kuota" form="{{ $formId }}"
+                                       value="{{ $kuotaAwal }}" min="1" max="{{ $produk->stok }}" step="1"
+                                       @disabled($terkunci)
+                                       class="input-field !w-24 !py-1.5 text-sm disabled:bg-slate-50 disabled:text-slate-400
+                                              {{ $galat->has('kuota') ? '!border-rose-400' : '' }}">
+                                @if ($galat->has('kuota'))
+                                    <p class="mt-1 text-[11px] font-semibold text-rose-600">{{ $galat->first('kuota') }}</p>
+                                @endif
+
+                                @if ($baris && $baris->terjual > 0)
+                                    <p class="mt-1 text-[11px] font-semibold text-emerald-600">{{ $baris->terjual }} terjual</p>
+                                @endif
+                            </td>
+
+                            {{-- Persentase dihitung ulang sambil harga diketik, supaya
+                                 dampak perubahannya terlihat sebelum disimpan. --}}
+                            <td class="table-cell text-center">
+                                <span class="badge bg-accent-100 text-accent-700 ring-accent-200"
+                                      x-show="harga > 0 && harga < {{ (int) $produk->harga }}">
+                                    −<span x-text="Math.round((1 - harga / {{ (int) $produk->harga }}) * 100)"></span>%
+                                </span>
+                                <span class="text-xs text-slate-300"
+                                      x-show="! (harga > 0 && harga < {{ (int) $produk->harga }})">—</span>
+                            </td>
+
+                            <td class="table-cell sticky right-0 {{ $latar }} text-right
+                                       shadow-[-10px_0_14px_-10px_rgba(15,23,42,0.18)]">
+                                @if ($terkunci)
+                                    <span class="text-xs text-slate-400">Terkunci</span>
+                                @else
+                                    <div class="flex items-center justify-end gap-2">
+                                        <span x-show="kabar" x-cloak x-transition
+                                              class="inline-flex items-center rounded-lg px-2 py-1 text-[11px] font-bold"
+                                              :class="kabar === 'diikuti' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'"
+                                              x-text="kabar === 'diikuti' ? 'Diikuti' : 'Dibatalkan'"></span>
+
+                                        <button form="{{ $formId }}"
+                                                class="{{ $baris ? 'btn-secondary' : 'btn-primary' }} btn-sm">
+                                            {{ $baris ? 'Perbarui' : 'Ikuti' }}
+                                        </button>
+
+                                        @if ($baris)
+                                            <button form="{{ $formId }}" name="tindakan" value="lepas"
+                                                    class="rounded-lg px-2 py-1.5 text-xs font-bold text-slate-400 transition hover:bg-rose-50 hover:text-rose-600">
+                                                Batal Ikuti
+                                            </button>
+                                        @endif
+                                    </div>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="py-14 text-center">
+                                <p class="text-sm font-semibold text-slate-500">Belum ada produk di katalog.</p>
+                                <a href="{{ route('admin.produk.create') }}" class="btn-primary mt-4">Tambah Produk</a>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        {{-- Form per produk diletakkan di luar tabel lalu dirujuk lewat atribut
+             form= pada tiap kolom, sebab <form> tidak sah bersarang di dalam <tr>. --}}
+        @unless ($terkunci)
+            <div class="hidden">
+                @foreach ($produks as $item)
+                    <form id="fs-{{ $item['model']->id }}" method="POST"
+                          action="{{ route('admin.flash-sale.produk', [$flashSale, $item['model']]) }}">
+                        @csrf
+                    </form>
+                @endforeach
+            </div>
+        @endunless
+
+        <div class="border-t border-slate-100 px-6 py-4">
+            <p class="text-xs text-slate-400">
+                Harga flash harus lebih murah dari harga normal, dan kuota tidak boleh melebihi stok.
+                Setiap produk diikutkan sendiri-sendiri.
+            </p>
+        </div>
+    </div>
 </x-layouts.admin>

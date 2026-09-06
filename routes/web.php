@@ -133,8 +133,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
         Route::get('/', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'index'])->name('index');
         Route::get('/{flashSale}/kelola', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'show'])->name('kelola');
         Route::post('/{flashSale}/ikut', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'toggleIkut'])->name('ikut');
-        Route::post('/{flashSale}/produk', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'simpanProduk'])->name('produk');
-        Route::delete('/{flashSale}/produk/{baris}', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'hapusProduk'])->name('produk.hapus');
+        Route::post('/{flashSale}/produk/{produk}', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'simpanBaris'])->name('produk');
 
         Route::middleware('role:superadmin')->prefix('kampanye')->name('kampanye.')->group(function () {
             Route::get('/', [App\Http\Controllers\Admin\FlashSaleController::class, 'index'])->name('index');

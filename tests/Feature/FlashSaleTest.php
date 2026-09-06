@@ -167,17 +167,32 @@ class FlashSaleTest extends TestCase
         $this->assertNull($kampanye->diikuti_oleh);
     }
 
-    public function test_admin_memilih_produk_beserta_harga_dan_kuota(): void
+    public function test_halaman_kelola_mengisi_harga_flash_sesuai_diskon_kampanye(): void
+    {
+        // Harga produk 200.000, diskon kampanye 20% -> usulan 160.000.
+        $kampanye = $this->buatKampanye(['diikuti' => true, 'diskon_persen' => 20]);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.flash-sale.kelola', $kampanye))
+            ->assertOk()
+            ->assertSee('value="160000"', false)
+            ->assertSee('form="fs-'.$this->produk->id.'"', false)
+            ->assertSee('name="harga_flash"', false)
+            // Tombol borong di kaki halaman sudah tidak ada; tiap baris berdiri sendiri.
+            ->assertDontSee('Simpan Pilihan Produk');
+    }
+
+    public function test_admin_mengikutkan_produk_beserta_harga_dan_kuota(): void
     {
         $kampanye = $this->buatKampanye(['diikuti' => true]);
 
         $this->actingAs($this->admin)
-            ->post(route('admin.flash-sale.produk', $kampanye), [
-                'produk' => [
-                    $this->produk->id => ['ikut' => 1, 'harga_flash' => 150000, 'kuota' => 5],
-                ],
+            ->post(route('admin.flash-sale.produk', [$kampanye, $this->produk]), [
+                'harga_flash' => 150000,
+                'kuota' => 5,
             ])
-            ->assertSessionHasNoErrors();
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('baris_tersimpan', $this->produk->id);
 
         $baris = $kampanye->produks()->firstOrFail();
 
@@ -186,17 +201,32 @@ class FlashSaleTest extends TestCase
         $this->assertSame(5, $baris->kuota);
     }
 
+    public function test_mengikutkan_ulang_memperbarui_baris_yang_sama(): void
+    {
+        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $this->sertakanProduk($kampanye);
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.flash-sale.produk', [$kampanye, $this->produk]), [
+                'harga_flash' => 120000,
+                'kuota' => 8,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(1, $kampanye->produks()->count());
+        $this->assertSame('120000', $kampanye->produks()->firstOrFail()->harga_flash);
+    }
+
     public function test_harga_flash_harus_lebih_murah_dari_harga_normal(): void
     {
         $kampanye = $this->buatKampanye(['diikuti' => true]);
 
         $this->actingAs($this->admin)
-            ->post(route('admin.flash-sale.produk', $kampanye), [
-                'produk' => [
-                    $this->produk->id => ['ikut' => 1, 'harga_flash' => 250000, 'kuota' => 5],
-                ],
+            ->post(route('admin.flash-sale.produk', [$kampanye, $this->produk]), [
+                'harga_flash' => 250000,
+                'kuota' => 5,
             ])
-            ->assertSessionHasErrors("produk.{$this->produk->id}.harga_flash");
+            ->assertSessionHasErrors('harga_flash', null, 'baris'.$this->produk->id);
 
         $this->assertSame(0, $kampanye->produks()->count());
     }
@@ -206,21 +236,22 @@ class FlashSaleTest extends TestCase
         $kampanye = $this->buatKampanye(['diikuti' => true]);
 
         $this->actingAs($this->admin)
-            ->post(route('admin.flash-sale.produk', $kampanye), [
-                'produk' => [
-                    $this->produk->id => ['ikut' => 1, 'harga_flash' => 150000, 'kuota' => 999],
-                ],
+            ->post(route('admin.flash-sale.produk', [$kampanye, $this->produk]), [
+                'harga_flash' => 150000,
+                'kuota' => 999,
             ])
-            ->assertSessionHasErrors("produk.{$this->produk->id}.kuota");
+            ->assertSessionHasErrors('kuota', null, 'baris'.$this->produk->id);
+
+        $this->assertSame(0, $kampanye->produks()->count());
     }
 
-    public function test_produk_yang_tidak_lagi_dicentang_dilepas(): void
+    public function test_admin_membatalkan_keikutsertaan_satu_produk(): void
     {
         $kampanye = $this->buatKampanye(['diikuti' => true]);
         $this->sertakanProduk($kampanye);
 
         $this->actingAs($this->admin)
-            ->post(route('admin.flash-sale.produk', $kampanye), ['produk' => []])
+            ->post(route('admin.flash-sale.produk', [$kampanye, $this->produk]), ['tindakan' => 'lepas'])
             ->assertSessionHasNoErrors();
 
         $this->assertSame(0, $kampanye->produks()->count());

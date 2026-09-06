@@ -4,10 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\FlashSale;
-use App\Models\FlashSaleProduk;
 use App\Models\Produk;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Keikutsertaan toko pada kampanye flash sale — untuk admin.
@@ -81,84 +80,75 @@ class FlashSalePartisipasiController extends Controller
     }
 
     /**
-     * Simpan pilihan produk beserta harga dan kuotanya.
+     * Simpan satu produk pada kampanye — menambahkan, memperbarui, atau melepas.
+     *
+     * Disimpan per baris, bukan sekaligus satu tabel, agar admin dengan ratusan
+     * produk tidak perlu menggulung ke tombol simpan di ujung halaman.
      */
-    public function simpanProduk(Request $request, FlashSale $flashSale)
+    public function simpanBaris(Request $request, FlashSale $flashSale, Produk $produk)
     {
         abort_unless($flashSale->aktif, 404);
 
         if ($flashSale->sudahBerakhir()) {
-            return back()->with('error', 'Kampanye sudah berakhir, produknya tidak dapat diubah.');
+            return $this->kembaliKeBaris($flashSale, $produk)
+                ->with('error', 'Kampanye sudah berakhir, produknya tidak dapat diubah.');
+        }
+
+        if ($request->input('tindakan') === 'lepas') {
+            $flashSale->produks()->where('produk_id', $produk->id)->delete();
+
+            return $this->kembaliKeBaris($flashSale, $produk)->with('baris_dilepas', $produk->id);
         }
 
         $data = $request->validate([
-            'produk' => ['array'],
-            'produk.*.ikut' => ['nullable', 'boolean'],
-            'produk.*.harga_flash' => ['nullable', 'numeric', 'min:0'],
-            'produk.*.kuota' => ['nullable', 'integer', 'min:1'],
+            'harga_flash' => ['nullable', 'numeric'],
+            'kuota' => ['nullable', 'integer'],
         ]);
 
-        $dipilih = collect($data['produk'] ?? [])->filter(fn ($b) => ! empty($b['ikut']));
+        $harga = (float) ($data['harga_flash'] ?? 0);
+        $kuota = (int) ($data['kuota'] ?? 0);
 
-        // Harga dan kuota divalidasi di sini, bukan lewat aturan bersyarat,
-        // agar pesannya bisa menyebut produk mana yang bermasalah.
+        // Divalidasi manual, bukan lewat aturan bersyarat, supaya batasannya
+        // dapat menyebut angka nyata milik produk ini.
         $galat = [];
-        $produks = Produk::whereIn('id', $dipilih->keys())->get()->keyBy('id');
 
-        foreach ($dipilih as $id => $baris) {
-            $produk = $produks[$id] ?? null;
+        if ($harga <= 0) {
+            $galat['harga_flash'] = 'Harga flash wajib diisi.';
+        } elseif ($harga >= (float) $produk->harga) {
+            $galat['harga_flash'] = 'Harus lebih murah dari '.rp($produk->harga).'.';
+        }
 
-            if (! $produk) {
-                continue;
-            }
-
-            $harga = (float) ($baris['harga_flash'] ?? 0);
-            $kuota = (int) ($baris['kuota'] ?? 0);
-
-            if ($harga <= 0) {
-                $galat["produk.{$id}.harga_flash"] = "Harga flash {$produk->nama} wajib diisi.";
-            } elseif ($harga >= (float) $produk->harga) {
-                $galat["produk.{$id}.harga_flash"] = "Harga flash {$produk->nama} harus lebih murah dari harga normal.";
-            }
-
-            if ($kuota < 1) {
-                $galat["produk.{$id}.kuota"] = "Kuota {$produk->nama} minimal 1.";
-            } elseif ($kuota > $produk->stok) {
-                $galat["produk.{$id}.kuota"] = "Kuota {$produk->nama} melebihi stok tersedia ({$produk->stok}).";
-            }
+        if ($kuota < 1) {
+            $galat['kuota'] = 'Kuota minimal 1.';
+        } elseif ($kuota > $produk->stok) {
+            $galat['kuota'] = "Melebihi stok tersedia ({$produk->stok}).";
         }
 
         if ($galat !== []) {
-            return back()->withErrors($galat)->withInput();
+            // Galat dan masukan dikantongi per produk agar baris lain tidak ikut
+            // menampilkan pesan atau nilai yang bukan miliknya.
+            return $this->kembaliKeBaris($flashSale, $produk)
+                ->withErrors($galat, 'baris'.$produk->id)
+                ->with('masukan_baris', [
+                    'id' => $produk->id,
+                    'harga_flash' => $request->input('harga_flash'),
+                    'kuota' => $request->input('kuota'),
+                ]);
         }
 
-        DB::transaction(function () use ($flashSale, $dipilih) {
-            // Produk yang tidak lagi dicentang dilepas dari kampanye.
-            $flashSale->produks()->whereNotIn('produk_id', $dipilih->keys())->delete();
+        $flashSale->produks()->updateOrCreate(
+            ['produk_id' => $produk->id],
+            ['harga_flash' => $harga, 'kuota' => $kuota],
+        );
 
-            foreach ($dipilih as $id => $baris) {
-                $flashSale->produks()->updateOrCreate(
-                    ['produk_id' => (int) $id],
-                    [
-                        'harga_flash' => (float) $baris['harga_flash'],
-                        'kuota' => (int) $baris['kuota'],
-                    ],
-                );
-            }
-        });
-
-        return back()->with('success', $dipilih->count().' produk disimpan pada kampanye ini.');
+        return $this->kembaliKeBaris($flashSale, $produk)->with('baris_tersimpan', $produk->id);
     }
 
     /**
-     * Lepas satu produk dari kampanye.
+     * Kembali ke halaman kelola tepat pada baris yang barusan disentuh.
      */
-    public function hapusProduk(FlashSale $flashSale, FlashSaleProduk $baris)
+    private function kembaliKeBaris(FlashSale $flashSale, Produk $produk): RedirectResponse
     {
-        abort_unless($flashSale->aktif && $baris->flash_sale_id === $flashSale->id, 404);
-
-        $baris->delete();
-
-        return back()->with('success', 'Produk dilepas dari kampanye.');
+        return redirect()->to(route('admin.flash-sale.kelola', $flashSale).'#produk-'.$produk->id);
     }
 }
