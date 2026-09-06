@@ -137,32 +137,6 @@
         </div>
     </section>
 
-    {{-- Promo / penawaran --}}
-    @if ($produkDiskon->isNotEmpty())
-        <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-ink-950 via-brand-950 to-brand-900 p-8 sm:p-12">
-                <div class="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-accent-500/25 blur-3xl"></div>
-                <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-500/70 to-transparent"></div>
-                <div class="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
-                    <div>
-                        <span class="badge relative bg-accent-500/15 text-accent-300 ring-accent-500/30">Promo Spesial</span>
-                        <h2 class="relative mt-3 text-2xl font-extrabold text-white sm:text-3xl">Hemat Besar Hari Ini</h2>
-                        <p class="relative mt-2 max-w-md text-sm text-ink-300">Jangan lewatkan produk dengan penawaran terbaik. Stok terbatas.</p>
-                    </div>
-                    <a href="{{ route('produk.index', ['urutkan' => 'termurah']) }}"
-                       class="relative rounded-2xl bg-accent-500 px-7 py-3.5 text-sm font-bold text-ink-950 shadow-accent transition hover:-translate-y-0.5 hover:bg-accent-400">
-                        Lihat Semua Promo →
-                    </a>
-                </div>
-                <div class="relative mt-8 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4">
-                    @foreach ($produkDiskon as $produk)
-                        @include('partials.kartu-produk', ['produk' => $produk])
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
-
     {{-- Keunggulan --}}
     <section class="border-t border-slate-200 bg-slate-50 py-14">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

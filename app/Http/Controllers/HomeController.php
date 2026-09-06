@@ -23,14 +23,6 @@ class HomeController extends Controller
             ->take(8)
             ->get();
 
-        $produkDiskon = Produk::aktif()->tersedia()
-            ->whereNotNull('harga_coret')
-            ->whereHas('toko', fn ($q) => $q->tampil())
-            ->with('kategori', 'toko')
-            ->latest()
-            ->take(4)
-            ->get();
-
         // Toko dengan katalog paling berisi ditampilkan lebih dulu: lapak
         // kosong di beranda memberi kesan pasar yang sepi.
         $tokos = Toko::tampil()
@@ -39,13 +31,14 @@ class HomeController extends Controller
             ->take(8)
             ->get();
 
-        // Kampanye yang benar-benar berjalan sekarang; scope-nya sudah
-        // memastikan sudah terbit, diikuti toko, dan berada dalam rentang waktu.
+        // Kampanye yang sudah terbit dan berada dalam rentang waktunya.
+        // Keikutsertaan toko disaring di tingkat produk, bukan di sini: satu
+        // kampanye kini dapat diikuti sebagian lapak saja.
         $flashSale = FlashSale::berlangsung()
             ->with(['produks.produk.kategori', 'produks.produk.toko'])
             ->orderBy('selesai_at')
             ->first();
 
-        return view('beranda', compact('kategoris', 'produkTerbaru', 'produkDiskon', 'flashSale', 'tokos'));
+        return view('beranda', compact('kategoris', 'produkTerbaru', 'flashSale', 'tokos'));
     }
 }
