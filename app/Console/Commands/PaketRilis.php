@@ -151,7 +151,10 @@ class PaketRilis extends Command
             return null;
         }
 
-        $ada = Process::path($akar)->run(sprintf('git cat-file -e %s^{commit}', escapeshellarg($ref)));
+        // "rev-parse --verify", bukan "cat-file -e ...^{commit}": tanda ^ adalah
+        // karakter escape di cmd Windows sehingga sufiksnya hilang dan
+        // pemeriksaannya selalu gagal.
+        $ada = Process::path($akar)->run(sprintf('git rev-parse --verify --quiet %s', escapeshellarg($ref)));
 
         if (! $ada->successful()) {
             $this->components->warn("Penanda rilis '{$ref}' tidak dikenal; membungkus seluruh aplikasi.");
