@@ -25,11 +25,11 @@
                      berposisi selalu dilukis di atas yang statis. --}}
                 <div class="relative -mt-12 flex flex-col gap-5 sm:-mt-14 sm:flex-row sm:items-end sm:justify-between">
                     <div class="flex items-end gap-4">
-                        <span class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-white shadow-lg ring-1 ring-slate-200 sm:h-28 sm:w-28">
+                        <span class="flex h-24 w-24 shrink-0 items-center justify-center rounded-3xl bg-white p-1.5 shadow-lg ring-1 ring-slate-900/5 sm:h-28 sm:w-28">
                             @if ($toko->logo)
-                                <img src="{{ asset($toko->logo) }}" alt="{{ $toko->nama }}" class="h-full w-full object-cover">
+                                <img src="{{ asset($toko->logo) }}" alt="{{ $toko->nama }}" class="h-full w-full rounded-2xl object-cover">
                             @else
-                                <span class="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-600 to-accent-500 text-3xl font-extrabold text-white">
+                                <span class="flex h-full w-full items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-accent-500 text-3xl font-extrabold text-white">
                                     {{ $toko->inisial }}
                                 </span>
                             @endif

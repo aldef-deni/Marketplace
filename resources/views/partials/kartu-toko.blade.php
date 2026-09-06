@@ -26,12 +26,12 @@
              sampul di atasnya juga berposisi, dan elemen berposisi selalu
              dilukis di atas yang statis — logonya akan tertimbun tanpa ini. --}}
         <div class="relative -mt-9 mb-1">
-            <span class="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-slate-200">
+            <span class="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-2xl bg-white p-1 shadow-lg ring-1 ring-slate-900/5">
                 @if ($toko->logo)
                     <img src="{{ asset($toko->logo) }}" alt="{{ $toko->nama }}" draggable="false"
-                         class="h-full w-full object-cover" loading="lazy">
+                         class="h-full w-full rounded-xl object-cover" loading="lazy">
                 @else
-                    <span class="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-600 to-accent-500 text-lg font-extrabold text-white">
+                    <span class="flex h-full w-full items-center justify-center rounded-xl bg-gradient-to-br from-brand-600 to-accent-500 text-lg font-extrabold text-white">
                         {{ $toko->inisial }}
                     </span>
                 @endif
