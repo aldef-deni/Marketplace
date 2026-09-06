@@ -54,24 +54,22 @@
     {{-- Kategori. Ubin kecil rapat, bukan kartu besar: kategori adalah jalan
          pintas menuju katalog, bukan barang dagangan tersendiri. Ditaruh tepat
          di bawah hero supaya pembeli bisa langsung memilih arah. --}}
-    <section id="kategori" class="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
+    <section id="kategori" class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div class="card overflow-hidden p-5 sm:p-6">
-            <div class="flex items-end justify-between">
-                <div>
-                    <h2 class="text-base font-extrabold tracking-tight text-slate-900 sm:text-lg">Jelajahi Kategori</h2>
-                    <p class="mt-0.5 text-xs text-slate-400">Temukan produk sesuai kebutuhanmu</p>
-                </div>
-                <a href="{{ route('produk.index') }}" class="text-xs font-bold text-brand-600 transition hover:text-brand-800">
-                    Lihat Semua &rarr;
-                </a>
-            </div>
+            <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
+                Jelajahi <span class="teks-gradien">Kategori</span>
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">Temukan produk sesuai kebutuhanmu</p>
 
-            <div class="mt-5 grid grid-cols-3 gap-x-2 gap-y-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
+            <div class="mt-6 grid grid-cols-3 gap-x-2 gap-y-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
                 @forelse ($kategoris as $kategori)
                     <a href="{{ route('produk.index', ['kategori' => $kategori->slug]) }}"
-                       class="group flex flex-col items-center gap-2 rounded-xl px-1 py-2 text-center transition hover:bg-brand-50/70">
-                        <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-50 to-accent-50 ring-1 ring-brand-100 transition group-hover:scale-110 group-hover:ring-brand-300">
-                            <x-ikon :nama="$kategori->ikon" kelas="h-5 w-5 text-brand-700 transition group-hover:text-accent-500" />
+                       class="group flex flex-col items-center gap-2 rounded-xl px-1 py-2 text-center transition">
+                        {{-- Ubin biru pekat dengan ikon putih; saat disorot ikonnya
+                             berpendar oranye — cukup satu unsur yang berubah agar
+                             deretan sembilan ubin tidak terasa gaduh. --}}
+                        <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-brand-700 shadow-brand ring-1 ring-brand-700/20 transition duration-300 group-hover:-translate-y-0.5 group-hover:from-brand-700 group-hover:to-brand-800">
+                            <x-ikon :nama="$kategori->ikon" kelas="h-5 w-5 text-white transition duration-300 group-hover:text-accent-400" />
                         </span>
                         <span class="line-clamp-2 text-[11px] font-semibold leading-tight text-slate-600 transition group-hover:text-brand-700">
                             {{ $kategori->nama }}

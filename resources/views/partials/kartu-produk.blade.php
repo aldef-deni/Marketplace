@@ -69,11 +69,11 @@
 
         <div class="mt-3 flex items-center justify-between gap-2 pt-0.5">
             @if ($potongan && $potongan->sisaKuota !== null)
-                <span class="truncate text-xs font-semibold text-rose-600">Sisa {{ $potongan->sisaKuota }} promo</span>
+                <span class="truncate text-[11px] font-semibold text-rose-600">Sisa {{ $potongan->sisaKuota }} promo</span>
             @elseif ($potongan)
-                <span class="truncate text-xs font-semibold text-brand-600">{{ $potongan->label }}</span>
+                <span class="truncate text-[11px] font-semibold text-brand-600">{{ $potongan->label }}</span>
             @else
-                <span class="truncate text-xs font-semibold {{ $produk->stok > 0 ? 'text-emerald-600' : 'text-rose-500' }}">
+                <span class="truncate text-[11px] font-semibold {{ $produk->stok > 0 ? 'text-emerald-600' : 'text-rose-500' }}">
                     {{ $produk->stok > 0 ? "Sisa {$produk->stok} pcs" : 'Habis' }}
                 </span>
             @endif
