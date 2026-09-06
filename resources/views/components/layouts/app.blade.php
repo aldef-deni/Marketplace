@@ -63,7 +63,7 @@
                         <a href="{{ route('alamat.index') }}" class="block rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-brand-50 hover:text-brand-700">Buku Alamat</a>
                         <a href="{{ route('profile.edit') }}" class="block rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-brand-50 hover:text-brand-700">Profil</a>
 
-                        @if (auth()->user()->isAdmin())
+                        @if (auth()->user()->isPengelola())
                             <a href="{{ route('admin.dashboard') }}" class="block rounded-xl px-3 py-2 text-sm font-bold text-brand-700 transition hover:bg-brand-50">Panel Admin</a>
                         @endif
 

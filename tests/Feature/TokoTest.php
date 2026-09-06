@@ -15,9 +15,9 @@ class TokoTest extends TestCase
 
     private User $admin;
 
-    private User $penjualA;
+    private User $pemilikA;
 
-    private User $penjualB;
+    private User $pemilikB;
 
     private Toko $tokoA;
 
@@ -29,16 +29,16 @@ class TokoTest extends TestCase
     {
         parent::setUp();
 
-        $this->admin = User::factory()->create(['role' => 'admin']);
-        $this->penjualA = User::factory()->create(['role' => 'penjual']);
-        $this->penjualB = User::factory()->create(['role' => 'penjual']);
+        $this->admin = User::factory()->create(['role' => 'superadmin']);
+        $this->pemilikA = User::factory()->create(['role' => 'admin']);
+        $this->pemilikB = User::factory()->create(['role' => 'admin']);
 
         $this->kategori = Kategori::create([
             'nama' => 'Elektronik', 'slug' => 'elektronik', 'ikon' => 'ponsel', 'aktif' => true,
         ]);
 
-        $this->tokoA = $this->buatToko($this->penjualA, 'Lapak Alfa');
-        $this->tokoB = $this->buatToko($this->penjualB, 'Lapak Beta');
+        $this->tokoA = $this->buatToko($this->pemilikA, 'Lapak Alfa');
+        $this->tokoB = $this->buatToko($this->pemilikB, 'Lapak Beta');
     }
 
     private function buatToko(User $pemilik, string $nama, string $status = 'aktif'): Toko
@@ -114,73 +114,73 @@ class TokoTest extends TestCase
 
     public function test_inisial_melewati_kata_bersimbol(): void
     {
-        $toko = $this->buatToko($this->penjualA, 'Dapur & Griya Sejahtera');
+        $toko = $this->buatToko($this->pemilikA, 'Dapur & Griya Sejahtera');
 
         $this->assertSame('DG', $toko->inisial);
         $this->assertSame('LA', $this->tokoA->inisial);
     }
 
-    /* ---------- Batas antar-penjual ---------- */
+    /* ---------- Batas antar-pemilik toko ---------- */
 
-    public function test_penjual_hanya_melihat_tokonya_sendiri(): void
+    public function test_pemilik_toko_hanya_melihat_tokonya_sendiri(): void
     {
-        $this->actingAs($this->penjualA)
+        $this->actingAs($this->pemilikA)
             ->get(route('admin.toko.index'))
             ->assertOk()
             ->assertSee('Lapak Alfa')
             ->assertDontSee('Lapak Beta');
     }
 
-    public function test_penjual_tidak_dapat_menyunting_toko_orang_lain(): void
+    public function test_pemilik_toko_tidak_dapat_menyunting_toko_orang_lain(): void
     {
-        $this->actingAs($this->penjualA)
+        $this->actingAs($this->pemilikA)
             ->get(route('admin.toko.edit', $this->tokoB))
             ->assertForbidden();
 
-        $this->actingAs($this->penjualA)
-            ->patch(route('admin.toko.update', $this->tokoB), ['nama' => 'Dibajak', 'user_id' => $this->penjualA->id])
+        $this->actingAs($this->pemilikA)
+            ->patch(route('admin.toko.update', $this->tokoB), ['nama' => 'Dibajak', 'user_id' => $this->pemilikA->id])
             ->assertForbidden();
 
         $this->assertSame('Lapak Beta', $this->tokoB->fresh()->nama);
     }
 
-    public function test_penjual_tidak_dapat_menyetujui_atau_menangguhkan_toko(): void
+    public function test_pemilik_toko_tidak_dapat_menyetujui_atau_menangguhkan_toko(): void
     {
-        $this->actingAs($this->penjualA)
+        $this->actingAs($this->pemilikA)
             ->patch(route('admin.toko.status', $this->tokoA))
             ->assertForbidden();
 
         $this->assertSame('aktif', $this->tokoA->fresh()->status);
     }
 
-    public function test_penjual_hanya_melihat_produk_tokonya(): void
+    public function test_pemilik_toko_hanya_melihat_produk_tokonya(): void
     {
         $this->buatProduk($this->tokoA, 'Adaptor Alfa');
         $this->buatProduk($this->tokoB, 'Kabel Beta');
 
-        $this->actingAs($this->penjualA)
+        $this->actingAs($this->pemilikA)
             ->get(route('admin.produk.index'))
             ->assertOk()
             ->assertSee('Adaptor Alfa')
             ->assertDontSee('Kabel Beta');
     }
 
-    public function test_penjual_tidak_dapat_menyunting_produk_toko_lain(): void
+    public function test_pemilik_toko_tidak_dapat_menyunting_produk_toko_lain(): void
     {
         $produk = $this->buatProduk($this->tokoB, 'Kabel Beta');
 
-        $this->actingAs($this->penjualA)->get(route('admin.produk.edit', $produk))->assertForbidden();
-        $this->actingAs($this->penjualA)->delete(route('admin.produk.destroy', $produk))->assertForbidden();
-        $this->actingAs($this->penjualA)->patch(route('admin.produk.status', $produk))->assertForbidden();
+        $this->actingAs($this->pemilikA)->get(route('admin.produk.edit', $produk))->assertForbidden();
+        $this->actingAs($this->pemilikA)->delete(route('admin.produk.destroy', $produk))->assertForbidden();
+        $this->actingAs($this->pemilikA)->patch(route('admin.produk.status', $produk))->assertForbidden();
 
         $this->assertDatabaseHas('produks', ['id' => $produk->id, 'status' => 'aktif']);
     }
 
-    public function test_produk_penjual_selalu_masuk_ke_tokonya_sendiri(): void
+    public function test_produk_pemilik_toko_selalu_masuk_ke_tokonya_sendiri(): void
     {
         // Meski formulirnya dipalsukan menunjuk toko lain, produknya tetap
-        // mendarat di toko milik penjual yang sedang masuk.
-        $this->actingAs($this->penjualA)
+        // mendarat di toko milik pemilik toko yang sedang masuk.
+        $this->actingAs($this->pemilikA)
             ->post(route('admin.produk.store'), [
                 'toko_id' => $this->tokoB->id,
                 'kategori_id' => $this->kategori->id,
@@ -195,10 +195,10 @@ class TokoTest extends TestCase
         ]);
     }
 
-    public function test_penjual_tidak_dapat_membuka_kendali_platform(): void
+    public function test_pemilik_toko_tidak_dapat_membuka_kendali_platform(): void
     {
         foreach ([
-            // Flash sale dan promo justru terbuka bagi penjual sejak
+            // Flash sale dan promo justru terbuka bagi pemilik toko sejak
             // keikutsertaan menjadi urusan tiap toko.
             route('admin.dashboard'),
             route('admin.pesanan.index'),
@@ -207,7 +207,7 @@ class TokoTest extends TestCase
             route('admin.kategori.index'),
             route('admin.laporan.transaksi'),
         ] as $url) {
-            $this->actingAs($this->penjualA)->get($url)->assertForbidden();
+            $this->actingAs($this->pemilikA)->get($url)->assertForbidden();
         }
     }
 
@@ -240,9 +240,9 @@ class TokoTest extends TestCase
             ->assertSee('Lapak Beta');
     }
 
-    public function test_penjual_tidak_dapat_berpindah_ke_toko_lain(): void
+    public function test_pemilik_toko_tidak_dapat_berpindah_ke_toko_lain(): void
     {
-        $this->actingAs($this->penjualA)
+        $this->actingAs($this->pemilikA)
             ->get(route('admin.promo.index', ['toko' => $this->tokoB->slug]))
             ->assertOk()
             ->assertSee('Lapak Alfa')
@@ -262,7 +262,7 @@ class TokoTest extends TestCase
 
     public function test_pengelola_menyetujui_toko_yang_menunggu(): void
     {
-        $baru = $this->buatToko($this->penjualA, 'Lapak Gama', 'menunggu');
+        $baru = $this->buatToko($this->pemilikA, 'Lapak Gama', 'menunggu');
 
         $this->get(route('toko.index'))->assertOk()->assertDontSee('Lapak Gama');
 
@@ -273,7 +273,7 @@ class TokoTest extends TestCase
         $this->get(route('toko.index'))->assertOk()->assertSee('Lapak Gama');
     }
 
-    public function test_membuat_toko_menaikkan_pembeli_menjadi_penjual(): void
+    public function test_membuat_toko_menaikkan_pembeli_menjadi_pemilik_toko(): void
     {
         $pembeli = User::factory()->create(['role' => 'pengguna']);
 
@@ -284,7 +284,7 @@ class TokoTest extends TestCase
             ])
             ->assertSessionHasNoErrors();
 
-        $this->assertSame('penjual', $pembeli->fresh()->role);
+        $this->assertSame('admin', $pembeli->fresh()->role);
         $this->assertDatabaseHas('tokos', ['nama' => 'Lapak Delta', 'status' => 'aktif']);
     }
 

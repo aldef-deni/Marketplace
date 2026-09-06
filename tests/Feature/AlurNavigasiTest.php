@@ -142,7 +142,7 @@ class AlurNavigasiTest extends TestCase
 
     public function test_admin_tetap_boleh_membuka_pesanan_siapa_pun(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'superadmin']);
         Alamat::create(['user_id' => $this->pembeli->id, ...$this->alamatValid, 'is_default' => true]);
 
         $this->actingAs($this->pembeli)->post(route('keranjang.tambah', $this->produk), ['qty' => 1]);

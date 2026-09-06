@@ -94,9 +94,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:superadmin,admin,penjual'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:superadmin,admin'])->group(function () {
     Route::get('/', [App\Http\Controllers\Admin\DashboardController::class, 'index'])
-        ->middleware('role:superadmin,admin')->name('dashboard');
+        ->middleware('role:superadmin')->name('dashboard');
 
     Route::prefix('produk')->name('produk.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\ProdukController::class, 'index'])->name('index');
@@ -123,7 +123,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
         Route::delete('/{toko}', [App\Http\Controllers\Admin\TokoController::class, 'destroy'])->name('destroy');
     });
 
-    Route::prefix('kategori')->name('kategori.')->middleware('role:superadmin,admin')->group(function () {
+    Route::prefix('kategori')->name('kategori.')->middleware('role:superadmin')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\KategoriController::class, 'index'])->name('index');
         Route::post('/', [App\Http\Controllers\Admin\KategoriController::class, 'store'])->name('store');
         Route::patch('/{kategori}', [App\Http\Controllers\Admin\KategoriController::class, 'update'])->name('update');
@@ -131,7 +131,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
         Route::delete('/{kategori}', [App\Http\Controllers\Admin\KategoriController::class, 'destroy'])->name('destroy');
     });
 
-    Route::prefix('pesanan')->name('pesanan.')->middleware('role:superadmin,admin')->group(function () {
+    Route::prefix('pesanan')->name('pesanan.')->middleware('role:superadmin')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\PesananController::class, 'index'])->name('index');
         Route::get('/{pesanan}', [App\Http\Controllers\Admin\PesananController::class, 'show'])->name('show');
         Route::post('/{pesanan}/proses', [App\Http\Controllers\Admin\PesananController::class, 'proses'])->name('proses');
@@ -140,13 +140,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
         Route::post('/{pesanan}/batalkan', [App\Http\Controllers\Admin\PesananController::class, 'batalkan'])->name('batalkan');
     });
 
-    Route::prefix('pembayaran')->name('pembayaran.')->middleware('role:superadmin,admin')->group(function () {
+    Route::prefix('pembayaran')->name('pembayaran.')->middleware('role:superadmin')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\PembayaranController::class, 'index'])->name('index');
         Route::post('/{pembayaran}/verifikasi', [App\Http\Controllers\Admin\PembayaranController::class, 'verifikasi'])->name('verifikasi');
         Route::post('/{pembayaran}/tolak', [App\Http\Controllers\Admin\PembayaranController::class, 'tolak'])->name('tolak');
     });
 
-    Route::prefix('pengiriman')->name('pengiriman.')->middleware('role:superadmin,admin')->group(function () {
+    Route::prefix('pengiriman')->name('pengiriman.')->middleware('role:superadmin')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\PengirimanController::class, 'index'])->name('index');
     });
 
@@ -197,7 +197,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     | Laporan transaksi terbuka bagi admin dan superadmin; laporan toko —
     | kondisi katalog dan kinerja produk — khusus superadmin.
     */
-    Route::prefix('laporan')->name('laporan.')->middleware('role:superadmin,admin')->group(function () {
+    Route::prefix('laporan')->name('laporan.')->middleware('role:superadmin')->group(function () {
         Route::get('/transaksi', [App\Http\Controllers\Admin\LaporanController::class, 'transaksi'])->name('transaksi');
         Route::get('/transaksi/pdf', [App\Http\Controllers\Admin\LaporanController::class, 'transaksiPdf'])->name('transaksi.pdf');
         Route::get('/transaksi/excel', [App\Http\Controllers\Admin\LaporanController::class, 'transaksiExcel'])->name('transaksi.excel');

@@ -11,8 +11,8 @@ use Illuminate\Validation\Rule;
 /**
  * Pengelolaan toko di panel.
  *
- * Pengelola platform melihat seluruh toko dan menyetujui yang baru mendaftar.
- * Penjual hanya melihat dan menyunting tokonya sendiri — pembatasnya dipasang
+ * Superadmin melihat seluruh toko dan menyetujui yang baru mendaftar.
+ * Pemilik toko hanya melihat dan menyunting lapaknya sendiri — pembatasnya dipasang
  * pada kuerinya, bukan hanya disembunyikan dari tampilan.
  */
 class TokoController extends Controller
@@ -47,7 +47,7 @@ class TokoController extends Controller
 
     public function create()
     {
-        abort_unless(auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->isSuperadmin(), 403);
 
         return view('admin.toko.form', [
             'toko' => new Toko,
@@ -57,7 +57,7 @@ class TokoController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->isSuperadmin(), 403);
 
         $data = $this->validasi($request);
         $data['slug'] = Toko::slugUnik($data['nama']);
@@ -71,10 +71,10 @@ class TokoController extends Controller
 
         $toko = Toko::create($data);
 
-        // Pemiliknya dinaikkan jadi penjual bila sebelumnya pembeli biasa,
+        // Pemiliknya dinaikkan jadi pemilik toko bila sebelumnya pembeli biasa,
         // supaya ia benar-benar bisa masuk ke panel tokonya.
         if ($toko->pemilik?->isPengguna()) {
-            $toko->pemilik->update(['role' => 'penjual']);
+            $toko->pemilik->update(['role' => 'admin']);
         }
 
         return redirect()->route('admin.toko.index')->with('success', 'Toko berhasil dibuat.');
@@ -100,8 +100,8 @@ class TokoController extends Controller
             $data['slug'] = Toko::slugUnik($data['nama'], $toko->id);
         }
 
-        // Penjual tidak boleh memindahkan tokonya ke orang lain.
-        if (! auth()->user()->isAdmin()) {
+        // Pemilik toko tidak boleh memindahkan lapaknya ke orang lain.
+        if (! auth()->user()->isSuperadmin()) {
             unset($data['user_id']);
         }
 
@@ -117,7 +117,7 @@ class TokoController extends Controller
      */
     public function toggleStatus(Toko $toko)
     {
-        abort_unless(auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->isSuperadmin(), 403);
 
         $aktif = ! $toko->aktif();
 
@@ -133,7 +133,7 @@ class TokoController extends Controller
 
     public function destroy(Toko $toko)
     {
-        abort_unless(auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->isSuperadmin(), 403);
 
         if ($toko->produks()->exists()) {
             return back()->with('error', 'Toko masih memiliki produk. Pindahkan atau hapus produknya dulu.');
@@ -148,7 +148,7 @@ class TokoController extends Controller
 
     private function batasiMilikSendiri($query): void
     {
-        if (! auth()->user()->isAdmin()) {
+        if (! auth()->user()->isSuperadmin()) {
             $query->where('user_id', auth()->id());
         }
     }
@@ -163,13 +163,13 @@ class TokoController extends Controller
 
     private function pastikanBoleh(Toko $toko): void
     {
-        abort_unless(auth()->user()->isAdmin() || $toko->user_id === auth()->id(), 403);
+        abort_unless(auth()->user()->isSuperadmin() || $toko->user_id === auth()->id(), 403);
     }
 
     private function calonPemilik()
     {
-        return auth()->user()->isAdmin()
-            ? User::whereIn('role', ['penjual', 'pengguna', 'admin', 'superadmin'])->orderBy('name')->get()
+        return auth()->user()->isSuperadmin()
+            ? User::whereIn('role', ['admin', 'pengguna', 'superadmin'])->orderBy('name')->get()
             : collect();
     }
 

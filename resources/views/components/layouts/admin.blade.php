@@ -14,18 +14,18 @@
            class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-ink-950 text-ink-300 transition-transform duration-300 lg:translate-x-0">
 
         <div class="flex h-[4.5rem] items-center gap-3 border-b border-white/5 px-5">
-            <a href="{{ auth()->user()->isAdmin() ? route('admin.dashboard') : route('admin.produk.index') }}"
+            <a href="{{ auth()->user()->rutaPanel() }}"
                class="flex items-center transition hover:opacity-90">
                 <x-logo varian="landscape" kelas="h-8 w-auto" />
             </a>
-            <span class="rounded-md bg-accent-500/15 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-accent-400 ring-1 ring-accent-500/25">{{ auth()->user()->isPenjual() ? 'Penjual' : 'Admin' }}</span>
+            <span class="rounded-md bg-accent-500/15 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-accent-400 ring-1 ring-accent-500/25">{{ auth()->user()->isSuperadmin() ? 'Superadmin' : 'Pemilik Toko' }}</span>
         </div>
 
         <nav class="flex-1 space-y-1 overflow-y-auto p-4">
             @php
-                $pengelola = auth()->user()->isAdmin();
+                $pengelola = auth()->user()->isSuperadmin();
                 // Pengelola platform bertindak atas nama toko mana pun yang
-                // aktif; penjual hanya atas nama lapaknya sendiri.
+                // aktif; pemilik toko hanya atas nama lapaknya sendiri.
                 $kelolaToko = $pengelola
                     ? \App\Models\Toko::tampil()->exists()
                     : \App\Models\Toko::where('user_id', auth()->id())->exists();

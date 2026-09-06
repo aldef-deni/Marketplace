@@ -42,7 +42,7 @@ return new class extends Migration
             $table->index('status');
         });
 
-        // Peran penjual ditambahkan. Kolomnya diubah jadi string biasa supaya
+        // Kolom peran diubah jadi string biasa supaya
         // penambahan peran berikutnya tidak perlu mengubah skema lagi.
         Schema::table('users', function (Blueprint $table) {
             $table->string('role', 20)->default('pengguna')->change();
@@ -82,7 +82,10 @@ return new class extends Migration
             return;
         }
 
-        $pemilik = DB::table('users')->whereIn('role', ['superadmin', 'admin'])->orderBy('id')->first();
+        // Pemilik toko didahulukan; superadmin hanya cadangan bila belum ada.
+        // Toko yang dimiliki administrator platform mengaburkan batas peran.
+        $pemilik = DB::table('users')->where('role', 'admin')->orderBy('id')->first()
+            ?? DB::table('users')->where('role', 'superadmin')->orderBy('id')->first();
 
         if (! $pemilik) {
             return;

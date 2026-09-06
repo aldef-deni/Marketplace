@@ -1,7 +1,7 @@
 <x-layouts.admin>
     <x-slot name="title">Toko</x-slot>
 
-    @php ($pengelola = auth()->user()->isAdmin())
+    @php ($pengelola = auth()->user()->isSuperadmin())
 
     <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-ink-950 via-brand-950 to-brand-900 p-6 shadow-elevate sm:p-8">
         <div class="pointer-events-none absolute inset-0 pola-grid opacity-60"></div>

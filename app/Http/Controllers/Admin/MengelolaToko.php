@@ -11,8 +11,8 @@ use Illuminate\Database\Eloquent\Collection;
  * Keikutsertaan kampanye selalu milik satu lapak, jadi kendalinya perlu tahu
  * lapak mana. Aturannya berbeda menurut peran:
  *
- * - Penjual terkunci pada tokonya sendiri.
- * - Pengelola platform bertindak atas nama sebuah toko, dipilih lewat parameter
+ * - Pemilik toko terkunci pada lapaknya sendiri.
+ * - Superadmin bertindak atas nama sebuah toko, dipilih lewat parameter
  *   ?toko=<slug>. Pilihannya dibuat eksplisit dan terlihat di layar, bukan
  *   ditebak diam-diam — mengubah promo lapak orang tanpa sadar lapak mana yang
  *   sedang dibuka adalah kesalahan yang sulit ditelusuri.
@@ -52,7 +52,7 @@ trait MengelolaToko
      */
     protected function tokoTersedia(): Collection
     {
-        if (auth()->user()->isAdmin()) {
+        if (auth()->user()->isSuperadmin()) {
             return Toko::tampil()->orderBy('nama')->get();
         }
 

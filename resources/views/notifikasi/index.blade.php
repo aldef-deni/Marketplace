@@ -3,7 +3,7 @@
     // pembeli di layout toko, supaya navigasinya tidak berpindah konteks.
     // Judul halaman ditaruh di badan, bukan slot header, karena layout admin
     // tidak memiliki slot tersebut dan isinya akan hilang tanpa jejak.
-    $layout = auth()->user()->isAdmin() ? 'layouts.admin' : 'layouts.app';
+    $layout = auth()->user()->isPengelola() ? 'layouts.admin' : 'layouts.app';
     $belumDibaca = auth()->user()->unreadNotifications()->count();
     $sudahDibaca = auth()->user()->readNotifications()->count();
 @endphp

@@ -19,19 +19,20 @@
             Edit Profil
         </a>
 
-        @if (auth()->user()->isSuperadmin())
-            <a href="{{ route('admin.pengguna.index') }}"
-               class="inline-flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] px-5 py-2.5 text-sm font-semibold text-ink-200 ring-1 ring-white/10 transition hover:bg-white/10">
-                <x-ikon nama="pengguna" kelas="h-4 w-4" />
-                Kelola Pengguna
-            </a>
-        @else
-            <a href="{{ route('admin.pesanan.index') }}"
-               class="inline-flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] px-5 py-2.5 text-sm font-semibold text-ink-200 ring-1 ring-white/10 transition hover:bg-white/10">
-                <x-ikon nama="kotak" kelas="h-4 w-4" />
-                Kelola Pesanan
-            </a>
-        @endif
+        {{-- Dashboard ini hanya dapat dibuka superadmin, jadi kedua pintasan
+             ditampilkan sekaligus; percabangan peran di sini dulu menyiapkan
+             tampilan untuk admin yang kini tidak pernah sampai ke halaman ini. --}}
+        <a href="{{ route('admin.pesanan.index') }}"
+           class="inline-flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] px-5 py-2.5 text-sm font-semibold text-ink-200 ring-1 ring-white/10 transition hover:bg-white/10">
+            <x-ikon nama="kotak" kelas="h-4 w-4" />
+            Kelola Pesanan
+        </a>
+
+        <a href="{{ route('admin.pengguna.index') }}"
+           class="inline-flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] px-5 py-2.5 text-sm font-semibold text-ink-200 ring-1 ring-white/10 transition hover:bg-white/10">
+            <x-ikon nama="pengguna" kelas="h-4 w-4" />
+            Kelola Pengguna
+        </a>
     </x-kartu-profil>
 
     {{-- Kartu statistik --}}

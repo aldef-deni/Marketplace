@@ -20,9 +20,9 @@ class PromoTest extends TestCase
 
     private User $superadmin;
 
-    private User $penjualA;
+    private User $pemilikA;
 
-    private User $penjualB;
+    private User $pemilikB;
 
     private Toko $tokoA;
 
@@ -37,15 +37,15 @@ class PromoTest extends TestCase
         parent::setUp();
 
         $this->superadmin = User::factory()->create(['role' => 'superadmin']);
-        $this->penjualA = User::factory()->create(['role' => 'penjual']);
-        $this->penjualB = User::factory()->create(['role' => 'penjual']);
+        $this->pemilikA = User::factory()->create(['role' => 'admin']);
+        $this->pemilikB = User::factory()->create(['role' => 'admin']);
 
         $this->kategori = Kategori::create([
             'nama' => 'Elektronik', 'slug' => 'elektronik', 'ikon' => 'ponsel', 'aktif' => true,
         ]);
 
-        $this->tokoA = $this->buatToko($this->penjualA, 'Lapak Alfa');
-        $this->tokoB = $this->buatToko($this->penjualB, 'Lapak Beta');
+        $this->tokoA = $this->buatToko($this->pemilikA, 'Lapak Alfa');
+        $this->tokoB = $this->buatToko($this->pemilikB, 'Lapak Beta');
 
         $this->produkA = $this->buatProduk($this->tokoA, 'Adaptor Alfa', 200000);
     }
@@ -116,13 +116,13 @@ class PromoTest extends TestCase
 
     /* ---------- Hak akses ---------- */
 
-    public function test_penjual_hanya_melihat_promo_tokonya_sendiri(): void
+    public function test_pemilik_toko_hanya_melihat_promo_tokonya_sendiri(): void
     {
         $this->buatPromo(['nama' => 'Promo Platform', 'slug' => 'promo-platform']);
         $this->buatPromo(['toko_id' => $this->tokoA->id, 'nama' => 'Promo Alfa', 'slug' => 'promo-alfa']);
         $this->buatPromo(['toko_id' => $this->tokoB->id, 'nama' => 'Promo Beta', 'slug' => 'promo-beta']);
 
-        $this->actingAs($this->penjualA)
+        $this->actingAs($this->pemilikA)
             ->get(route('admin.promo.kampanye.index'))
             ->assertOk()
             ->assertSee('Promo Alfa')
@@ -130,17 +130,17 @@ class PromoTest extends TestCase
             ->assertDontSee('Promo Platform');
     }
 
-    public function test_penjual_tidak_dapat_menyunting_promo_platform(): void
+    public function test_pemilik_toko_tidak_dapat_menyunting_promo_platform(): void
     {
         $promo = $this->buatPromo();
 
-        $this->actingAs($this->penjualA)->get(route('admin.promo.kampanye.edit', $promo))->assertForbidden();
-        $this->actingAs($this->penjualA)->patch(route('admin.promo.kampanye.terbit', $promo))->assertForbidden();
+        $this->actingAs($this->pemilikA)->get(route('admin.promo.kampanye.edit', $promo))->assertForbidden();
+        $this->actingAs($this->pemilikA)->patch(route('admin.promo.kampanye.terbit', $promo))->assertForbidden();
     }
 
-    public function test_promo_penjual_selalu_milik_tokonya_sendiri(): void
+    public function test_promo_pemilik_toko_selalu_milik_tokonya_sendiri(): void
     {
-        $this->actingAs($this->penjualA)
+        $this->actingAs($this->pemilikA)
             ->post(route('admin.promo.kampanye.store'), [
                 'nama' => 'Promo Selundupan',
                 'mulai_at' => Carbon::now()->format('Y-m-d H:i'),
@@ -207,7 +207,7 @@ class PromoTest extends TestCase
         $this->actingAs($this->superadmin)->patch(route('admin.promo.kampanye.terbit', $promo));
 
         \Illuminate\Support\Facades\Notification::assertSentTo(
-            [$this->penjualA, $this->penjualB],
+            [$this->pemilikA, $this->pemilikB],
             fn (NotifikasiKampanye $n) => $n->peristiwa === 'promo_baru',
         );
     }
@@ -218,7 +218,7 @@ class PromoTest extends TestCase
 
         $promo = $this->buatPromo(['toko_id' => $this->tokoA->id, 'aktif' => false]);
 
-        $this->actingAs($this->penjualA)->patch(route('admin.promo.kampanye.terbit', $promo));
+        $this->actingAs($this->pemilikA)->patch(route('admin.promo.kampanye.terbit', $promo));
 
         // Pemberitahuan hanya berguna bila pengirim dan penerimanya berbeda.
         \Illuminate\Support\Facades\Notification::assertNothingSent();
@@ -298,19 +298,19 @@ class PromoTest extends TestCase
     {
         $promo = $this->buatPromo();
 
-        $this->actingAs($this->penjualA)->post(route('admin.promo.ikut', $promo));
+        $this->actingAs($this->pemilikA)->post(route('admin.promo.ikut', $promo));
         $this->assertTrue($promo->fresh()->berlakuUntukToko($this->tokoA));
 
-        $this->actingAs($this->penjualA)->post(route('admin.promo.ikut', $promo));
+        $this->actingAs($this->pemilikA)->post(route('admin.promo.ikut', $promo));
         $this->assertFalse($promo->fresh()->berlakuUntukToko($this->tokoA));
     }
 
-    public function test_penjual_hanya_menyertakan_produk_tokonya(): void
+    public function test_pemilik_toko_hanya_menyertakan_produk_tokonya(): void
     {
         $promo = $this->buatPromo(['toko_id' => $this->tokoA->id]);
         $produkB = $this->buatProduk($this->tokoB, 'Kabel Beta', 50000);
 
-        $this->actingAs($this->penjualA)
+        $this->actingAs($this->pemilikA)
             ->post(route('admin.promo.produk', [$promo, $produkB]), ['kuota' => 3])
             ->assertForbidden();
 
@@ -321,7 +321,7 @@ class PromoTest extends TestCase
     {
         $promo = $this->buatPromo(['toko_id' => $this->tokoA->id]);
 
-        $this->actingAs($this->penjualA)
+        $this->actingAs($this->pemilikA)
             ->post(route('admin.promo.produk', [$promo, $this->produkA]), ['kuota' => 999])
             ->assertSessionHasErrors('kuota', null, 'baris'.$this->produkA->id);
 

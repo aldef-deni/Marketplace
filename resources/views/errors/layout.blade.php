@@ -40,7 +40,7 @@
             </a>
 
             @auth
-                <a href="{{ auth()->user()->isAdmin() ? route('admin.dashboard') : route('dashboard') }}"
+                <a href="{{ auth()->user()->rutaPanel() }}"
                    class="inline-flex items-center gap-2 rounded-xl bg-white/[0.06] px-6 py-3 text-sm font-semibold text-ink-200 ring-1 ring-white/10 transition hover:bg-white/10">
                     Ke Dashboard
                 </a>

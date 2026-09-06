@@ -29,7 +29,7 @@ class LaporanTest extends TestCase
         parent::setUp();
 
         $this->pembeli = User::factory()->create(['role' => 'pengguna', 'name' => 'Pembeli Uji']);
-        $this->admin = User::factory()->create(['role' => 'admin']);
+        $this->admin = User::factory()->create(['role' => 'superadmin']);
         $this->superadmin = User::factory()->create(['role' => 'superadmin']);
 
         $kategori = Kategori::create([
@@ -81,8 +81,12 @@ class LaporanTest extends TestCase
             ->assertSee('Pembeli Uji');
     }
 
-    public function test_admin_tidak_boleh_membuka_laporan_toko(): void
+    public function test_pemilik_toko_tidak_boleh_membuka_laporan_toko(): void
     {
+        // Pemilik toko hanya berwenang atas lapaknya; laporan lintas toko
+        // adalah pandangan platform.
+        $this->admin = User::factory()->create(['role' => 'admin']);
+
         $this->actingAs($this->admin)->get(route('admin.laporan.toko'))->assertForbidden();
         $this->actingAs($this->admin)->get(route('admin.laporan.toko.pdf'))->assertForbidden();
         $this->actingAs($this->admin)->get(route('admin.laporan.toko.excel'))->assertForbidden();

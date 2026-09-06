@@ -20,10 +20,10 @@
                     <input type="text" name="nama" value="{{ old('nama', $produk->nama) }}" class="input-field" required placeholder="Contoh: Smart TV 43 Inch Ultra HD">
                     @error('nama') <p class="mt-1 text-xs font-semibold text-rose-600">{{ $message }}</p> @enderror
                 </div>
-                {{-- Pemilihan toko hanya ditawarkan kepada pengelola platform.
-                     Penjual dikunci ke tokonya sendiri di sisi server, jadi
+                {{-- Pemilihan toko hanya ditawarkan kepada superadmin. Pemilik
+                     toko dikunci ke lapaknya sendiri di sisi server, jadi
                      menampilkan pilihan di sini hanya akan menyesatkan. --}}
-                @if (auth()->user()->isAdmin())
+                @if (auth()->user()->isSuperadmin())
                     <div class="sm:col-span-2">
                         <label class="label-field">Toko Pemilik *</label>
                         <select name="toko_id" class="input-field" required>

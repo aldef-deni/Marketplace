@@ -2,7 +2,7 @@
     // Admin dan superadmin tetap berada di panelnya sendiri saat menyunting
     // profil, supaya navigasinya tidak berpindah konteks ke tampilan toko.
     // Judul ditaruh di badan karena layout admin tidak punya slot header.
-    $layout = $user->isAdmin() ? 'layouts.admin' : 'layouts.app';
+    $layout = $user->isPengelola() ? 'layouts.admin' : 'layouts.app';
 @endphp
 
 <x-dynamic-component :component="$layout">
@@ -12,7 +12,7 @@
 
         {{-- Panel admin sudah menampilkan judul halaman dan identitas pengguna
              di bilah atasnya, jadi kepala ini hanya untuk tampilan pembeli. --}}
-        @unless ($user->isAdmin())
+        @unless ($user->isPengelola())
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight text-slate-900">Profil Saya</h1>

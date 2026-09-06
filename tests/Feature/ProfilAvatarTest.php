@@ -138,7 +138,7 @@ class ProfilAvatarTest extends TestCase
 
     public function test_dashboard_admin_menampilkan_kartu_profil(): void
     {
-        $admin = User::factory()->create(['role' => 'admin', 'name' => 'Admin Uji']);
+        $admin = User::factory()->create(['role' => 'superadmin', 'name' => 'Admin Uji']);
 
         $this->actingAs($admin)
             ->get(route('admin.dashboard'))
@@ -166,7 +166,7 @@ class ProfilAvatarTest extends TestCase
      */
     public function test_halaman_profil_admin_memakai_layout_panel(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'superadmin']);
 
         $this->actingAs($admin)
             ->get(route('profile.edit'))
@@ -178,7 +178,7 @@ class ProfilAvatarTest extends TestCase
     public function test_admin_dapat_mengunggah_foto_profil(): void
     {
         Storage::fake('uploads');
-        $admin = User::factory()->create(['role' => 'admin', 'avatar' => null]);
+        $admin = User::factory()->create(['role' => 'superadmin', 'avatar' => null]);
 
         $this->actingAs($admin)
             ->post(route('profile.avatar'), ['avatar' => UploadedFile::fake()->image('admin.jpg')])

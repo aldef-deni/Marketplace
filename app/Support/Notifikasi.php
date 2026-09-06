@@ -34,11 +34,15 @@ class Notifikasi
     }
 
     /**
-     * Beri tahu seluruh admin dan superadmin.
+     * Beri tahu administrator platform.
+     *
+     * Bukan pemilik toko: pesanan masih menyatu lintas lapak, sehingga
+     * mengirimkannya ke semua pemilik toko berarti memberitahukan pesanan
+     * yang bukan miliknya — dan tautannya pun berujung 403.
      */
     public static function keAdmin(Pesanan $pesanan, string $peristiwa, ?string $pesan = null): void
     {
-        $penerima = User::whereIn('role', ['admin', 'superadmin'])->get();
+        $penerima = User::where('role', 'superadmin')->get();
 
         if ($penerima->isEmpty()) {
             return;

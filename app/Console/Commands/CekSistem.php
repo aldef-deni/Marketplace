@@ -42,6 +42,8 @@ class CekSistem extends Command
         $this->periksaKolom();
         $this->periksaMigrasi();
 
+        $this->periksaPeran();
+
         $this->periksaAkunInduk();
 
         $this->bagian('Paket & dependensi');
@@ -193,6 +195,26 @@ class CekSistem extends Command
      * kredensial yang salah atau hak akses yang belum diberikan hanya ketahuan
      * saat koneksinya benar-benar dipakai.
      */
+    /**
+     * Kebersihan peran dan kepemilikan toko.
+     */
+    private function periksaPeran(): void
+    {
+        $asing = \App\Models\User::whereNotIn('role', ['superadmin', 'admin', 'pengguna'])->count();
+
+        $asing === 0
+            ? $this->ok('Peran pengguna', 'hanya superadmin, admin, dan pengguna')
+            : $this->salah('Peran pengguna', $asing.' akun berperan tak dikenal — jalankan migrasi peran');
+
+        // Toko yang dimiliki administrator platform mengaburkan batas peran:
+        // pemiliknya memegang kendali platform sekaligus sebuah lapak.
+        $rancu = \App\Models\Toko::whereHas('pemilik', fn ($q) => $q->where('role', 'superadmin'))->count();
+
+        $rancu === 0
+            ? $this->ok('Kepemilikan toko', 'seluruhnya dimiliki akun berperan admin')
+            : $this->peringatan('Kepemilikan toko', $rancu.' toko dimiliki superadmin — sebaiknya dipindah ke akun admin');
+    }
+
     private function periksaAkunInduk(): void
     {
         if (! \App\Support\AkunArahInn::aktif()) {

@@ -34,7 +34,7 @@ class AlurTransaksiTest extends TestCase
         parent::setUp();
 
         $this->pembeli = User::factory()->create(['role' => 'pengguna']);
-        $this->admin = User::factory()->create(['role' => 'admin']);
+        $this->admin = User::factory()->create(['role' => 'superadmin']);
 
         $kategori = Kategori::create([
             'nama' => 'Elektronik', 'slug' => 'elektronik', 'ikon' => 'ponsel', 'aktif' => true,

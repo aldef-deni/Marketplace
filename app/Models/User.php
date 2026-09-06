@@ -119,14 +119,27 @@ class User extends Authenticatable
         return $this->hasMany(Pesanan::class);
     }
 
+    /*
+    | Tiga peran, dan hanya tiga:
+    |
+    |   superadmin — administrator platform, satu-satunya pemegang kendali
+    |                pesanan, pembayaran, pengiriman, kategori, dan laporan.
+    |   admin      — pemilik toko. Hanya menyentuh lapaknya sendiri.
+    |   pengguna   — pembeli.
+    |
+    | isAdmin() sengaja tidak ada. Nama itu dulu berarti "pengelola platform"
+    | dan mencakup keduanya; sejak admin menjadi pemilik toko, satu pemanggilan
+    | yang terlewat akan diam-diam membuka panel platform untuk pemilik lapak.
+    | Memaksa penyebutan yang jelas membuat kekeliruan itu mustahil lolos.
+    */
     public function isSuperadmin(): bool
     {
         return $this->role === 'superadmin';
     }
 
-    public function isAdmin(): bool
+    public function isPemilikToko(): bool
     {
-        return in_array($this->role, ['superadmin', 'admin']);
+        return $this->role === 'admin';
     }
 
     public function isPengguna(): bool
@@ -134,17 +147,27 @@ class User extends Authenticatable
         return $this->role === 'pengguna';
     }
 
-    public function isPenjual(): bool
-    {
-        return $this->role === 'penjual';
-    }
-
     /**
-     * Siapa pun yang punya panel pengelolaan: pengelola platform maupun penjual.
+     * Siapa pun yang punya panel, apa pun luasnya.
      */
     public function isPengelola(): bool
     {
-        return in_array($this->role, ['superadmin', 'admin', 'penjual'], true);
+        return in_array($this->role, ['superadmin', 'admin'], true);
+    }
+
+    /**
+     * Halaman awal panel menurut perannya.
+     *
+     * Pemilik toko tidak boleh diarahkan ke dashboard platform — ia akan
+     * disambut 403 tepat setelah berhasil masuk.
+     */
+    public function rutaPanel(): string
+    {
+        return match (true) {
+            $this->isSuperadmin() => route('admin.dashboard'),
+            $this->isPemilikToko() => route('admin.produk.index'),
+            default => route('dashboard'),
+        };
     }
 
     public function toko(): HasOne
@@ -156,8 +179,7 @@ class User extends Authenticatable
     {
         return match ($this->role) {
             'superadmin' => 'Superadmin',
-            'admin' => 'Admin',
-            'penjual' => 'Penjual',
+            'admin' => 'Pemilik Toko',
             default => 'Pengguna',
         };
     }
@@ -166,8 +188,7 @@ class User extends Authenticatable
     {
         return match ($this->role) {
             'superadmin' => 'bg-purple-100 text-purple-700 ring-purple-200',
-            'admin' => 'bg-blue-100 text-blue-700 ring-blue-200',
-            'penjual' => 'bg-accent-100 text-accent-700 ring-accent-200',
+            'admin' => 'bg-accent-100 text-accent-700 ring-accent-200',
             default => 'bg-gray-100 text-gray-700 ring-gray-200',
         };
     }

@@ -143,7 +143,7 @@ class PesananController extends Controller
      */
     private function bukanMilikSendiri(Pesanan $pesanan): ?RedirectResponse
     {
-        if ((int) $pesanan->user_id === (int) auth()->id() || auth()->user()->isAdmin()) {
+        if ((int) $pesanan->user_id === (int) auth()->id() || auth()->user()->isSuperadmin()) {
             return null;
         }
 

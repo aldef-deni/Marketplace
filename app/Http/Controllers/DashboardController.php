@@ -11,14 +11,11 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->isAdmin()) {
-            return redirect()->route('admin.dashboard');
-        }
-
-        // Penjual belum punya dashboard sendiri selama pesanan masih menyatu
-        // lintas toko; daftar produknya adalah halaman kerja yang bermakna.
-        if ($user->isPenjual()) {
-            return redirect()->route('admin.produk.index');
+        // Pemilik toko belum punya dashboard sendiri selama pesanan masih
+        // menyatu lintas toko; daftar produknya adalah halaman kerja yang
+        // bermakna, dan dashboard platform akan menyambutnya dengan 403.
+        if ($user->isPengelola()) {
+            return redirect()->to($user->rutaPanel());
         }
 
         $stats = [

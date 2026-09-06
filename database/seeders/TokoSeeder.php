@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Hash;
 /**
  * Toko contoh beserta penjualnya.
  *
- * Tiap toko punya pemilik sendiri berperan penjual, supaya pembatasan akses
+ * Tiap toko punya pemilik sendiri berperan admin, supaya pembatasan akses
  * antar-lapak bisa benar-benar dicoba, bukan sekadar diasumsikan bekerja.
  */
 class TokoSeeder extends Seeder
@@ -57,14 +57,14 @@ class TokoSeeder extends Seeder
                 [
                     'name' => $namaPemilik,
                     'password' => Hash::make('password'),
-                    'role' => 'penjual',
+                    'role' => 'admin',
                     'email_verified_at' => now(),
                 ],
             );
 
             // Peran diperbarui juga bagi akun yang sudah ada dari seeding lama.
-            if (! $pemilik->isPenjual()) {
-                $pemilik->update(['role' => 'penjual']);
+            if (! $pemilik->isPemilikToko()) {
+                $pemilik->update(['role' => 'admin']);
             }
 
             Toko::firstOrCreate(

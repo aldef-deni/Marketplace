@@ -1,7 +1,7 @@
 <x-layouts.admin>
     <x-slot name="title">{{ $toko->exists ? 'Edit Toko' : 'Buat Toko' }}</x-slot>
 
-    @php ($pengelola = auth()->user()->isAdmin())
+    @php ($pengelola = auth()->user()->isSuperadmin())
 
     <div class="mx-auto max-w-4xl">
         <div class="mb-6">
@@ -78,7 +78,7 @@
                             @endforeach
                         </select>
                         <p class="mt-1 text-[11px] text-slate-400">
-                            Pembeli biasa yang dipilih di sini otomatis dinaikkan menjadi penjual.
+                            Pembeli biasa yang dipilih di sini otomatis dinaikkan menjadi pemilik toko.
                         </p>
                         @error('user_id') <p class="mt-1 text-xs font-semibold text-rose-600">{{ $message }}</p> @enderror
                     </div>

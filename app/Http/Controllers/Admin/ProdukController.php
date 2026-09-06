@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 /**
  * Katalog produk di panel.
  *
- * Penjual hanya menyentuh produk tokonya sendiri. Pembatasnya dipasang di
+ * Pemilik toko hanya menyentuh produk lapaknya sendiri. Pembatasnya dipasang di
  * kueri dan di setiap aksi tunggal, bukan sekadar disembunyikan dari tampilan.
  */
 class ProdukController extends Controller
@@ -119,16 +119,16 @@ class ProdukController extends Controller
     /* ---------- Kepemilikan toko ---------- */
 
     /**
-     * Id toko milik penjual yang sedang masuk; null bagi pengelola platform.
+     * Id toko milik pemilik toko yang sedang masuk; null bagi superadmin.
      */
     private function tokoPenjual(): ?int
     {
-        return auth()->user()->isAdmin() ? null : auth()->user()->toko?->id;
+        return auth()->user()->isSuperadmin() ? null : auth()->user()->toko?->id;
     }
 
     private function tokoTersedia()
     {
-        return auth()->user()->isAdmin()
+        return auth()->user()->isSuperadmin()
             ? Toko::orderBy('nama')->get()
             : Toko::where('user_id', auth()->id())->get();
     }
@@ -155,7 +155,7 @@ class ProdukController extends Controller
             'gambar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
-        // Penjual tidak boleh menitipkan produk ke toko orang lain, berapa pun
+        // Pemilik toko tidak boleh menitipkan produk ke lapak lain, berapa pun
         // nilai yang dikirim formulirnya.
         if ($tokoId = $this->tokoPenjual()) {
             $data['toko_id'] = $tokoId;
