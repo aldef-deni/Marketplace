@@ -51,33 +51,40 @@
         </div>
     </section>
 
-    @include('partials.flash-sale')
-
-    {{-- Kategori --}}
-    <section id="kategori" class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div class="flex items-end justify-between">
-            <div>
-                <h2 class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Jelajahi <span class="teks-gradien">Kategori</span></h2>
-                <p class="mt-2 text-sm text-slate-500">Temukan produk sesuai kebutuhanmu</p>
-            </div>
-            <a href="{{ route('produk.index') }}" class="hidden text-sm font-bold text-brand-600 transition hover:text-brand-800 sm:block">Lihat Semua →</a>
-        </div>
-
-        <div class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            @forelse ($kategoris as $kategori)
-                <a href="{{ route('produk.index', ['kategori' => $kategori->slug]) }}"
-                   class="group rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200/70 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-100 hover:ring-brand-200">
-                    <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-50 to-accent-50 text-4xl ring-1 ring-brand-100 transition group-hover:scale-110">
-                        <x-ikon :nama="$kategori->ikon" kelas="h-7 w-7 text-brand-700 transition group-hover:text-accent-500" />
-                    </span>
-                    <p class="mt-4 text-sm font-bold text-slate-800 group-hover:text-brand-700">{{ $kategori->nama }}</p>
-                    <p class="mt-1 text-xs text-slate-400">{{ $kategori->produks_count }} produk</p>
+    {{-- Kategori. Ubin kecil rapat, bukan kartu besar: kategori adalah jalan
+         pintas menuju katalog, bukan barang dagangan tersendiri. Ditaruh tepat
+         di bawah hero supaya pembeli bisa langsung memilih arah. --}}
+    <section id="kategori" class="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
+        <div class="card overflow-hidden p-5 sm:p-6">
+            <div class="flex items-end justify-between">
+                <div>
+                    <h2 class="text-base font-extrabold tracking-tight text-slate-900 sm:text-lg">Jelajahi Kategori</h2>
+                    <p class="mt-0.5 text-xs text-slate-400">Temukan produk sesuai kebutuhanmu</p>
+                </div>
+                <a href="{{ route('produk.index') }}" class="text-xs font-bold text-brand-600 transition hover:text-brand-800">
+                    Lihat Semua &rarr;
                 </a>
-            @empty
-                <p class="col-span-full text-center text-sm text-slate-400">Belum ada kategori.</p>
-            @endforelse
+            </div>
+
+            <div class="mt-5 grid grid-cols-3 gap-x-2 gap-y-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
+                @forelse ($kategoris as $kategori)
+                    <a href="{{ route('produk.index', ['kategori' => $kategori->slug]) }}"
+                       class="group flex flex-col items-center gap-2 rounded-xl px-1 py-2 text-center transition hover:bg-brand-50/70">
+                        <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-50 to-accent-50 ring-1 ring-brand-100 transition group-hover:scale-110 group-hover:ring-brand-300">
+                            <x-ikon :nama="$kategori->ikon" kelas="h-5 w-5 text-brand-700 transition group-hover:text-accent-500" />
+                        </span>
+                        <span class="line-clamp-2 text-[11px] font-semibold leading-tight text-slate-600 transition group-hover:text-brand-700">
+                            {{ $kategori->nama }}
+                        </span>
+                    </a>
+                @empty
+                    <p class="col-span-full py-4 text-center text-sm text-slate-400">Belum ada kategori.</p>
+                @endforelse
+            </div>
         </div>
     </section>
+
+    @include('partials.flash-sale')
 
     {{-- Produk terbaru --}}
     <section class="bg-white py-14">
