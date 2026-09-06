@@ -109,6 +109,9 @@ class CekSistem extends Command
             'users', 'kategoris', 'produks', 'keranjangs', 'alamats',
             'pesanans', 'pesanan_items', 'metode_pembayarans', 'pembayarans',
             'pengirimans', 'notifications', 'sessions',
+            // Tabel rilis terbaru ikut diperiksa; tanpa ini "12 tabel lengkap"
+            // tetap hijau walau fitur terbarunya belum ada sama sekali.
+            'flash_sales', 'flash_sale_produk', 'tokos',
         ];
 
         $hilang = array_values(array_filter($wajib, fn ($t) => ! Schema::hasTable($t)));
@@ -130,6 +133,7 @@ class CekSistem extends Command
         $wajib = [
             'users.google_id' => 'Masuk dengan Google',
             'users.avatar' => 'Foto profil',
+            'produks.toko_id' => 'Kepemilikan produk oleh toko',
         ];
 
         foreach ($wajib as $jalur => $fitur) {
@@ -302,12 +306,16 @@ class CekSistem extends Command
             ? $this->ok('APP_ENV', $env)
             : $this->peringatan('APP_ENV', $env.' — di server seharusnya production');
 
-        // Di komputer pengembang APP_DEBUG=true justru diperlukan; yang
-        // berbahaya hanyalah bila menyala di lingkungan produksi.
+        // Yang menentukan bahaya bukan label lingkungannya, melainkan apakah
+        // situsnya benar-benar dapat dibuka publik. Server yang masih ber-
+        // APP_ENV=local tetap memajang jejak galat lengkap ke siapa pun.
+        $publik = str_starts_with($url, 'https://');
+
         if (! config('app.debug')) {
             $this->ok('APP_DEBUG', 'false');
-        } elseif ($env === 'production') {
-            $this->salah('APP_DEBUG', 'masih true di produksi — halaman galat akan membocorkan isi .env');
+        } elseif ($publik) {
+            $this->salah('APP_DEBUG', 'masih true di situs publik — halaman galat memajang kode sumber dan isi .env');
+            $this->petunjuk('Setel APP_DEBUG=false dan APP_ENV=production di .env, lalu jalankan "php artisan optimize".');
         } else {
             $this->ok('APP_DEBUG', 'true, wajar di lingkungan '.$env);
         }
