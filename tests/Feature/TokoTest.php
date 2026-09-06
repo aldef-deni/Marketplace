@@ -7,6 +7,8 @@ use App\Models\Produk;
 use App\Models\Toko;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class TokoTest extends TestCase
@@ -247,6 +249,70 @@ class TokoTest extends TestCase
             ->assertOk()
             ->assertSee('Lapak Alfa')
             ->assertDontSee('Lapak Beta');
+    }
+
+    /* ---------- Penyuntingan lapak sendiri ---------- */
+
+    public function test_pemilik_toko_dapat_menyunting_lapaknya(): void
+    {
+        $this->actingAs($this->pemilikA)
+            ->patch(route('admin.toko.update', $this->tokoA), [
+                'user_id' => $this->pemilikA->id,
+                'nama' => 'Aldis Skincare',
+                'deskripsi' => 'Brightening Facial Wash',
+                'no_hp' => '085138136009',
+                'email' => 'aldis@arahinn.com',
+                'provinsi' => 'Jawa Barat',
+                'kota' => 'Bekasi',
+                'kecamatan' => 'Bekasi Selatan',
+                'alamat' => 'Jl. Raya Pekayon No. 27',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('admin.toko.index'));
+
+        $toko = $this->tokoA->fresh();
+
+        $this->assertSame('Aldis Skincare', $toko->nama);
+        $this->assertSame('Bekasi Selatan', $toko->kecamatan);
+        $this->assertSame('aktif', $toko->status, 'Menyunting tidak boleh mengubah status lapak.');
+    }
+
+    public function test_mengunggah_logo_dan_sampul_menyimpan_jalur_yang_dapat_diakses(): void
+    {
+        Storage::fake('uploads');
+
+        $this->actingAs($this->pemilikA)
+            ->patch(route('admin.toko.update', $this->tokoA), [
+                'user_id' => $this->pemilikA->id,
+                'nama' => 'Lapak Alfa',
+                'logo' => UploadedFile::fake()->image('logo.png', 400, 400),
+                'banner' => UploadedFile::fake()->image('sampul.jpg', 1200, 400),
+            ])
+            ->assertSessionHasNoErrors();
+
+        $toko = $this->tokoA->fresh();
+
+        // Awalan "uploads/" wajib ikut tersimpan; tanpa itu asset() menghasilkan
+        // URL yang berujung 404.
+        $this->assertStringStartsWith('uploads/', $toko->logo);
+        $this->assertStringStartsWith('uploads/', $toko->banner);
+    }
+
+    public function test_menyunting_tanpa_mengunggah_tidak_menghapus_gambar_lama(): void
+    {
+        $this->tokoA->update(['logo' => 'uploads/toko/lama.png', 'banner' => 'uploads/toko/sampul.png']);
+
+        $this->actingAs($this->pemilikA)
+            ->patch(route('admin.toko.update', $this->tokoA), [
+                'user_id' => $this->pemilikA->id,
+                'nama' => 'Lapak Alfa',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $toko = $this->tokoA->fresh();
+
+        $this->assertSame('uploads/toko/lama.png', $toko->logo);
+        $this->assertSame('uploads/toko/sampul.png', $toko->banner);
     }
 
     /* ---------- Pengelola platform ---------- */
