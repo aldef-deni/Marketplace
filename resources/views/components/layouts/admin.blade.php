@@ -21,16 +21,18 @@
             <span class="rounded-md bg-accent-500/15 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-accent-400 ring-1 ring-accent-500/25">{{ auth()->user()->isSuperadmin() ? 'Superadmin' : 'Pemilik Toko' }}</span>
         </div>
 
-        {{-- Seluruh blok PHP di berkas ini memakai bentuk @php ... @endphp,
-             tidak pernah bentuk sebaris @php(...).
+        {{-- Blok PHP di berkas ini selalu berbentuk pasangan pembuka dan
+             penutup, tidak pernah bentuk ekspresi sebaris.
 
-             Blade menyimpan blok PHP mentah lebih dulu lewat regex
-             /(?<!@)@php(.*?)@endphp/s, sebelum direktif lain diproses. Regex itu
-             memasangkan @php pertama dengan @endphp berikutnya tanpa peduli
-             bentuknya, sehingga satu @php(...) sebaris yang diikuti sebuah blok
-             di bawahnya akan menelan segalanya di antara keduanya sebagai PHP
-             mentah — komentar tidak terproses, direktif tidak terkompilasi, dan
-             halamannya galat. Menyeragamkan bentuknya menutup jebakan itu. --}}
+             Blade menyimpan blok PHP mentah lebih dulu — sebelum komentar
+             dibuang dan direktif diproses — dengan regex yang memasangkan
+             pembuka pertama dengan penutup berikutnya, tanpa peduli bentuknya.
+             Satu ekspresi sebaris yang diikuti sebuah blok di bawahnya karena
+             itu menelan segalanya di antara keduanya sebagai PHP mentah, dan
+             halamannya galat. Menyeragamkan bentuknya menutup jebakan itu.
+
+             Sebab yang sama, nama direktifnya sengaja tidak ditulis harfiah di
+             komentar ini; kata di dalam komentar pun ikut terpindai. --}}
         <nav class="flex-1 space-y-1 overflow-y-auto p-4">
             @php
                 $pengelola = auth()->user()->isSuperadmin();
