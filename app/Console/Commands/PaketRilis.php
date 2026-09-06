@@ -80,15 +80,10 @@ class PaketRilis extends Command
         }
 
         $tujuan = $this->folderTujuan();
-        $nama = sprintf(
-            'market-arahinn-%s%s.zip',
-            now()->format('Ymd-Hi'),
-            $sejak ? '-perubahan' : '-lengkap',
-        );
-        $path = $tujuan.DIRECTORY_SEPARATOR.$nama;
+        $path = $this->pathBaru($tujuan, $akar, $sejak !== null);
 
         $zip = new ZipArchive;
-        if ($zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+        if ($zip->open($path, ZipArchive::CREATE | ZipArchive::EXCL) !== true) {
             $this->components->error("Tidak dapat menulis ke {$path}");
 
             return self::FAILURE;
@@ -375,6 +370,38 @@ class PaketRilis extends Command
     /**
      * Daftar commit yang tercakup paket ini, untuk ditulis di catatan deploy.
      */
+    /**
+     * Nama berkas ZIP yang tidak mungkin menimpa paket sebelumnya.
+     *
+     * Stempel waktu saja hanya sampai menit, sehingga dua paket yang dibuat
+     * berdekatan akan bertumpuk diam-diam — dan paket yang hilang itu tidak
+     * ketahuan sampai perubahannya tidak muncul di server. Karena itu nama
+     * disertai commit yang dibawanya, lalu tetap diberi urutan bila kebetulan
+     * masih sama persis.
+     */
+    private function pathBaru(string $tujuan, string $akar, bool $sebagian): string
+    {
+        $sha = $this->adaGit($akar)
+            ? trim((string) Process::path($akar)->run('git rev-parse --short=7 HEAD')->output())
+            : '';
+
+        $dasar = sprintf(
+            'market-arahinn-%s%s-%s',
+            now()->format('Ymd-Hi'),
+            $sha !== '' ? '-'.$sha : '',
+            $sebagian ? 'perubahan' : 'lengkap',
+        );
+
+        $path = $tujuan.DIRECTORY_SEPARATOR.$dasar.'.zip';
+        $urutan = 1;
+
+        while (file_exists($path)) {
+            $path = $tujuan.DIRECTORY_SEPARATOR.$dasar.'-'.(++$urutan).'.zip';
+        }
+
+        return $path;
+    }
+
     /**
      * Isi RILIS.txt — versi yang dibawa paket ini.
      */
