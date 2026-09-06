@@ -4,7 +4,7 @@
      yang ditampilkan cukup namanya, supaya tetap jelas lapak mana yang sedang
      diubah. Pilihan disimpan di sesi, jadi tombol-tombol di halaman ini tidak
      perlu ikut membawa parameternya. --}}
-@php ($banyak = ($tokos ?? collect())->count() > 1)
+@php $banyak = ($tokos ?? collect())->count() > 1; @endphp
 
 <div class="flex flex-wrap items-center gap-2 rounded-2xl bg-white/[0.07] p-2 pl-3.5 ring-1 ring-white/10 backdrop-blur">
     <span class="text-[11px] font-bold uppercase tracking-wider text-ink-400">Atas nama</span>

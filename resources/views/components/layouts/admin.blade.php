@@ -24,15 +24,10 @@
         <nav class="flex-1 space-y-1 overflow-y-auto p-4">
             @php
                 $pengelola = auth()->user()->isSuperadmin();
-                // Pengelola platform bertindak atas nama toko mana pun yang
-                // aktif; pemilik toko hanya atas nama lapaknya sendiri.
-                $kelolaToko = $pengelola
-                    ? \App\Models\Toko::tampil()->exists()
-                    : \App\Models\Toko::where('user_id', auth()->id())->exists();
             @endphp
 
-            {{-- Penjual tidak diberi menu tingkat platform. Rutenya pun sudah
-                 dikunci di sisi server; ini hanya agar sidebarnya tidak
+            {{-- Pemilik toko tidak diberi menu tingkat platform. Rutenya pun
+                 sudah dikunci di sisi server; ini hanya agar sidebarnya tidak
                  menampilkan pintu yang pasti tertutup. --}}
             @if ($pengelola)
             <p class="px-3 pb-2 text-[10px] font-bold uppercase tracking-widest text-ink-500">Menu Utama</p>
@@ -61,42 +56,42 @@
 
             @endif
 
-            {{-- Judulnya ikut disembunyikan saat tidak ada satu pun menu di
-                 bawahnya; kepala seksi yang menggantung kosong terbaca sebagai
-                 halaman yang rusak. --}}
-            @if ($kelolaToko || auth()->user()->isSuperadmin())
-            <p class="px-3 pb-2 pt-5 text-[10px] font-bold uppercase tracking-widest text-ink-500">Promo</p>
+            {{-- Seksi promo dibagi tegas menurut peran. Halaman keikutsertaan
+                 adalah pekerjaan pemilik lapak; superadmin menyusun kampanyenya
+                 dan masuk ke daftar produk lewat tombol di kartu kampanye, jadi
+                 menampilkan keduanya hanya menggandakan pintu ke tempat sama.
 
-            @if ($kelolaToko)
-                <a href="{{ route('admin.flash-sale.index') }}"
-                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.flash-sale.index') || request()->routeIs('admin.flash-sale.kelola') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
-                    <x-ikon nama="api" kelas="h-5 w-5" /> Flash Sale
-                </a>
+                 Judulnya ikut disembunyikan bila tak ada satu pun menu di
+                 bawahnya; kepala seksi yang menggantung terbaca sebagai rusak. --}}
+            @php $pemilikLapak = auth()->user()->isPemilikToko(); @endphp
 
-                <a href="{{ route('admin.promo.index') }}"
-                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.promo.index') || request()->routeIs('admin.promo.kelola') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
-                    <x-ikon nama="label" kelas="h-5 w-5" /> Promo
-                </a>
-            @endif
+            @if ($pemilikLapak || auth()->user()->isSuperadmin())
+                <p class="px-3 pb-2 pt-5 text-[10px] font-bold uppercase tracking-widest text-ink-500">Promo</p>
 
-            @if (auth()->user()->isSuperadmin())
-                <a href="{{ route('admin.flash-sale.kampanye.index') }}"
-                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.flash-sale.kampanye.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
-                    <x-ikon nama="petir" kelas="h-5 w-5" /> Kampanye Flash Sale
-                </a>
-            @endif
+                @if ($pemilikLapak)
+                    <a href="{{ route('admin.flash-sale.index') }}"
+                       class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.flash-sale.index') || request()->routeIs('admin.flash-sale.kelola') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                        <x-ikon nama="api" kelas="h-5 w-5" /> Flash Sale
+                    </a>
 
-            @if (auth()->user()->isSuperadmin() || $kelolaToko)
+                    <a href="{{ route('admin.promo.index') }}"
+                       class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.promo.index') || request()->routeIs('admin.promo.kelola') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                        <x-ikon nama="label" kelas="h-5 w-5" /> Promo
+                    </a>
+                @endif
+
+                @if (auth()->user()->isSuperadmin())
+                    <a href="{{ route('admin.flash-sale.kampanye.index') }}"
+                       class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.flash-sale.kampanye.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
+                        <x-ikon nama="petir" kelas="h-5 w-5" /> Kampanye Flash Sale
+                    </a>
+                @endif
+
                 <a href="{{ route('admin.promo.kampanye.index') }}"
                    class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.promo.kampanye.*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
                     <x-ikon nama="tambah" kelas="h-5 w-5" />
-                    @if (auth()->user()->isSuperadmin())
-                        Kampanye Promo
-                    @else
-                        {{ $pengelola ? 'Promo Toko' : 'Promo Saya' }}
-                    @endif
+                    {{ auth()->user()->isSuperadmin() ? 'Kampanye Promo' : 'Promo Saya' }}
                 </a>
-            @endif
             @endif
 
             <p class="px-3 pb-2 pt-5 text-[10px] font-bold uppercase tracking-widest text-ink-500">Katalog</p>

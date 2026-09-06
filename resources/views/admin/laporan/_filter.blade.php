@@ -71,7 +71,7 @@
 
         {{-- Tombol hanya muncul bila pustaka pembuat berkasnya benar-benar
              terpasang; menawarkan unduhan yang pasti gagal hanya menyesatkan. --}}
-        @php ($siap = unduhanLaporanSiap())
+        @php $siap = unduhanLaporanSiap(); @endphp
 
         <div class="ml-auto flex items-center gap-2">
             @if ($siap['pdf'])

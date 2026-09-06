@@ -6,7 +6,7 @@
 {{-- Satuan dikirim pemanggilnya lewat links('vendor.pagination.brand',
      ['satuan' => 'pesanan']); dipaku di sini, daftar pesanan akan berbunyi
      "30 produk". --}}
-@php ($satuan = $satuan ?? 'data')
+@php $satuan = $satuan ?? 'data'; @endphp
 
 @if ($paginator->hasPages())
     <nav role="navigation" aria-label="Navigasi halaman" class="flex flex-col items-center gap-4">

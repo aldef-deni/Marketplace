@@ -55,7 +55,7 @@
 
     <div class="mt-5 grid gap-4 lg:grid-cols-2">
         @forelse ($platform as $promo)
-            @php ($ikut = $promo->tokos->contains('id', $toko->id))
+            @php $ikut = $promo->tokos->contains('id', $toko->id); @endphp
 
             <div class="card relative overflow-hidden p-6 {{ $promo->sudahBerakhir() ? 'opacity-70' : '' }}">
                 @if ($promo->sedangBerlangsung() && $ikut)

@@ -1,7 +1,7 @@
 <x-layouts.admin>
     <x-slot name="title">{{ $promo->exists ? 'Edit Promo' : 'Buat Promo' }}</x-slot>
 
-    @php ($superadmin = auth()->user()->isSuperadmin())
+    @php $superadmin = auth()->user()->isSuperadmin(); @endphp
 
     <div class="mx-auto max-w-3xl">
         <div class="mb-6">

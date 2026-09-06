@@ -1,7 +1,7 @@
 <x-layouts.admin>
     <x-slot name="title">{{ $toko->exists ? 'Edit Toko' : 'Buat Toko' }}</x-slot>
 
-    @php ($pengelola = auth()->user()->isSuperadmin())
+    @php $pengelola = auth()->user()->isSuperadmin(); @endphp
 
     <div class="mx-auto max-w-4xl">
         <div class="mb-6">

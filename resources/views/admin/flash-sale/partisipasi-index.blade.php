@@ -39,7 +39,7 @@
 
     <div class="mt-6 grid gap-4 lg:grid-cols-2">
         @forelse ($kampanyes as $kampanye)
-            @php ($ikut = $kampanye->tokos->contains('id', $toko->id))
+            @php $ikut = $kampanye->tokos->contains('id', $toko->id); @endphp
             <div class="card relative overflow-hidden p-6 {{ $kampanye->sudahBerakhir() ? 'opacity-70' : '' }}">
                 @if ($kampanye->sedangBerlangsung())
                     <span class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-accent-500 to-brand-500"></span>
