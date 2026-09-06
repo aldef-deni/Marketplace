@@ -112,6 +112,14 @@ class TokoTest extends TestCase
             ->assertDontSee('Kabel Beta');
     }
 
+    public function test_inisial_melewati_kata_bersimbol(): void
+    {
+        $toko = $this->buatToko($this->penjualA, 'Dapur & Griya Sejahtera');
+
+        $this->assertSame('DG', $toko->inisial);
+        $this->assertSame('LA', $this->tokoA->inisial);
+    }
+
     /* ---------- Batas antar-penjual ---------- */
 
     public function test_penjual_hanya_melihat_tokonya_sendiri(): void

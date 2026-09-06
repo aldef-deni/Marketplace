@@ -78,11 +78,16 @@ class Toko extends Model
      */
     public function getInisialAttribute(): string
     {
-        return Str::of($this->nama)
+        $inisial = Str::of($this->nama)
             ->explode(' ')
+            // Kata sambung bersimbol seperti "&" bukan inisial; tanpa saringan
+            // ini "Dapur & Griya" terbaca sebagai "D&".
+            ->filter(fn (string $kata) => preg_match('/^\p{L}|^\d/u', $kata) === 1)
             ->take(2)
             ->map(fn (string $kata) => Str::upper(Str::substr($kata, 0, 1)))
             ->implode('');
+
+        return $inisial !== '' ? $inisial : '?';
     }
 
     /**
