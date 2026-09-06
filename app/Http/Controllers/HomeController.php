@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kategori;
+use App\Models\FlashSale;
 use App\Models\Produk;
 
 class HomeController extends Controller
@@ -27,6 +28,13 @@ class HomeController extends Controller
             ->take(4)
             ->get();
 
-        return view('beranda', compact('kategoris', 'produkTerbaru', 'produkDiskon'));
+        // Kampanye yang benar-benar berjalan sekarang; scope-nya sudah
+        // memastikan sudah terbit, diikuti toko, dan berada dalam rentang waktu.
+        $flashSale = FlashSale::berlangsung()
+            ->with(['produks.produk.kategori'])
+            ->orderBy('selesai_at')
+            ->first();
+
+        return view('beranda', compact('kategoris', 'produkTerbaru', 'produkDiskon', 'flashSale'));
     }
 }

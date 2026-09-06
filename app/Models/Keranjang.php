@@ -29,6 +29,8 @@ class Keranjang extends Model
 
     public function getSubtotalAttribute(): float
     {
-        return $this->produk->harga * $this->qty;
+        // Harga berlaku, bukan harga daftar: flash sale yang sedang jalan
+        // harus terpakai sama di keranjang, checkout, dan katalog.
+        return $this->produk->hargaEfektif() * $this->qty;
     }
 }

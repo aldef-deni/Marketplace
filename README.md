@@ -95,6 +95,21 @@ mengembalikan stok. Invoice dapat dicetak langsung dari peramban.
 - Tombol Google otomatis tersembunyi bila kredensialnya belum diisi;
   penyiapannya ada di [DEPLOY.md](DEPLOY.md#7-masuk-dengan-google-sso)
 
+### Flash Sale
+| Peran | Wewenang |
+|---|---|
+| Superadmin | Menyusun kampanye: nama, jadwal, saran diskon; menerbitkan atau menariknya |
+| Admin | Memutuskan toko ikut serta, lalu memilih produk beserta harga flash dan kuotanya |
+
+Harga flash baru berlaku bagi pembeli bila **tiga syarat** terpenuhi sekaligus:
+kampanye sudah diterbitkan superadmin, diikuti admin toko, dan berada dalam
+rentang waktunya. Kuota membatasi berapa unit yang dijual dengan harga promo —
+setelah habis, harga kembali normal alih-alih produknya menghilang.
+
+Kampanye yang berjalan tampil di beranda lengkap dengan hitung mundur, dan
+harganya dipakai konsisten dari katalog sampai checkout lewat satu sumber:
+`Produk::hargaEfektif()`.
+
 ### Laporan
 | Laporan | Akses | Isi |
 |---|---|---|

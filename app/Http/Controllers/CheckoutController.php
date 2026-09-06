@@ -35,7 +35,7 @@ class CheckoutController extends Controller
         $alamats = auth()->user()->alamats()->get();
         $metodes = MetodePembayaran::where('aktif', true)->get();
 
-        $subtotal = $items->sum(fn ($i) => $i->produk->harga * $i->qty);
+        $subtotal = $items->sum(fn ($i) => $i->produk->hargaEfektif() * $i->qty);
         $beratGram = $items->sum(fn ($i) => $i->produk->berat * $i->qty);
 
         return view('checkout.index', compact('items', 'alamats', 'metodes', 'subtotal', 'beratGram'));
@@ -70,7 +70,7 @@ class CheckoutController extends Controller
         foreach ($items as $item) {
             abort_if($item->produk->status !== 'aktif' || $item->produk->stok < $item->qty, 422,
                 "Stok produk {$item->produk->nama} tidak mencukupi.");
-            $subtotal += $item->produk->harga * $item->qty;
+            $subtotal += $item->produk->hargaEfektif() * $item->qty;
             $beratGram += $item->produk->berat * $item->qty;
         }
 
@@ -97,13 +97,19 @@ class CheckoutController extends Controller
                     'produk_id' => $item->produk_id,
                     'nama_produk' => $item->produk->nama,
                     'gambar' => $item->produk->gambar,
-                    'harga' => $item->produk->harga,
+                    'harga' => $item->produk->hargaEfektif(),
                     'qty' => $item->qty,
-                    'subtotal' => $item->produk->harga * $item->qty,
+                    'subtotal' => $item->produk->hargaEfektif() * $item->qty,
                 ]);
 
                 // Kurangi stok sebagai bentuk reservasi
                 $item->produk->decrement('stok', $item->qty);
+
+                // Kuota flash sale ikut terpakai. Tanpa pencatatan ini, harga
+                // promo berlaku tanpa batas dan kuotanya kehilangan arti.
+                if ($barisFlash = $item->produk->flashSaleBerlaku()) {
+                    $barisFlash->increment('terjual', min($item->qty, $barisFlash->sisaKuota()));
+                }
             }
 
             Pembayaran::create([

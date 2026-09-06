@@ -65,6 +65,8 @@
         </div>
     </section>
 
+    @include('partials.flash-sale')
+
     {{-- Kategori --}}
     <section id="kategori" class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div class="flex items-end justify-between">

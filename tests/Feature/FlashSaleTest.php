@@ -1,0 +1,329 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Alamat;
+use App\Models\FlashSale;
+use App\Models\Kategori;
+use App\Models\MetodePembayaran;
+use App\Models\Produk;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Tests\TestCase;
+
+class FlashSaleTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private User $admin;
+
+    private User $superadmin;
+
+    private User $pembeli;
+
+    private Produk $produk;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->admin = User::factory()->create(['role' => 'admin']);
+        $this->superadmin = User::factory()->create(['role' => 'superadmin']);
+        $this->pembeli = User::factory()->create(['role' => 'pengguna']);
+
+        $kategori = Kategori::create([
+            'nama' => 'Elektronik', 'slug' => 'elektronik', 'ikon' => 'ponsel', 'aktif' => true,
+        ]);
+
+        $this->produk = Produk::create([
+            'kategori_id' => $kategori->id,
+            'nama' => 'Produk Flash', 'slug' => 'produk-flash', 'deskripsi' => 'Uji.',
+            'harga' => 200000, 'stok' => 20, 'berat' => 500, 'status' => 'aktif',
+        ]);
+
+        Alamat::create([
+            'user_id' => $this->pembeli->id, 'label' => 'Rumah',
+            'nama_penerima' => 'Uji', 'no_hp' => '0812',
+            'provinsi' => 'Jabar', 'kota' => 'Bekasi', 'kecamatan' => 'Pondok Gede',
+            'kode_pos' => '17412', 'alamat_lengkap' => 'Jl. Uji', 'is_default' => true,
+        ]);
+
+        MetodePembayaran::create([
+            'nama' => 'Transfer Uji', 'tipe' => 'transfer',
+            'no_rekening' => '1', 'atas_nama' => 'ArahInn', 'aktif' => true,
+        ]);
+    }
+
+    private function buatKampanye(array $ubah = []): FlashSale
+    {
+        return FlashSale::create(array_merge([
+            'nama' => 'Flash Sale Uji',
+            'slug' => 'flash-sale-uji',
+            'mulai_at' => Carbon::now()->subHour(),
+            'selesai_at' => Carbon::now()->addHours(3),
+            'diskon_persen' => 25,
+            'aktif' => true,
+            'diikuti' => false,
+            'dibuat_oleh' => $this->superadmin->id,
+        ], $ubah));
+    }
+
+    private function sertakanProduk(FlashSale $kampanye, int $harga = 150000, int $kuota = 5): void
+    {
+        $kampanye->produks()->create([
+            'produk_id' => $this->produk->id,
+            'harga_flash' => $harga,
+            'kuota' => $kuota,
+        ]);
+    }
+
+    /* ---------- Hak akses ---------- */
+
+    public function test_hanya_superadmin_yang_dapat_menyusun_kampanye(): void
+    {
+        $this->actingAs($this->admin)->get(route('admin.flash-sale.kampanye.index'))->assertForbidden();
+        $this->actingAs($this->admin)->get(route('admin.flash-sale.kampanye.create'))->assertForbidden();
+
+        $this->actingAs($this->superadmin)->get(route('admin.flash-sale.kampanye.index'))->assertOk();
+        $this->actingAs($this->superadmin)->get(route('admin.flash-sale.kampanye.create'))->assertOk();
+    }
+
+    public function test_admin_dapat_membuka_halaman_flash_sale(): void
+    {
+        $kampanye = $this->buatKampanye();
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.flash-sale.index'))
+            ->assertOk()
+            ->assertSee($kampanye->nama);
+    }
+
+    public function test_kampanye_draf_tidak_tampil_bagi_admin(): void
+    {
+        $draf = $this->buatKampanye(['aktif' => false, 'nama' => 'Kampanye Draf', 'slug' => 'kampanye-draf']);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.flash-sale.index'))
+            ->assertOk()
+            ->assertDontSee($draf->nama);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.flash-sale.kelola', $draf))
+            ->assertNotFound();
+    }
+
+    /* ---------- Penyusunan kampanye ---------- */
+
+    public function test_superadmin_membuat_kampanye_sebagai_draf(): void
+    {
+        $this->actingAs($this->superadmin)
+            ->post(route('admin.flash-sale.kampanye.store'), [
+                'nama' => 'Promo Akhir Pekan',
+                'mulai_at' => Carbon::now()->addDay()->format('Y-m-d H:i'),
+                'selesai_at' => Carbon::now()->addDays(2)->format('Y-m-d H:i'),
+                'diskon_persen' => 30,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $kampanye = FlashSale::firstOrFail();
+
+        $this->assertSame('promo-akhir-pekan', $kampanye->slug);
+        $this->assertFalse($kampanye->aktif, 'Kampanye baru harus berupa draf sampai diterbitkan.');
+        $this->assertSame($this->superadmin->id, $kampanye->dibuat_oleh);
+    }
+
+    public function test_jadwal_yang_berakhir_sebelum_dimulai_ditolak(): void
+    {
+        $this->actingAs($this->superadmin)
+            ->post(route('admin.flash-sale.kampanye.store'), [
+                'nama' => 'Jadwal Terbalik',
+                'mulai_at' => Carbon::now()->addDays(2)->format('Y-m-d H:i'),
+                'selesai_at' => Carbon::now()->addDay()->format('Y-m-d H:i'),
+                'diskon_persen' => 10,
+            ])
+            ->assertSessionHasErrors('selesai_at');
+
+        $this->assertSame(0, FlashSale::count());
+    }
+
+    /* ---------- Keikutsertaan ---------- */
+
+    public function test_admin_mengikuti_dan_berhenti_mengikuti_kampanye(): void
+    {
+        $kampanye = $this->buatKampanye();
+
+        $this->actingAs($this->admin)->post(route('admin.flash-sale.ikut', $kampanye));
+        $kampanye->refresh();
+
+        $this->assertTrue($kampanye->diikuti);
+        $this->assertSame($this->admin->id, $kampanye->diikuti_oleh);
+        $this->assertNotNull($kampanye->diikuti_at);
+
+        $this->actingAs($this->admin)->post(route('admin.flash-sale.ikut', $kampanye));
+        $kampanye->refresh();
+
+        $this->assertFalse($kampanye->diikuti);
+        $this->assertNull($kampanye->diikuti_oleh);
+    }
+
+    public function test_admin_memilih_produk_beserta_harga_dan_kuota(): void
+    {
+        $kampanye = $this->buatKampanye(['diikuti' => true]);
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.flash-sale.produk', $kampanye), [
+                'produk' => [
+                    $this->produk->id => ['ikut' => 1, 'harga_flash' => 150000, 'kuota' => 5],
+                ],
+            ])
+            ->assertSessionHasNoErrors();
+
+        $baris = $kampanye->produks()->firstOrFail();
+
+        $this->assertSame($this->produk->id, $baris->produk_id);
+        $this->assertSame('150000', $baris->harga_flash);
+        $this->assertSame(5, $baris->kuota);
+    }
+
+    public function test_harga_flash_harus_lebih_murah_dari_harga_normal(): void
+    {
+        $kampanye = $this->buatKampanye(['diikuti' => true]);
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.flash-sale.produk', $kampanye), [
+                'produk' => [
+                    $this->produk->id => ['ikut' => 1, 'harga_flash' => 250000, 'kuota' => 5],
+                ],
+            ])
+            ->assertSessionHasErrors("produk.{$this->produk->id}.harga_flash");
+
+        $this->assertSame(0, $kampanye->produks()->count());
+    }
+
+    public function test_kuota_tidak_boleh_melebihi_stok(): void
+    {
+        $kampanye = $this->buatKampanye(['diikuti' => true]);
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.flash-sale.produk', $kampanye), [
+                'produk' => [
+                    $this->produk->id => ['ikut' => 1, 'harga_flash' => 150000, 'kuota' => 999],
+                ],
+            ])
+            ->assertSessionHasErrors("produk.{$this->produk->id}.kuota");
+    }
+
+    public function test_produk_yang_tidak_lagi_dicentang_dilepas(): void
+    {
+        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $this->sertakanProduk($kampanye);
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.flash-sale.produk', $kampanye), ['produk' => []])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(0, $kampanye->produks()->count());
+    }
+
+    /* ---------- Harga yang berlaku ---------- */
+
+    public function test_harga_flash_berlaku_hanya_saat_semua_syarat_terpenuhi(): void
+    {
+        $kampanye = $this->buatKampanye(['diikuti' => false]);
+        $this->sertakanProduk($kampanye);
+
+        $this->assertSame(200000.0, $this->produk->fresh()->hargaEfektif(),
+            'Kampanye yang belum diikuti toko tidak boleh mengubah harga.');
+
+        $kampanye->update(['diikuti' => true]);
+        $this->assertSame(150000.0, $this->produk->fresh()->hargaEfektif());
+
+        $kampanye->update(['aktif' => false]);
+        $this->assertSame(200000.0, $this->produk->fresh()->hargaEfektif(),
+            'Kampanye yang ditarik penerbitannya harus berhenti berlaku.');
+    }
+
+    public function test_harga_normal_kembali_saat_kampanye_belum_mulai_atau_sudah_berakhir(): void
+    {
+        $kampanye = $this->buatKampanye([
+            'diikuti' => true,
+            'mulai_at' => Carbon::now()->addDay(),
+            'selesai_at' => Carbon::now()->addDays(2),
+        ]);
+        $this->sertakanProduk($kampanye);
+
+        $this->assertSame(200000.0, $this->produk->fresh()->hargaEfektif());
+
+        $kampanye->update([
+            'mulai_at' => Carbon::now()->subDays(2),
+            'selesai_at' => Carbon::now()->subDay(),
+        ]);
+
+        $this->assertSame(200000.0, $this->produk->fresh()->hargaEfektif());
+    }
+
+    public function test_kuota_habis_mengembalikan_harga_normal(): void
+    {
+        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $this->sertakanProduk($kampanye, kuota: 2);
+
+        $this->assertSame(150000.0, $this->produk->fresh()->hargaEfektif());
+
+        $kampanye->produks()->first()->update(['terjual' => 2]);
+
+        $this->assertSame(200000.0, $this->produk->fresh()->hargaEfektif(),
+            'Kuota yang habis harus mengembalikan harga normal, bukan menghilangkan produknya.');
+    }
+
+    /* ---------- Jalur uang ---------- */
+
+    public function test_checkout_memakai_harga_flash_dan_memakai_kuotanya(): void
+    {
+        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $this->sertakanProduk($kampanye, harga: 150000, kuota: 5);
+
+        $this->actingAs($this->pembeli)->post(route('keranjang.tambah', $this->produk), ['qty' => 2]);
+        $this->actingAs($this->pembeli)->post(route('checkout.store'), [
+            'alamat_id' => $this->pembeli->alamats()->first()->id,
+            'kurir' => 'JNE',
+            'metode_pembayaran_id' => MetodePembayaran::first()->id,
+        ])->assertSessionHasNoErrors();
+
+        $pesanan = $this->pembeli->pesanans()->firstOrFail();
+        $item = $pesanan->items()->firstOrFail();
+
+        $this->assertSame('150000', $item->harga, 'Harga flash harus tercatat pada pesanan.');
+        $this->assertSame(300000, (int) $pesanan->subtotal);
+        $this->assertSame(2, $kampanye->produks()->first()->refresh()->terjual);
+    }
+
+    public function test_beranda_menampilkan_kampanye_yang_berjalan(): void
+    {
+        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $this->sertakanProduk($kampanye);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee($kampanye->nama)
+            ->assertSee('Flash Sale');
+    }
+
+    public function test_beranda_tidak_menampilkan_kampanye_tanpa_produk(): void
+    {
+        $kampanye = $this->buatKampanye(['diikuti' => true, 'nama' => 'Kampanye Kosong', 'slug' => 'kampanye-kosong']);
+
+        $this->get('/')->assertOk()->assertDontSee('Kampanye Kosong');
+    }
+
+    public function test_kampanye_berjalan_tidak_dapat_dihapus(): void
+    {
+        $kampanye = $this->buatKampanye(['diikuti' => true]);
+
+        $this->actingAs($this->superadmin)
+            ->delete(route('admin.flash-sale.kampanye.destroy', $kampanye))
+            ->assertSessionHas('error');
+
+        $this->assertNotNull($kampanye->fresh());
+    }
+}

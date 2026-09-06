@@ -126,6 +126,28 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     });
 
     /*
+    | Flash sale. Kampanye disusun superadmin; admin memutuskan keikutsertaan
+    | toko dan memilih produk yang disertakan.
+    */
+    Route::prefix('flash-sale')->name('flash-sale.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'index'])->name('index');
+        Route::get('/{flashSale}/kelola', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'show'])->name('kelola');
+        Route::post('/{flashSale}/ikut', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'toggleIkut'])->name('ikut');
+        Route::post('/{flashSale}/produk', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'simpanProduk'])->name('produk');
+        Route::delete('/{flashSale}/produk/{baris}', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'hapusProduk'])->name('produk.hapus');
+
+        Route::middleware('role:superadmin')->prefix('kampanye')->name('kampanye.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\FlashSaleController::class, 'index'])->name('index');
+            Route::get('/tambah', [App\Http\Controllers\Admin\FlashSaleController::class, 'create'])->name('create');
+            Route::post('/', [App\Http\Controllers\Admin\FlashSaleController::class, 'store'])->name('store');
+            Route::get('/{flashSale}/edit', [App\Http\Controllers\Admin\FlashSaleController::class, 'edit'])->name('edit');
+            Route::patch('/{flashSale}', [App\Http\Controllers\Admin\FlashSaleController::class, 'update'])->name('update');
+            Route::patch('/{flashSale}/terbit', [App\Http\Controllers\Admin\FlashSaleController::class, 'toggleAktif'])->name('terbit');
+            Route::delete('/{flashSale}', [App\Http\Controllers\Admin\FlashSaleController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    /*
     | Laporan transaksi terbuka bagi admin dan superadmin; laporan toko —
     | kondisi katalog dan kinerja produk — khusus superadmin.
     */
