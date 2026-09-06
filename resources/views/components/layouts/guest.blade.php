@@ -9,10 +9,17 @@
 
 {{-- Strip promosi --}}
 <div class="bg-ink-950 py-2.5 text-center text-[11px] font-semibold tracking-wide text-ink-300 sm:text-xs">
-    <span class="text-accent-400">Gratis ongkir</span> untuk belanja di atas {{ rp(500000) }}
-    <span class="mx-2 text-ink-700">&bull;</span>
-    <span class="hidden sm:inline">Pembayaran aman, pengiriman ke seluruh Indonesia</span>
-    <span class="sm:hidden">Aman &amp; terpercaya</span>
+    {{-- Di layar sempit kedua kalimat berdiri sendiri-sendiri; dipaksa satu
+         baris, keduanya patah di tengah kata dan pemisah titiknya justru
+         mendarat di awal baris kedua. --}}
+    <span class="block sm:inline">
+        <span class="text-accent-400">Gratis ongkir</span> untuk belanja di atas {{ rp(500000) }}
+    </span>
+    <span class="mx-2 hidden text-ink-700 sm:inline">&bull;</span>
+    <span class="block sm:inline">
+        <span class="hidden sm:inline">Pembayaran aman, pengiriman ke seluruh Indonesia</span>
+        <span class="sm:hidden">Aman &amp; terpercaya</span>
+    </span>
 </div>
 
 {{-- Navigasi utama --}}
@@ -115,9 +122,9 @@
 {{-- Footer --}}
 <footer class="mt-20 bg-ink-950 text-ink-300">
     <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div class="grid gap-10 md:grid-cols-12">
+        <div class="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-12">
 
-            <div class="text-center md:col-span-5">
+            <div class="col-span-2 text-center md:col-span-5">
                 <a href="{{ route('beranda') }}" class="inline-flex transition hover:opacity-90"
                    aria-label="{{ config('brand.nama') }} — beranda">
                     <x-logo varian="landscape" kelas="h-16 w-auto sm:h-20" loading="lazy" />
@@ -129,7 +136,7 @@
 
             </div>
 
-            <div class="md:col-span-2">
+            <div class="col-span-1 md:col-span-2">
                 <h4 class="text-xs font-bold uppercase tracking-widest text-white">Belanja</h4>
                 <ul class="mt-4 space-y-2.5 text-sm">
                     <li><a href="{{ route('toko.index') }}" class="text-ink-400 transition hover:text-accent-400">Daftar Toko</a></li>
@@ -140,7 +147,7 @@
                 </ul>
             </div>
 
-            <div class="md:col-span-2">
+            <div class="col-span-1 md:col-span-2">
                 <h4 class="text-xs font-bold uppercase tracking-widest text-white">Akun</h4>
                 <ul class="mt-4 space-y-2.5 text-sm">
                     @auth
@@ -155,7 +162,7 @@
                 </ul>
             </div>
 
-            <div class="md:col-span-3">
+            <div class="col-span-2 text-center md:col-span-3 md:text-left">
                 <h4 class="text-xs font-bold uppercase tracking-widest text-white">Hubungi Kami</h4>
                 <ul class="mt-4 space-y-2.5 text-sm text-ink-400">
                     <li><a href="mailto:{{ config('brand.email') }}" class="transition hover:text-accent-400">{{ config('brand.email') }}</a></li>

@@ -10,7 +10,9 @@
 
         <div class="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
             <div class="grid items-center gap-10 lg:grid-cols-2">
-                <div>
+                {{-- Rata tengah di ponsel: tanpa ilustrasi di sampingnya, teks
+                     rata kiri menyisakan pinggir kanan yang menganga. --}}
+                <div class="text-center lg:text-left">
                     <span class="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-bold text-white ring-1 ring-white/25 backdrop-blur">
                         Belanja Online Terpercaya #1 di Indonesia
                     </span>
@@ -18,12 +20,12 @@
                         Belanja Mudah,<br>
                         <span class="teks-emas">Hemat & Aman</span>
                     </h1>
-                    <p class="mt-5 max-w-lg text-base leading-relaxed text-ink-300 sm:text-lg">
+                    <p class="mx-auto mt-5 max-w-lg text-base leading-relaxed text-ink-300 sm:text-lg lg:mx-0">
                         Temukan ribuan produk berkualitas dengan harga terbaik.
                         Pembayaran fleksibel — transfer bank, e-wallet, hingga COD.
                         Dikirim cepat ke seluruh Indonesia.
                     </p>
-                    <div class="mt-8 flex flex-wrap gap-3">
+                    <div class="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
                         <a href="{{ route('produk.index') }}" class="rounded-2xl bg-accent-500 px-7 py-3.5 text-sm font-bold text-ink-950 shadow-accent transition hover:-translate-y-0.5 hover:bg-accent-400">
                             Belanja Sekarang
                         </a>
