@@ -61,7 +61,7 @@
                     </div>
 
                     <span class="shrink-0 rounded-xl bg-accent-50 px-3 py-1.5 text-sm font-extrabold text-accent-700 ring-1 ring-accent-200">
-                        −{{ $kampanye->diskon_persen }}%
+                        −{{ $kampanye->label_diskon }}
                     </span>
                 </div>
 
@@ -75,8 +75,8 @@
                         {{ $kampanye->produks_count }} produk disertakan
                     </span>
                     <span class="inline-flex items-center gap-1.5">
-                        <x-ikon :nama="$kampanye->diikuti ? 'centang' : 'jam'" kelas="h-4 w-4" />
-                        {{ $kampanye->diikuti ? 'Diikuti toko' : 'Belum diikuti toko' }}
+                        <x-ikon nama="toko" kelas="h-4 w-4" />
+                        {{ $kampanye->tokos_count }} toko ikut
                     </span>
                 </div>
 

@@ -5,89 +5,117 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\FlashSale;
 use App\Models\Produk;
+use App\Models\Toko;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /**
- * Keikutsertaan toko pada kampanye flash sale — untuk admin.
+ * Keikutsertaan toko pada kampanye flash sale.
  *
- * Admin tidak menyusun kampanye; ia memutuskan ikut atau tidak, lalu memilih
- * produk mana yang disertakan beserta harga dan kuotanya.
+ * Pemilik toko tidak menyusun kampanye; ia memutuskan tokonya ikut atau tidak,
+ * lalu memilih produk mana yang disertakan beserta harga dan kuotanya.
+ *
+ * Seluruh kendali di sini bekerja pada satu toko — toko milik pengguna yang
+ * sedang masuk. Sejak katalog dimiliki banyak lapak, "toko ikut kampanye" tidak
+ * lagi punya jawaban tunggal.
  */
 class FlashSalePartisipasiController extends Controller
 {
+    use MengelolaToko;
+
     public function index()
     {
+        $toko = $this->tokoSaya();
+
+        if (! $toko) {
+            return view('admin.flash-sale.tanpa-toko');
+        }
+
         // Draf milik superadmin sengaja tidak ditampilkan: kampanye yang belum
         // diterbitkan belum tentu jadi, dan menampilkannya hanya membingungkan.
         $kampanyes = FlashSale::terbit()
-            ->withCount('produks')
+            ->withCount(['produks as produks_count' => fn ($q) => $q->whereHas('produk', fn ($p) => $p->where('toko_id', $toko->id))])
+            ->with(['tokos' => fn ($q) => $q->where('tokos.id', $toko->id)])
             ->orderByRaw('CASE WHEN selesai_at >= ? THEN 0 ELSE 1 END', [now()])
             ->orderBy('mulai_at')
             ->paginate(12);
 
+        $diikutiIds = $toko->flashSales()->pluck('flash_sales.id');
+
         $jumlah = [
-            'berlangsung' => FlashSale::berlangsung()->count(),
-            'perlu_keputusan' => FlashSale::terbit()->where('diikuti', false)
-                ->where('selesai_at', '>=', now())->count(),
-            'diikuti' => FlashSale::terbit()->where('diikuti', true)->count(),
+            'berlangsung' => FlashSale::berlangsung()->whereIn('id', $diikutiIds)->count(),
+            'perlu_keputusan' => FlashSale::terbit()->where('selesai_at', '>=', now())
+                ->whereNotIn('id', $diikutiIds)->count(),
+            'diikuti' => $diikutiIds->count(),
         ];
 
-        return view('admin.flash-sale.partisipasi-index', compact('kampanyes', 'jumlah'));
+        return view('admin.flash-sale.partisipasi-index', compact('kampanyes', 'jumlah', 'toko'));
     }
 
     public function show(FlashSale $flashSale)
     {
         abort_unless($flashSale->aktif, 404);
 
+        $toko = $this->tokoSaya();
+        abort_unless($toko !== null, 403, 'Halaman ini untuk pemilik toko.');
+
         $flashSale->load(['produks.produk.kategori']);
 
-        $terpilih = $flashSale->produks->keyBy('produk_id');
+        $terpilih = $flashSale->produks
+            ->filter(fn ($b) => $b->produk?->toko_id === $toko->id)
+            ->keyBy('produk_id');
 
         $produks = Produk::with('kategori')
+            ->where('toko_id', $toko->id)
             ->orderBy('nama')
             ->get()
-            ->map(fn (Produk $p) => [
-                'model' => $p,
-                'baris' => $terpilih[$p->id] ?? null,
-            ]);
+            ->map(fn (Produk $p) => ['model' => $p, 'baris' => $terpilih[$p->id] ?? null]);
 
-        return view('admin.flash-sale.partisipasi-show', compact('flashSale', 'produks'));
+        $diikuti = $flashSale->diikutiOleh($toko);
+
+        return view('admin.flash-sale.partisipasi-show', compact('flashSale', 'produks', 'toko', 'diikuti'));
     }
 
     /**
-     * Ikut atau berhenti mengikuti kampanye.
+     * Ikut atau berhenti mengikuti kampanye, untuk toko milik pengguna ini.
      */
     public function toggleIkut(FlashSale $flashSale)
     {
         abort_unless($flashSale->aktif, 404);
 
+        $toko = $this->tokoSaya();
+        abort_unless($toko !== null, 403, 'Halaman ini untuk pemilik toko.');
+
         if ($flashSale->sudahBerakhir()) {
             return back()->with('error', 'Kampanye sudah berakhir, keikutsertaannya tidak dapat diubah.');
         }
 
-        $ikut = ! $flashSale->diikuti;
+        if ($flashSale->diikutiOleh($toko)) {
+            $flashSale->tokos()->detach($toko->id);
 
-        $flashSale->update([
-            'diikuti' => $ikut,
-            'diikuti_at' => $ikut ? now() : null,
-            'diikuti_oleh' => $ikut ? auth()->id() : null,
+            return back()->with('success', 'Toko berhenti mengikuti kampanye. Harga flash tidak lagi berlaku.');
+        }
+
+        $flashSale->tokos()->attach($toko->id, [
+            'diikuti_at' => now(),
+            'diikuti_oleh' => auth()->id(),
         ]);
 
-        return back()->with('success', $ikut
-            ? 'Toko mengikuti kampanye ini. Pilih produk yang disertakan.'
-            : 'Toko berhenti mengikuti kampanye. Harga flash tidak lagi berlaku.');
+        return back()->with('success', 'Toko mengikuti kampanye ini. Pilih produk yang disertakan.');
     }
 
     /**
      * Simpan satu produk pada kampanye — menambahkan, memperbarui, atau melepas.
      *
-     * Disimpan per baris, bukan sekaligus satu tabel, agar admin dengan ratusan
+     * Disimpan per baris, bukan sekaligus satu tabel, agar toko dengan ratusan
      * produk tidak perlu menggulung ke tombol simpan di ujung halaman.
      */
     public function simpanBaris(Request $request, FlashSale $flashSale, Produk $produk)
     {
         abort_unless($flashSale->aktif, 404);
+
+        $toko = $this->tokoSaya();
+        abort_unless($toko !== null && $produk->toko_id === $toko->id, 403);
 
         if ($flashSale->sudahBerakhir()) {
             return $this->kembaliKeBaris($flashSale, $produk)
@@ -125,8 +153,6 @@ class FlashSalePartisipasiController extends Controller
         }
 
         if ($galat !== []) {
-            // Galat dan masukan dikantongi per produk agar baris lain tidak ikut
-            // menampilkan pesan atau nilai yang bukan miliknya.
             return $this->kembaliKeBaris($flashSale, $produk)
                 ->withErrors($galat, 'baris'.$produk->id)
                 ->with('masukan_baris', [
@@ -144,9 +170,6 @@ class FlashSalePartisipasiController extends Controller
         return $this->kembaliKeBaris($flashSale, $produk)->with('baris_tersimpan', $produk->id);
     }
 
-    /**
-     * Kembali ke halaman kelola tepat pada baris yang barusan disentuh.
-     */
     private function kembaliKeBaris(FlashSale $flashSale, Produk $produk): RedirectResponse
     {
         return redirect()->to(route('admin.flash-sale.kelola', $flashSale).'#produk-'.$produk->id);

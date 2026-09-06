@@ -32,7 +32,7 @@ class FlashSaleController extends Controller
         // Kampanye terjadwal berikutnya dipakai mengisi halaman saat tidak ada
         // promo berjalan, supaya pengunjung punya alasan untuk kembali.
         $berikutnya = FlashSale::terbit()
-            ->where('diikuti', true)
+            ->whereHas('tokos')
             ->where('mulai_at', '>', now())
             ->orderBy('mulai_at')
             ->first();

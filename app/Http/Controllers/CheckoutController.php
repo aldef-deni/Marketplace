@@ -105,10 +105,14 @@ class CheckoutController extends Controller
                 // Kurangi stok sebagai bentuk reservasi
                 $item->produk->decrement('stok', $item->qty);
 
-                // Kuota flash sale ikut terpakai. Tanpa pencatatan ini, harga
-                // promo berlaku tanpa batas dan kuotanya kehilangan arti.
-                if ($barisFlash = $item->produk->flashSaleBerlaku()) {
-                    $barisFlash->increment('terjual', min($item->qty, $barisFlash->sisaKuota()));
+                // Kuota potongan ikut terpakai — flash sale maupun promo. Tanpa
+                // pencatatan ini, harga promo berlaku tanpa batas dan kuotanya
+                // kehilangan arti. Yang dikurangi hanya potongan yang benar-benar
+                // dipakai, bukan setiap potongan yang kebetulan berlaku.
+                if ($potongan = $item->produk->potonganBerlaku()) {
+                    $potongan->sumber->increment('terjual', $potongan->sisaKuota === null
+                        ? $item->qty
+                        : min($item->qty, $potongan->sisaKuota));
                 }
             }
 

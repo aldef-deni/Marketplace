@@ -11,13 +11,15 @@
                 {{ $kampanye->exists ? 'Edit Kampanye Flash Sale' : 'Buat Kampanye Flash Sale' }}
             </h1>
             <p class="mt-0.5 text-sm text-slate-500">
-                Kampanye baru tersimpan sebagai draf. Terbitkan agar admin toko dapat mengikutinya.
+                Kampanye baru tersimpan sebagai draf. Terbitkan agar pemilik toko diberi tahu
+                dan dapat mengikutinya.
             </p>
         </div>
 
         <form method="POST"
               action="{{ $kampanye->exists ? route('admin.flash-sale.kampanye.update', $kampanye) : route('admin.flash-sale.kampanye.store') }}"
-              class="card space-y-5 p-6 sm:p-8">
+              class="card space-y-5 p-6 sm:p-8"
+              x-data="{ tipe: '{{ old('tipe_diskon', $kampanye->tipe_diskon ?? 'persen') }}' }">
             @csrf
             @if ($kampanye->exists) @method('PATCH') @endif
 
@@ -53,14 +55,27 @@
             </div>
 
             <div>
-                <label class="label-field">Saran Diskon (%) *</label>
-                <input type="number" name="diskon_persen" class="input-field" required min="0" max="90"
-                       value="{{ old('diskon_persen', $kampanye->diskon_persen ?: 20) }}">
+                <label class="label-field">Saran Potongan *</label>
+                <div class="flex gap-2">
+                    <select name="tipe_diskon" class="input-field !w-36"
+                            x-model="tipe">
+                        <option value="persen" @selected(old('tipe_diskon', $kampanye->tipe_diskon ?? 'persen') === 'persen')>Persentase</option>
+                        <option value="nominal" @selected(old('tipe_diskon', $kampanye->tipe_diskon ?? 'persen') === 'nominal')>Nominal</option>
+                    </select>
+                    <div class="relative flex-1">
+                        <input type="number" name="nilai_diskon" class="input-field pr-12" required min="1"
+                               :max="tipe === 'persen' ? 90 : 1000000000"
+                               value="{{ old('nilai_diskon', $kampanye->nilai_diskon ?: 20) }}">
+                        <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-bold text-slate-400"
+                              x-text="tipe === 'persen' ? '%' : 'Rp'"></span>
+                    </div>
+                </div>
                 <p class="mt-1.5 text-xs text-slate-400">
                     Dipakai untuk menghitung usulan harga saat admin memilih produk.
                     Harga akhir tetap ditentukan per produk agar marginnya bisa disesuaikan.
                 </p>
-                <x-input-error :messages="$errors->get('diskon_persen')" class="mt-2" />
+                <x-input-error :messages="$errors->get('nilai_diskon')" class="mt-2" />
+                <x-input-error :messages="$errors->get('tipe_diskon')" class="mt-2" />
             </div>
 
             <div class="flex items-center gap-3 border-t border-slate-100 pt-5">

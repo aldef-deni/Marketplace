@@ -10,7 +10,8 @@
             <span class="badge bg-accent-500/15 text-accent-300 ring-accent-500/30">Program Promo</span>
             <h1 class="mt-3 text-2xl font-extrabold text-white">Flash Sale</h1>
             <p class="mt-1.5 max-w-xl text-sm text-ink-300">
-                Kampanye disusun superadmin. Anda memutuskan apakah toko ikut serta,
+                Kampanye disusun pengelola platform. Anda memutuskan apakah
+                <span class="font-bold text-white">{{ $toko->nama }}</span> ikut serta,
                 lalu memilih produk mana yang disertakan beserta harga dan kuotanya.
             </p>
         </div>
@@ -34,6 +35,7 @@
 
     <div class="mt-6 grid gap-4 lg:grid-cols-2">
         @forelse ($kampanyes as $kampanye)
+            @php ($ikut = $kampanye->tokos->contains('id', $toko->id))
             <div class="card relative overflow-hidden p-6 {{ $kampanye->sudahBerakhir() ? 'opacity-70' : '' }}">
                 @if ($kampanye->sedangBerlangsung())
                     <span class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-accent-500 to-brand-500"></span>
@@ -49,7 +51,7 @@
                     </div>
 
                     <span class="shrink-0 rounded-xl bg-accent-50 px-3 py-1.5 text-sm font-extrabold text-accent-700 ring-1 ring-accent-200">
-                        −{{ $kampanye->diskon_persen }}%
+                        −{{ $kampanye->label_diskon }}
                     </span>
                 </div>
 
@@ -60,18 +62,18 @@
                 {{-- Keadaan keikutsertaan dibuat menonjol: inilah keputusan yang
                      diminta dari admin di halaman ini. --}}
                 <div class="mt-4 flex items-center gap-3 rounded-2xl p-4 ring-1
-                            {{ $kampanye->diikuti ? 'bg-emerald-50 ring-emerald-200' : 'bg-amber-50 ring-amber-200' }}">
+                            {{ $ikut ? 'bg-emerald-50 ring-emerald-200' : 'bg-amber-50 ring-amber-200' }}">
                     <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl
-                                 {{ $kampanye->diikuti ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' }}">
-                        <x-ikon :nama="$kampanye->diikuti ? 'centang' : 'jam'" kelas="h-5 w-5" />
+                                 {{ $ikut ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' }}">
+                        <x-ikon :nama="$ikut ? 'centang' : 'jam'" kelas="h-5 w-5" />
                     </span>
                     <div class="min-w-0 flex-1">
-                        <p class="text-sm font-bold {{ $kampanye->diikuti ? 'text-emerald-800' : 'text-amber-800' }}">
-                            {{ $kampanye->diikuti ? 'Toko mengikuti kampanye ini' : 'Toko belum mengikuti kampanye ini' }}
+                        <p class="text-sm font-bold {{ $ikut ? 'text-emerald-800' : 'text-amber-800' }}">
+                            {{ $ikut ? 'Toko mengikuti kampanye ini' : 'Toko belum mengikuti kampanye ini' }}
                         </p>
-                        <p class="mt-0.5 text-xs {{ $kampanye->diikuti ? 'text-emerald-700' : 'text-amber-700' }}">
-                            {{ $kampanye->diikuti
-                                ? $kampanye->produks_count.' produk disertakan'
+                        <p class="mt-0.5 text-xs {{ $ikut ? 'text-emerald-700' : 'text-amber-700' }}">
+                            {{ $ikut
+                                ? $kampanye->produks_count.' produk toko ini disertakan'
                                 : 'Harga flash belum berlaku sampai Anda ikut serta' }}
                         </p>
                     </div>
@@ -81,8 +83,8 @@
                     @unless ($kampanye->sudahBerakhir())
                         <form method="POST" action="{{ route('admin.flash-sale.ikut', $kampanye) }}">
                             @csrf
-                            <button class="{{ $kampanye->diikuti ? 'btn-secondary' : 'btn-primary' }} btn-sm">
-                                {{ $kampanye->diikuti ? 'Berhenti Ikut' : 'Ikuti Kampanye' }}
+                            <button class="{{ $ikut ? 'btn-secondary' : 'btn-primary' }} btn-sm">
+                                {{ $ikut ? 'Berhenti Ikut' : 'Ikuti Kampanye' }}
                             </button>
                         </form>
                     @endunless

@@ -1,5 +1,5 @@
 @php
-    $barisFlash = $produk->flashSaleBerlaku();
+    $potongan = $produk->potonganBerlaku();
 @endphp
 
 {{-- Tautan produk dibentangkan sebagai lapisan absolut, bukan membungkus
@@ -21,12 +21,16 @@
             </div>
         @endif
 
-        {{-- Lencana flash sale menggantikan lencana diskon biasa: menampilkan
-             keduanya sekaligus hanya membingungkan pembeli. --}}
-        @if ($barisFlash)
-            <span class="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-accent-500 to-rose-500 px-2 py-1 text-[10px] font-extrabold text-white shadow-lg">
-                <x-ikon nama="petir" kelas="h-3 w-3" />
-                −{{ $barisFlash->persen_hemat }}%
+        {{-- Satu lencana saja. Menampilkan flash sale, promo, dan harga coret
+             sekaligus hanya membingungkan pembeli, jadi yang tampil adalah
+             potongan yang benar-benar dipakai. --}}
+        @if ($potongan)
+            <span class="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-extrabold text-white shadow-lg
+                         {{ $potongan->flashSale()
+                                ? 'bg-gradient-to-r from-accent-500 to-rose-500'
+                                : 'bg-gradient-to-r from-brand-600 to-brand-500' }}">
+                <x-ikon :nama="$potongan->flashSale() ? 'petir' : 'label'" kelas="h-3 w-3" />
+                −{{ $potongan->persenHemat }}%
             </span>
         @elseif ($produk->diskon_persen)
             <span class="absolute left-2.5 top-2.5 rounded-full bg-rose-500 px-2 py-1 text-[10px] font-extrabold text-white shadow-lg">
@@ -53,7 +57,7 @@
         </p>
 
         <div class="mt-auto flex flex-wrap items-baseline gap-x-2 gap-y-0.5 pt-2">
-            <p class="whitespace-nowrap text-base font-extrabold {{ $barisFlash ? 'text-rose-600' : 'text-brand-700' }}">
+            <p class="whitespace-nowrap text-base font-extrabold {{ $potongan ? 'text-rose-600' : 'text-brand-700' }}">
                 {{ rp($produk->hargaEfektif()) }}
             </p>
             @if ($produk->hargaSebelumPotongan())
@@ -64,8 +68,10 @@
         </div>
 
         <div class="mt-3 flex items-center justify-between gap-2 pt-0.5">
-            @if ($barisFlash)
-                <span class="truncate text-xs font-semibold text-rose-600">Sisa {{ $barisFlash->sisaKuota() }} promo</span>
+            @if ($potongan && $potongan->sisaKuota !== null)
+                <span class="truncate text-xs font-semibold text-rose-600">Sisa {{ $potongan->sisaKuota }} promo</span>
+            @elseif ($potongan)
+                <span class="truncate text-xs font-semibold text-brand-600">{{ $potongan->label }}</span>
             @else
                 <span class="truncate text-xs font-semibold {{ $produk->stok > 0 ? 'text-emerald-600' : 'text-rose-500' }}">
                     {{ $produk->stok > 0 ? "Sisa {$produk->stok} pcs" : 'Habis' }}

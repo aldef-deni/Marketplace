@@ -198,12 +198,13 @@ class TokoTest extends TestCase
     public function test_penjual_tidak_dapat_membuka_kendali_platform(): void
     {
         foreach ([
+            // Flash sale dan promo justru terbuka bagi penjual sejak
+            // keikutsertaan menjadi urusan tiap toko.
             route('admin.dashboard'),
             route('admin.pesanan.index'),
             route('admin.pembayaran.index'),
             route('admin.pengiriman.index'),
             route('admin.kategori.index'),
-            route('admin.flash-sale.index'),
             route('admin.laporan.transaksi'),
         ] as $url) {
             $this->actingAs($this->penjualA)->get($url)->assertForbidden();

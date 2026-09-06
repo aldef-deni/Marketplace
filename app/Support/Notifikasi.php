@@ -3,8 +3,11 @@
 namespace App\Support;
 
 use App\Models\Pesanan;
+use App\Models\Toko;
 use App\Models\User;
+use App\Notifications\NotifikasiKampanye;
 use App\Notifications\NotifikasiPesanan;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Notification;
 use Throwable;
 
@@ -42,6 +45,27 @@ class Notifikasi
         }
 
         self::kirim($penerima, $pesanan, $peristiwa, $pesan);
+    }
+
+    /**
+     * Beri tahu pemilik setiap toko aktif tentang sebuah kampanye.
+     *
+     * Sasarannya pemilik toko, bukan seluruh pengelola platform: yang perlu
+     * memutuskan ikut atau tidak adalah orang yang punya lapaknya.
+     */
+    public static function kePemilikToko(Model $kampanye, string $peristiwa): void
+    {
+        $penerima = User::whereIn('id', Toko::tampil()->pluck('user_id')->unique())->get();
+
+        if ($penerima->isEmpty()) {
+            return;
+        }
+
+        try {
+            Notification::send($penerima, new NotifikasiKampanye($kampanye, $peristiwa));
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     private static function kirim(iterable $penerima, Pesanan $pesanan, string $peristiwa, ?string $pesan): void

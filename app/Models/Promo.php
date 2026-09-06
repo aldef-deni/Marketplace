@@ -8,18 +8,29 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
-class FlashSale extends Model
+/**
+ * Promo potongan harga.
+ *
+ * Dua asalnya berbeda dan menentukan cara kerjanya:
+ *
+ * - toko_id kosong — promo platform yang disusun superadmin, ditawarkan ke
+ *   seluruh toko, dan baru berlaku setelah sebuah toko ikut serta.
+ * - toko_id terisi — promo milik toko itu sendiri, tidak perlu diikuti siapa
+ *   pun karena pemiliknya yang membuatnya.
+ */
+class Promo extends Model
 {
     use PunyaDiskon;
 
     protected $fillable = [
-        'nama', 'slug', 'deskripsi', 'mulai_at', 'selesai_at',
-        'tipe_diskon', 'nilai_diskon', 'aktif', 'dibuat_oleh',
+        'toko_id', 'nama', 'slug', 'deskripsi', 'tipe_diskon', 'nilai_diskon',
+        'mulai_at', 'selesai_at', 'aktif', 'dibuat_oleh',
     ];
 
     protected $casts = [
+        'toko_id' => 'integer',
         'mulai_at' => 'datetime',
         'selesai_at' => 'datetime',
         'nilai_diskon' => 'decimal:0',
@@ -27,9 +38,9 @@ class FlashSale extends Model
         'dibuat_oleh' => 'integer',
     ];
 
-    public function produks(): HasMany
+    public function toko(): BelongsTo
     {
-        return $this->hasMany(FlashSaleProduk::class);
+        return $this->belongsTo(Toko::class);
     }
 
     public function pembuat(): BelongsTo
@@ -37,35 +48,45 @@ class FlashSale extends Model
         return $this->belongsTo(User::class, 'dibuat_oleh');
     }
 
-    /**
-     * Toko yang mengikuti kampanye ini.
-     *
-     * Keberadaan barisnya sendiri yang menandakan ikut serta, jadi tidak ada
-     * kolom boolean yang bisa berbeda dari kenyataan.
-     */
+    public function produks(): HasMany
+    {
+        return $this->hasMany(PromoProduk::class);
+    }
+
     public function tokos(): BelongsToMany
     {
-        return $this->belongsToMany(Toko::class, 'flash_sale_tokos')
+        return $this->belongsToMany(Toko::class, 'promo_tokos')
             ->withPivot('diikuti_at', 'diikuti_oleh')
             ->withTimestamps();
     }
 
-    public function diikutiOleh(int|Toko $toko): bool
+    /**
+     * Promo platform ditawarkan ke semua toko; promo toko hanya miliknya sendiri.
+     */
+    public function milikPlatform(): bool
+    {
+        return $this->toko_id === null;
+    }
+
+    /**
+     * Apakah promo ini berlaku bagi sebuah toko.
+     *
+     * Promo miliknya sendiri berlaku tanpa perlu diikuti; promo platform baru
+     * berlaku setelah toko itu menyatakan ikut.
+     */
+    public function berlakuUntukToko(int|Toko $toko): bool
     {
         $id = $toko instanceof Toko ? $toko->id : $toko;
+
+        if (! $this->milikPlatform()) {
+            return $this->toko_id === $id;
+        }
 
         return $this->relationLoaded('tokos')
             ? $this->tokos->contains('id', $id)
             : $this->tokos()->where('tokos.id', $id)->exists();
     }
 
-    /**
-     * Kampanye yang sudah diterbitkan dan sedang berada dalam rentang waktunya.
-     *
-     * Keikutsertaan toko sengaja tidak ikut disaring di sini: satu kampanye kini
-     * dapat diikuti sebagian toko saja, sehingga syarat itu hanya bermakna pada
-     * tingkat produk, bukan tingkat kampanye.
-     */
     public function scopeBerlangsung(Builder $q): Builder
     {
         return $q->where('aktif', true)
@@ -76,6 +97,11 @@ class FlashSale extends Model
     public function scopeTerbit(Builder $q): Builder
     {
         return $q->where('aktif', true);
+    }
+
+    public function scopePlatform(Builder $q): Builder
+    {
+        return $q->whereNull('toko_id');
     }
 
     public function sedangBerlangsung(): bool
@@ -125,25 +151,23 @@ class FlashSale extends Model
         };
     }
 
-    /**
-     * Sisa waktu sampai kampanye berakhir, dalam detik.
-     *
-     * Bernilai nol bila kampanye belum berjalan, supaya tampilan tidak
-     * menghitung mundur sesuatu yang belum dimulai.
-     */
-    public function sisaDetik(): int
-    {
-        if (! $this->sedangBerlangsung()) {
-            return 0;
-        }
-
-        // Carbon mengembalikan pecahan; dibulatkan eksplisit agar tidak memicu
-        // peringatan kehilangan presisi saat dikembalikan sebagai int.
-        return max(0, (int) round(Carbon::now()->diffInSeconds($this->selesai_at, false)));
-    }
-
     public function getDurasiLabelAttribute(): string
     {
         return tanggalIndo($this->mulai_at, true).' — '.tanggalIndo($this->selesai_at, true);
+    }
+
+    public static function slugUnik(string $nama, ?int $abaikan = null): string
+    {
+        $dasar = Str::slug($nama) ?: 'promo';
+        $slug = $dasar;
+        $urutan = 1;
+
+        while (static::where('slug', $slug)
+            ->when($abaikan, fn (Builder $q) => $q->where('id', '!=', $abaikan))
+            ->exists()) {
+            $slug = $dasar.'-'.(++$urutan);
+        }
+
+        return $slug;
     }
 }

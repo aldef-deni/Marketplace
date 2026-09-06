@@ -154,7 +154,29 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     | Flash sale. Kampanye disusun superadmin; admin memutuskan keikutsertaan
     | toko dan memilih produk yang disertakan.
     */
-    Route::prefix('flash-sale')->name('flash-sale.')->middleware('role:superadmin,admin')->group(function () {
+    /*
+    | Promo. Bentuknya sama dengan flash sale: disusun superadmin lalu diikuti
+    | toko, atau dibuat sendiri oleh toko untuk produknya. Keikutsertaan terbuka
+    | bagi penjual; penyusunan promo platform tetap milik superadmin.
+    */
+    Route::prefix('promo')->name('promo.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\PromoPartisipasiController::class, 'index'])->name('index');
+        Route::get('/{promo}/kelola', [App\Http\Controllers\Admin\PromoPartisipasiController::class, 'show'])->name('kelola');
+        Route::post('/{promo}/ikut', [App\Http\Controllers\Admin\PromoPartisipasiController::class, 'toggleIkut'])->name('ikut');
+        Route::post('/{promo}/produk/{produk}', [App\Http\Controllers\Admin\PromoPartisipasiController::class, 'simpanBaris'])->name('produk');
+
+        Route::prefix('kampanye')->name('kampanye.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\PromoController::class, 'index'])->name('index');
+            Route::get('/tambah', [App\Http\Controllers\Admin\PromoController::class, 'create'])->name('create');
+            Route::post('/', [App\Http\Controllers\Admin\PromoController::class, 'store'])->name('store');
+            Route::get('/{promo}/edit', [App\Http\Controllers\Admin\PromoController::class, 'edit'])->name('edit');
+            Route::patch('/{promo}', [App\Http\Controllers\Admin\PromoController::class, 'update'])->name('update');
+            Route::patch('/{promo}/terbit', [App\Http\Controllers\Admin\PromoController::class, 'toggleAktif'])->name('terbit');
+            Route::delete('/{promo}', [App\Http\Controllers\Admin\PromoController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    Route::prefix('flash-sale')->name('flash-sale.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'index'])->name('index');
         Route::get('/{flashSale}/kelola', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'show'])->name('kelola');
         Route::post('/{flashSale}/ikut', [App\Http\Controllers\Admin\FlashSalePartisipasiController::class, 'toggleIkut'])->name('ikut');

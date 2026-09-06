@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\FlashSale;
+use App\Support\Notifikasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -18,8 +19,8 @@ class FlashSaleController extends Controller
 {
     public function index()
     {
-        $kampanyes = FlashSale::withCount('produks')
-            ->with('pembuat', 'penyetuju')
+        $kampanyes = FlashSale::withCount('produks', 'tokos')
+            ->with('pembuat')
             ->orderByDesc('mulai_at')
             ->paginate(12);
 
@@ -79,8 +80,13 @@ class FlashSaleController extends Controller
     {
         $flashSale->update(['aktif' => ! $flashSale->aktif]);
 
+        // Pemberitahuan dikirim saat diterbitkan, bukan saat disimpan sebagai
+        // draf: draf belum tentu jadi, dan mengabarkan sesuatu yang belum bisa
+        // ditindaklanjuti hanya melatih orang mengabaikan notifikasi.
+        Notifikasi::kePemilikToko($flashSale, $flashSale->aktif ? 'flash_sale_baru' : 'flash_sale_ditarik');
+
         return back()->with('success', $flashSale->aktif
-            ? 'Kampanye diterbitkan. Admin toko kini dapat mengikutinya.'
+            ? 'Kampanye diterbitkan. Pemilik toko sudah diberi tahu dan dapat mengikutinya.'
             : 'Kampanye ditarik. Harga flash tidak lagi berlaku.');
     }
 
@@ -104,10 +110,16 @@ class FlashSaleController extends Controller
             // Jadwal yang berakhir sebelum dimulai membuat kampanye tidak
             // pernah berjalan tanpa pesan galat apa pun.
             'selesai_at' => ['required', 'date', 'after:mulai_at'],
-            'diskon_persen' => ['required', 'integer', 'min:0', 'max:90'],
+            'tipe_diskon' => ['required', 'in:persen,nominal'],
+            // Persentase di atas 90 menyisakan harga yang praktis nol, sedangkan
+            // potongan nominal wajar bernilai ratusan ribu — batasnya karena itu
+            // mengikuti tipe yang dipilih.
+            'nilai_diskon' => ['required', 'numeric', 'min:1',
+                $request->input('tipe_diskon') === 'persen' ? 'max:90' : 'max:1000000000'],
         ], [
             'selesai_at.after' => 'Waktu selesai harus setelah waktu mulai.',
             'nama.unique' => 'Sudah ada kampanye dengan nama tersebut.',
+            'nilai_diskon.max' => 'Potongan persentase maksimal 90%.',
         ]);
     }
 

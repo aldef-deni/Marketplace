@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
@@ -37,6 +38,32 @@ class Toko extends Model
     public function produks(): HasMany
     {
         return $this->hasMany(Produk::class);
+    }
+
+    /**
+     * Kampanye flash sale yang diikuti toko ini.
+     */
+    public function flashSales(): BelongsToMany
+    {
+        return $this->belongsToMany(FlashSale::class, 'flash_sale_tokos')
+            ->withPivot('diikuti_at', 'diikuti_oleh')
+            ->withTimestamps();
+    }
+
+    /**
+     * Promo platform yang diikuti toko ini. Promo miliknya sendiri tidak masuk
+     * sini — kepemilikannya sudah cukup jadi tanda berlaku.
+     */
+    public function promosDiikuti(): BelongsToMany
+    {
+        return $this->belongsToMany(Promo::class, 'promo_tokos')
+            ->withPivot('diikuti_at', 'diikuti_oleh')
+            ->withTimestamps();
+    }
+
+    public function promos(): HasMany
+    {
+        return $this->hasMany(Promo::class);
     }
 
     /**

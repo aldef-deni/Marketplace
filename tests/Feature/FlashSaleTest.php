@@ -9,6 +9,8 @@ use App\Models\MetodePembayaran;
 use App\Models\Produk;
 use App\Models\Toko;
 use App\Models\User;
+use App\Notifications\NotifikasiKampanye;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -72,11 +74,22 @@ class FlashSaleTest extends TestCase
             'slug' => 'flash-sale-uji',
             'mulai_at' => Carbon::now()->subHour(),
             'selesai_at' => Carbon::now()->addHours(3),
-            'diskon_persen' => 25,
+            'tipe_diskon' => 'persen',
+            'nilai_diskon' => 25,
             'aktif' => true,
-            'diikuti' => false,
             'dibuat_oleh' => $this->superadmin->id,
         ], $ubah));
+    }
+
+    /**
+     * Kampanye yang sudah diikuti toko uji — bentuk paling lazim di pengujian.
+     */
+    private function buatKampanyeDiikuti(array $ubah = []): FlashSale
+    {
+        $kampanye = $this->buatKampanye($ubah);
+        $kampanye->tokos()->attach($this->toko->id, ['diikuti_at' => now()]);
+
+        return $kampanye;
     }
 
     private function sertakanProduk(FlashSale $kampanye, int $harga = 150000, int $kuota = 5): void
@@ -132,7 +145,8 @@ class FlashSaleTest extends TestCase
                 'nama' => 'Promo Akhir Pekan',
                 'mulai_at' => Carbon::now()->addDay()->format('Y-m-d H:i'),
                 'selesai_at' => Carbon::now()->addDays(2)->format('Y-m-d H:i'),
-                'diskon_persen' => 30,
+                'tipe_diskon' => 'persen',
+                'nilai_diskon' => 30,
             ])
             ->assertSessionHasNoErrors();
 
@@ -159,28 +173,59 @@ class FlashSaleTest extends TestCase
 
     /* ---------- Keikutsertaan ---------- */
 
-    public function test_admin_mengikuti_dan_berhenti_mengikuti_kampanye(): void
+    public function test_menerbitkan_kampanye_memberi_tahu_pemilik_toko(): void
+    {
+        Notification::fake();
+
+        $kampanye = $this->buatKampanye(['aktif' => false]);
+
+        $this->actingAs($this->superadmin)->patch(route('admin.flash-sale.kampanye.terbit', $kampanye));
+
+        Notification::assertSentTo(
+            $this->admin,
+            fn (NotifikasiKampanye $n) => $n->peristiwa === 'flash_sale_baru',
+        );
+    }
+
+    public function test_toko_mengikuti_dan_berhenti_mengikuti_kampanye(): void
     {
         $kampanye = $this->buatKampanye();
 
         $this->actingAs($this->admin)->post(route('admin.flash-sale.ikut', $kampanye));
-        $kampanye->refresh();
 
-        $this->assertTrue($kampanye->diikuti);
-        $this->assertSame($this->admin->id, $kampanye->diikuti_oleh);
-        $this->assertNotNull($kampanye->diikuti_at);
+        $this->assertTrue($kampanye->fresh()->diikutiOleh($this->toko));
+        $this->assertDatabaseHas('flash_sale_tokos', [
+            'flash_sale_id' => $kampanye->id,
+            'toko_id' => $this->toko->id,
+            'diikuti_oleh' => $this->admin->id,
+        ]);
 
         $this->actingAs($this->admin)->post(route('admin.flash-sale.ikut', $kampanye));
-        $kampanye->refresh();
 
-        $this->assertFalse($kampanye->diikuti);
-        $this->assertNull($kampanye->diikuti_oleh);
+        $this->assertFalse($kampanye->fresh()->diikutiOleh($this->toko));
+        $this->assertDatabaseMissing('flash_sale_tokos', [
+            'flash_sale_id' => $kampanye->id,
+            'toko_id' => $this->toko->id,
+        ]);
+    }
+
+    public function test_kampanye_yang_tidak_diikuti_toko_tidak_memotong_harga(): void
+    {
+        // Kampanye berjalan dan produknya terdaftar, tetapi tokonya belum ikut.
+        $kampanye = $this->buatKampanye();
+        $this->sertakanProduk($kampanye);
+
+        $this->assertSame(200000.0, $this->produk->fresh()->hargaEfektif());
+
+        $kampanye->tokos()->attach($this->toko->id, ['diikuti_at' => now()]);
+
+        $this->assertSame(150000.0, $this->produk->fresh()->hargaEfektif());
     }
 
     public function test_halaman_kelola_mengisi_harga_flash_sesuai_diskon_kampanye(): void
     {
         // Harga produk 200.000, diskon kampanye 20% -> usulan 160.000.
-        $kampanye = $this->buatKampanye(['diikuti' => true, 'diskon_persen' => 20]);
+        $kampanye = $this->buatKampanyeDiikuti(['nilai_diskon' => 20]);
 
         $this->actingAs($this->admin)
             ->get(route('admin.flash-sale.kelola', $kampanye))
@@ -194,7 +239,7 @@ class FlashSaleTest extends TestCase
 
     public function test_admin_mengikutkan_produk_beserta_harga_dan_kuota(): void
     {
-        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $kampanye = $this->buatKampanyeDiikuti();
 
         $this->actingAs($this->admin)
             ->post(route('admin.flash-sale.produk', [$kampanye, $this->produk]), [
@@ -213,7 +258,7 @@ class FlashSaleTest extends TestCase
 
     public function test_mengikutkan_ulang_memperbarui_baris_yang_sama(): void
     {
-        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $kampanye = $this->buatKampanyeDiikuti();
         $this->sertakanProduk($kampanye);
 
         $this->actingAs($this->admin)
@@ -229,7 +274,7 @@ class FlashSaleTest extends TestCase
 
     public function test_harga_flash_harus_lebih_murah_dari_harga_normal(): void
     {
-        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $kampanye = $this->buatKampanyeDiikuti();
 
         $this->actingAs($this->admin)
             ->post(route('admin.flash-sale.produk', [$kampanye, $this->produk]), [
@@ -243,7 +288,7 @@ class FlashSaleTest extends TestCase
 
     public function test_kuota_tidak_boleh_melebihi_stok(): void
     {
-        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $kampanye = $this->buatKampanyeDiikuti();
 
         $this->actingAs($this->admin)
             ->post(route('admin.flash-sale.produk', [$kampanye, $this->produk]), [
@@ -257,7 +302,7 @@ class FlashSaleTest extends TestCase
 
     public function test_admin_membatalkan_keikutsertaan_satu_produk(): void
     {
-        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $kampanye = $this->buatKampanyeDiikuti();
         $this->sertakanProduk($kampanye);
 
         $this->actingAs($this->admin)
@@ -277,7 +322,7 @@ class FlashSaleTest extends TestCase
         $this->assertSame(200000.0, $this->produk->fresh()->hargaEfektif(),
             'Kampanye yang belum diikuti toko tidak boleh mengubah harga.');
 
-        $kampanye->update(['diikuti' => true]);
+        $kampanye->tokos()->attach($this->toko->id, ['diikuti_at' => now()]);
         $this->assertSame(150000.0, $this->produk->fresh()->hargaEfektif());
 
         $kampanye->update(['aktif' => false]);
@@ -306,7 +351,7 @@ class FlashSaleTest extends TestCase
 
     public function test_kuota_habis_mengembalikan_harga_normal(): void
     {
-        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $kampanye = $this->buatKampanyeDiikuti();
         $this->sertakanProduk($kampanye, kuota: 2);
 
         $this->assertSame(150000.0, $this->produk->fresh()->hargaEfektif());
@@ -321,7 +366,7 @@ class FlashSaleTest extends TestCase
 
     public function test_checkout_memakai_harga_flash_dan_memakai_kuotanya(): void
     {
-        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $kampanye = $this->buatKampanyeDiikuti();
         $this->sertakanProduk($kampanye, harga: 150000, kuota: 5);
 
         $this->actingAs($this->pembeli)->post(route('keranjang.tambah', $this->produk), ['qty' => 2]);
@@ -341,7 +386,7 @@ class FlashSaleTest extends TestCase
 
     public function test_beranda_menampilkan_kampanye_yang_berjalan(): void
     {
-        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $kampanye = $this->buatKampanyeDiikuti();
         $this->sertakanProduk($kampanye);
 
         $this->get('/')
@@ -356,7 +401,7 @@ class FlashSaleTest extends TestCase
 
     public function test_kartu_produk_memisahkan_tautan_dari_tombol_keranjang(): void
     {
-        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $kampanye = $this->buatKampanyeDiikuti();
         $this->sertakanProduk($kampanye);
 
         $html = $this->get('/')->assertOk()->getContent();
@@ -368,7 +413,7 @@ class FlashSaleTest extends TestCase
 
     public function test_beranda_tidak_menampilkan_kampanye_tanpa_produk(): void
     {
-        $kampanye = $this->buatKampanye(['diikuti' => true, 'nama' => 'Kampanye Kosong', 'slug' => 'kampanye-kosong']);
+        $kampanye = $this->buatKampanyeDiikuti(['nama' => 'Kampanye Kosong', 'slug' => 'kampanye-kosong']);
 
         $this->get('/')->assertOk()->assertDontSee('Kampanye Kosong');
     }
@@ -377,7 +422,7 @@ class FlashSaleTest extends TestCase
 
     public function test_halaman_flash_sale_hanya_memuat_produk_yang_berpromo(): void
     {
-        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $kampanye = $this->buatKampanyeDiikuti();
         $this->sertakanProduk($kampanye);
 
         $biasa = Produk::create([
@@ -396,7 +441,7 @@ class FlashSaleTest extends TestCase
 
     public function test_halaman_flash_sale_melewatkan_produk_yang_kuotanya_habis(): void
     {
-        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $kampanye = $this->buatKampanyeDiikuti();
         $this->sertakanProduk($kampanye, kuota: 3);
         $kampanye->produks()->firstOrFail()->update(['terjual' => 3]);
 
@@ -408,8 +453,8 @@ class FlashSaleTest extends TestCase
 
     public function test_halaman_flash_sale_menawarkan_jadwal_berikutnya_saat_kosong(): void
     {
-        $this->buatKampanye([
-            'nama' => 'Kampanye Depan', 'slug' => 'kampanye-depan', 'diikuti' => true,
+        $this->buatKampanyeDiikuti([
+            'nama' => 'Kampanye Depan', 'slug' => 'kampanye-depan',
             'mulai_at' => Carbon::now()->addDays(2), 'selesai_at' => Carbon::now()->addDays(3),
         ]);
 
@@ -423,7 +468,7 @@ class FlashSaleTest extends TestCase
     {
         $this->get('/')->assertOk()->assertDontSee(route('flash-sale.index'));
 
-        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $kampanye = $this->buatKampanyeDiikuti();
         $this->sertakanProduk($kampanye);
 
         $this->get('/')->assertOk()->assertSee(route('flash-sale.index'));
@@ -431,7 +476,7 @@ class FlashSaleTest extends TestCase
 
     public function test_kampanye_berjalan_tidak_dapat_dihapus(): void
     {
-        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $kampanye = $this->buatKampanyeDiikuti();
 
         $this->actingAs($this->superadmin)
             ->delete(route('admin.flash-sale.kampanye.destroy', $kampanye))

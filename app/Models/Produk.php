@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PotonganBerlaku;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,8 +39,17 @@ class Produk extends Model
         return $this->hasMany(FlashSaleProduk::class);
     }
 
+    public function promoItems(): HasMany
+    {
+        return $this->hasMany(PromoProduk::class);
+    }
+
     /**
      * Baris flash sale yang harganya berlaku untuk produk ini sekarang.
+     *
+     * Tiga syarat: kampanyenya berjalan, toko pemilik produk ikut serta, dan
+     * kuotanya belum habis. Syarat kedua penting sejak katalog dimiliki banyak
+     * lapak — satu kampanye kini bisa diikuti sebagian toko saja.
      *
      * Hasilnya di-cache pada instance karena satu halaman katalog memanggilnya
      * sekali per produk, dan tanpa itu setiap kartu memicu kuerinya sendiri.
@@ -50,9 +60,10 @@ class Produk extends Model
             return $this->relations['flashSaleBerlaku'];
         }
 
-        $baris = $this->flashSaleItems()
+        $baris = $this->toko_id === null ? null : $this->flashSaleItems()
             ->with('flashSale')
-            ->whereHas('flashSale', fn ($q) => $q->berlangsung())
+            ->whereHas('flashSale', fn ($q) => $q->berlangsung()
+                ->whereHas('tokos', fn ($t) => $t->where('tokos.id', $this->toko_id)))
             ->get()
             ->first(fn (FlashSaleProduk $b) => ! $b->kuotaHabis());
 
@@ -61,9 +72,89 @@ class Produk extends Model
         return $baris;
     }
 
+    /**
+     * Baris promo yang berlaku untuk produk ini sekarang.
+     *
+     * Promo milik tokonya sendiri langsung berlaku; promo platform baru berlaku
+     * setelah tokonya ikut serta.
+     */
+    public function promoBerlaku(): ?PromoProduk
+    {
+        if (array_key_exists('promoBerlaku', $this->relations)) {
+            return $this->relations['promoBerlaku'];
+        }
+
+        $tokoId = $this->toko_id;
+
+        $baris = $tokoId === null ? null : $this->promoItems()
+            ->with('promo')
+            ->whereHas('promo', fn ($q) => $q->berlangsung()
+                ->where(fn ($p) => $p->where('toko_id', $tokoId)
+                    ->orWhere(fn ($pp) => $pp->whereNull('toko_id')
+                        ->whereHas('tokos', fn ($t) => $t->where('tokos.id', $tokoId)))))
+            ->get()
+            ->first(fn (PromoProduk $b) => ! $b->kuotaHabis());
+
+        $this->relations['promoBerlaku'] = $baris;
+
+        return $baris;
+    }
+
+    /**
+     * Potongan yang benar-benar dipakai untuk produk ini saat ini.
+     *
+     * Bila flash sale dan promo sama-sama berlaku, yang menghasilkan harga
+     * terendah yang menang — memajang yang lebih mahal padahal ada yang lebih
+     * murah akan terbaca sebagai menahan diskon.
+     */
+    public function potonganBerlaku(): ?PotonganBerlaku
+    {
+        if (array_key_exists('potonganBerlaku', $this->relations)) {
+            return $this->relations['potonganBerlaku'];
+        }
+
+        $normal = (float) $this->harga;
+        $kandidat = [];
+
+        if ($flash = $this->flashSaleBerlaku()) {
+            $kandidat[] = new PotonganBerlaku(
+                jenis: 'flash',
+                label: 'Flash Sale',
+                harga: (float) $flash->harga_flash,
+                hargaNormal: $normal,
+                persenHemat: $flash->persen_hemat,
+                sisaKuota: $flash->sisaKuota(),
+                sumber: $flash,
+            );
+        }
+
+        if ($promo = $this->promoBerlaku()) {
+            $kandidat[] = new PotonganBerlaku(
+                jenis: 'promo',
+                label: $promo->promo?->nama ?? 'Promo',
+                harga: $promo->hargaPromo(),
+                hargaNormal: $normal,
+                persenHemat: $promo->persen_hemat,
+                sisaKuota: $promo->sisaKuota(),
+                sumber: $promo,
+            );
+        }
+
+        $terbaik = PotonganBerlaku::terbaik(...$kandidat);
+
+        $this->relations['potonganBerlaku'] = $terbaik;
+
+        return $terbaik;
+    }
+
     public function sedangFlashSale(): bool
     {
-        return $this->flashSaleBerlaku() !== null;
+        return $this->potonganBerlaku()?->flashSale() ?? false;
+    }
+
+    public function sedangDipotong(): bool
+    {
+        return $this->potonganBerlaku() !== null;
     }
 
     /**
@@ -74,7 +165,7 @@ class Produk extends Model
      */
     public function hargaEfektif(): float
     {
-        return (float) ($this->flashSaleBerlaku()?->harga_flash ?? $this->harga);
+        return $this->potonganBerlaku()?->harga ?? (float) $this->harga;
     }
 
     /**
@@ -82,7 +173,7 @@ class Produk extends Model
      */
     public function hargaSebelumPotongan(): ?float
     {
-        if ($this->sedangFlashSale()) {
+        if ($this->sedangDipotong()) {
             return (float) $this->harga;
         }
 
