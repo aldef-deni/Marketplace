@@ -22,6 +22,7 @@ class PaketRilis extends Command
 {
     protected $signature = 'rilis:paket
         {--sejak= : Hanya sertakan berkas yang berubah sejak ref git ini, misal HEAD~1 atau nama tag}
+        {--penuh : Bungkus seluruh aplikasi, bukan hanya perubahan}
         {--tujuan= : Folder tujuan ZIP (baku: folder Downloads pengguna)}
         {--tanpa-build : Lewati "npm run build"; pakai aset yang sudah ada}';
 
@@ -38,8 +39,16 @@ class PaketRilis extends Command
         'tests/', '.github/', '.idea/', '.vscode/',
     ];
 
+    /**
+     * Catatan commit yang terakhir dibungkus, dipakai sebagai titik awal paket
+     * berikutnya. Tanpa ini satu paket yang terlewat membuat paket sesudahnya
+     * kehilangan berkas yang dirujuk kode baru, dan server langsung 500.
+     */
+    private const BERKAS_PENANDA = 'storage/app/rilis-terakhir.txt';
+
     private const KECUALI_BERKAS = [
         '.env', '.env.backup', '.env.production', '.phpunit.result.cache',
+        self::BERKAS_PENANDA,
         'database/database.sqlite', 'package-lock.json',
         'phpunit.xml', '.editorconfig', '.gitattributes',
     ];
@@ -54,8 +63,10 @@ class PaketRilis extends Command
             });
         }
 
-        $berkas = $this->option('sejak')
-            ? $this->berkasBerubah($akar, $this->option('sejak'))
+        $sejak = $this->titikAwal($akar);
+
+        $berkas = $sejak
+            ? $this->berkasBerubah($akar, $sejak)
             : $this->seluruhBerkas($akar);
 
         if ($berkas === null) {
@@ -72,7 +83,7 @@ class PaketRilis extends Command
         $nama = sprintf(
             'market-arahinn-%s%s.zip',
             now()->format('Ymd-Hi'),
-            $this->option('sejak') ? '-perubahan' : '-lengkap',
+            $sejak ? '-perubahan' : '-lengkap',
         );
         $path = $tujuan.DIRECTORY_SEPARATOR.$nama;
 
@@ -87,7 +98,7 @@ class PaketRilis extends Command
             $zip->addFile($akar.DIRECTORY_SEPARATOR.$relatif, $relatif);
         }
 
-        $zip->addFromString('CARA-DEPLOY.txt', $this->catatanDeploy($berkas));
+        $zip->addFromString('CARA-DEPLOY.txt', $this->catatanDeploy($berkas, $this->daftarCommit($akar, $sejak)));
         $zip->close();
 
         $this->newLine();
@@ -95,12 +106,96 @@ class PaketRilis extends Command
         $this->components->twoColumnDetail('Berkas', $path);
         $this->components->twoColumnDetail('Jumlah berkas', (string) count($berkas));
         $this->components->twoColumnDetail('Ukuran', $this->ukuran(filesize($path)));
+
+        if ($sejak) {
+            $this->components->twoColumnDetail('Mencakup commit', $this->ringkasanCommit($akar, $sejak));
+        }
+
+        $this->catatPenanda($akar);
+
         $this->newLine();
         $this->line('  Unggah dan ekstrak di root aplikasi pada server, lalu jalankan:');
         $this->line('  <fg=gray>php artisan migrate --force && php artisan optimize</>');
         $this->newLine();
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Titik awal paket: opsi eksplisit, lalu commit yang terakhir dibungkus.
+     *
+     * Baku bertumpu pada penanda, bukan HEAD~1, supaya paket berikutnya tetap
+     * memuat commit yang paketnya terlewat alih-alih melompatinya.
+     */
+    private function titikAwal(string $akar): ?string
+    {
+        if ($this->option('penuh')) {
+            return null;
+        }
+
+        if ($sejak = $this->option('sejak')) {
+            return $sejak;
+        }
+
+        $penanda = $akar.DIRECTORY_SEPARATOR.self::BERKAS_PENANDA;
+
+        if (! is_file($penanda)) {
+            return null;
+        }
+
+        $ref = trim((string) file_get_contents($penanda));
+
+        // Penanda yang menunjuk commit tak dikenal (riwayat ditulis ulang,
+        // klon baru) diabaikan; paket penuh lebih aman daripada paket bolong.
+        if ($ref === '' || ! $this->adaGit($akar)) {
+            return null;
+        }
+
+        $ada = Process::path($akar)->run(sprintf('git cat-file -e %s^{commit}', escapeshellarg($ref)));
+
+        if (! $ada->successful()) {
+            $this->components->warn("Penanda rilis '{$ref}' tidak dikenal; membungkus seluruh aplikasi.");
+
+            return null;
+        }
+
+        return $ref;
+    }
+
+    private function catatPenanda(string $akar): void
+    {
+        if (! $this->adaGit($akar)) {
+            return;
+        }
+
+        $head = trim((string) Process::path($akar)->run('git rev-parse HEAD')->output());
+
+        if ($head === '') {
+            return;
+        }
+
+        $penanda = $akar.DIRECTORY_SEPARATOR.self::BERKAS_PENANDA;
+
+        @mkdir(dirname($penanda), 0755, true);
+        file_put_contents($penanda, $head.PHP_EOL);
+    }
+
+    /**
+     * Ringkasan commit yang tercakup, agar terlihat bila ada yang terlewat.
+     */
+    private function ringkasanCommit(string $akar, string $sejak): string
+    {
+        $keluaran = Process::path($akar)
+            ->run(sprintf('git log --oneline %s..HEAD', escapeshellarg($sejak)))
+            ->output();
+
+        $baris = preg_split('/\R/', trim($keluaran), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        if ($baris === []) {
+            return 'tidak ada commit baru';
+        }
+
+        return count($baris).' commit sejak '.Str::substr($sejak, 0, 7);
     }
 
     /**
@@ -265,7 +360,23 @@ class PaketRilis extends Command
             : round($bita / 1024).' KB';
     }
 
-    private function catatanDeploy(array $berkas): string
+    /**
+     * Daftar commit yang tercakup paket ini, untuk ditulis di catatan deploy.
+     */
+    private function daftarCommit(string $akar, ?string $sejak): string
+    {
+        if (! $sejak || ! $this->adaGit($akar)) {
+            return '';
+        }
+
+        $keluaran = trim((string) Process::path($akar)
+            ->run(sprintf('git log --oneline %s..HEAD', escapeshellarg($sejak)))
+            ->output());
+
+        return $keluaran === '' ? '' : $keluaran;
+    }
+
+    private function catatanDeploy(array $berkas, string $commit = ''): string
     {
         $daftar = implode("\n", array_map(fn ($b) => '  - '.$b, array_slice($berkas, 0, 200)));
         $sisa = count($berkas) > 200 ? "\n  ... dan ".(count($berkas) - 200)." berkas lain" : '';
@@ -285,12 +396,21 @@ class PaketRilis extends Command
                 ."   \"php artisan migrate --force\" WAJIB dijalankan.\n\n";
         }
 
+        // Daftar commit membuat paket yang terlewat langsung kelihatan: kalau
+        // commit terbawah di sini bukan yang terakhir Anda pasang, ada paket
+        // sebelumnya yang belum sempat diunggah.
+        $riwayat = $commit === '' ? '' : "COMMIT YANG TERCAKUP
+--------------------
+{$commit}
+
+";
+
         return <<<TXT
         Market ArahInn — paket rilis
         Dibuat: {$this->waktu()}
         Tujuan: https://market.arahinn.com
 
-        {$wajib}LANGKAH DEPLOY
+        {$wajib}{$riwayat}LANGKAH DEPLOY
         --------------
         1. Backup dulu folder aplikasi dan database di server.
         2. Ekstrak isi ZIP ini ke ROOT aplikasi di server (menimpa berkas lama).
