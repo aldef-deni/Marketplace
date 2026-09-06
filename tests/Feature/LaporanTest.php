@@ -51,7 +51,7 @@ class LaporanTest extends TestCase
 
         MetodePembayaran::create([
             'nama' => 'Transfer Uji', 'tipe' => 'transfer',
-            'no_rekening' => '1', 'atas_nama' => 'ArahInn', 'aktif' => true,
+            'nomor_rekening' => '1', 'atas_nama' => 'ArahInn', 'aktif' => true,
         ]);
     }
 

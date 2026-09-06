@@ -170,13 +170,17 @@
 
         {{-- Metode pembayaran sebagai satu deret di atas garis penutup. Tanpa
              judul: nama-nama seperti BCA dan GoPay sudah menjelaskan dirinya,
-             dan label di atasnya hanya menambah baris tanpa menambah arti. --}}
-        @php ($metodeBayar = config('brand.metode_bayar') ?? [])
+             dan label di atasnya hanya menambah baris tanpa menambah arti.
 
-        @if ($metodeBayar !== [])
+             Dibaca dari tabel metode pembayaran, bukan daftar tetap: lencana di
+             sini menjanjikan cara membayar, dan menjanjikan merchant yang
+             nomornya belum dipasang adalah janji yang tidak bisa ditepati. --}}
+        @if (($metodeBayar ?? collect())->isNotEmpty())
             <div class="mt-12 flex flex-wrap items-center justify-center gap-2">
                 @foreach ($metodeBayar as $metode)
-                    <span class="kartu-merchant" style="--warna-merchant: {{ $metode['warna'] }}">{{ $metode['nama'] }}</span>
+                    <span class="kartu-merchant" style="--warna-merchant: {{ $metode->warna_merchant }}">
+                        {{ $metode->label_badge }}
+                    </span>
                 @endforeach
             </div>
         @endif

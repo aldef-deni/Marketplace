@@ -343,7 +343,7 @@ class PromoTest extends TestCase
 
         $metode = MetodePembayaran::create([
             'nama' => 'Transfer Uji', 'tipe' => 'transfer',
-            'no_rekening' => '1', 'atas_nama' => 'ArahInn', 'aktif' => true,
+            'nomor_rekening' => '1', 'atas_nama' => 'ArahInn', 'aktif' => true,
         ]);
 
         $promo = $this->buatPromo(['toko_id' => $this->tokoA->id]);

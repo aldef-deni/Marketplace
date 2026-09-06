@@ -43,7 +43,7 @@ class AlurNavigasiTest extends TestCase
 
         MetodePembayaran::create([
             'nama' => 'Transfer Uji', 'tipe' => 'transfer',
-            'no_rekening' => '123', 'atas_nama' => 'Market ArahInn', 'aktif' => true,
+            'nomor_rekening' => '123', 'atas_nama' => 'Market ArahInn', 'aktif' => true,
         ]);
     }
 

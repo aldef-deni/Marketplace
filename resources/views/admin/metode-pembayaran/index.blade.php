@@ -1,60 +1,166 @@
 <x-layouts.admin>
     <x-slot name="title">Metode Pembayaran</x-slot>
 
-    <div class="grid gap-6 lg:grid-cols-3">
-        {{-- Daftar metode --}}
-        <div class="card overflow-hidden lg:col-span-2">
-            <div class="p-6 pb-4">
-                <h3 class="text-base font-extrabold text-slate-900">Metode Pembayaran</h3>
-                <p class="mt-0.5 text-xs text-slate-400">Metode aktif akan tampil di halaman checkout</p>
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-ink-950 via-brand-950 to-brand-900 p-6 shadow-elevate sm:p-8">
+        <div class="pointer-events-none absolute inset-0 pola-grid opacity-60"></div>
+        <div class="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-brand-500/30 blur-3xl"></div>
+        <div class="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-brand-400/60 to-transparent"></div>
+
+        <div class="relative flex flex-wrap items-center justify-between gap-5">
+            <div class="min-w-0">
+                <span class="badge bg-brand-500/15 text-brand-200 ring-brand-500/30">Superadmin</span>
+                <h1 class="mt-3 text-2xl font-extrabold text-white">Metode Pembayaran</h1>
+                <p class="mt-1.5 max-w-xl text-sm text-ink-300">
+                    Isi nomor rekening atau nomor e-wallet tiap metode. Metode yang nomornya
+                    kosong tidak ditawarkan saat checkout, dan lencananya ikut hilang dari footer.
+                </p>
             </div>
-            <div class="divide-y divide-slate-100">
-                @foreach ($metodes->groupBy('tipe') as $tipe => $kelompok)
-                    <div class="px-6 pt-5">
-                        <span class="badge {{ $kelompok->first()->warna }}">{{ $kelompok->first()->label_tipe }}</span>
-                    </div>
-                    @foreach ($kelompok as $metode)
-                        <div class="flex flex-wrap items-center gap-4 px-6 py-4 transition hover:bg-slate-50/60">
-                            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl {{ match ($metode->tipe) { 'transfer' => 'bg-blue-50', 'ewallet' => 'bg-emerald-50', 'cod' => 'bg-amber-50', default => 'bg-slate-50' } }}">
-                                <x-ikon :nama="match ($metode->tipe) { 'transfer' => 'bank', 'ewallet' => 'ponsel', 'cod' => 'uang', default => 'kartu' }" kelas="h-6 w-6 text-slate-700" />
+
+            <div class="shrink-0 rounded-2xl bg-white/[0.07] p-4 text-center ring-1 ring-white/10 backdrop-blur">
+                <p class="text-3xl font-extrabold text-white">{{ $jumlahSiap }}</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-ink-400">Siap dipakai</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-6 grid gap-6 lg:grid-cols-3">
+        {{-- Daftar metode, tiap baris dapat disunting langsung --}}
+        <div class="space-y-4 lg:col-span-2">
+            @foreach ($metodes->groupBy('tipe') as $tipe => $kelompok)
+                <div class="flex items-center gap-2">
+                    <span class="badge {{ $kelompok->first()->warna_tipe }}">{{ $kelompok->first()->label_tipe }}</span>
+                    <span class="text-xs font-semibold text-slate-400">{{ $kelompok->count() }} metode</span>
+                </div>
+
+                @foreach ($kelompok as $metode)
+                    @php
+                        $siap = $metode->siapDipakai();
+                        $butuhNomor = $metode->tipe !== 'cod';
+                    @endphp
+
+                    <form action="{{ route('admin.metode-pembayaran.update', $metode) }}" method="POST"
+                          class="card overflow-hidden p-5">
+                        @csrf
+                        @method('PATCH')
+
+                        <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                            <div class="flex min-w-0 items-center gap-3">
+                                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
+                                      style="background-color: {{ $metode->warna_merchant }}1a; color: {{ $metode->warna_merchant }}">
+                                    <x-ikon :nama="match ($metode->tipe) { 'transfer' => 'bank', 'ewallet' => 'ponsel', 'cod' => 'uang', default => 'kartu' }" kelas="h-5 w-5" />
+                                </span>
+                                <div class="min-w-0">
+                                    <p class="truncate text-sm font-extrabold text-slate-800">{{ $metode->nama }}</p>
+                                    <p class="text-xs text-slate-400">{{ $metode->pembayarans_count }}× dipakai pembeli</p>
+                                </div>
+                            </div>
+
+                            {{-- Keadaan tampil dibuat menonjol: inilah akibat yang
+                                 paling mudah terlewat saat nomornya dikosongkan. --}}
+                            <span class="badge {{ $siap
+                                    ? 'bg-emerald-50 text-emerald-700 ring-emerald-200'
+                                    : 'bg-amber-50 text-amber-700 ring-amber-200' }}">
+                                <x-ikon :nama="$siap ? 'centang' : 'peringatan'" kelas="h-3 w-3" />
+                                {{ $siap ? 'Tampil di checkout' : $metode->alasan_belum_tampil }}
                             </span>
-                            <div class="min-w-0 flex-1">
-                                <p class="text-sm font-extrabold text-slate-800">{{ $metode->nama }}</p>
-                                @if ($metode->nomor_rekening)
-                                    <p class="text-xs text-slate-400">{{ $metode->nomor_rekening }} • {{ $metode->atas_nama }}</p>
-                                @else
-                                    <p class="text-xs text-slate-400">{{ $metode->instruksi }}</p>
+                        </div>
+
+                        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                            <div class="sm:col-span-2">
+                                <label class="label-field">Nama Metode *</label>
+                                <input type="text" name="nama" class="input-field" required maxlength="100"
+                                       value="{{ old('nama', $metode->nama) }}">
+                            </div>
+
+                            <div>
+                                <label class="label-field">
+                                    Nomor {{ $metode->tipe === 'ewallet' ? 'E-Wallet' : 'Rekening' }}
+                                    @if ($butuhNomor) <span class="text-rose-500">*</span> @endif
+                                </label>
+                                <input type="text" name="nomor_rekening" class="input-field" maxlength="50"
+                                       value="{{ old('nomor_rekening', $metode->nomor_rekening) }}"
+                                       placeholder="{{ $butuhNomor ? 'Wajib agar metode ini tampil' : 'Tidak diperlukan untuk COD' }}">
+                                @if ($butuhNomor)
+                                    <p class="mt-1 text-[11px] text-slate-400">Dikosongkan berarti metode ini disembunyikan.</p>
                                 @endif
                             </div>
-                            <span class="badge bg-slate-100 text-slate-500 ring-slate-200">{{ $metode->pembayarans_count }}× dipakai</span>
-                            <div class="flex items-center gap-2">
-                                <form action="{{ route('admin.metode-pembayaran.status', $metode) }}" method="POST">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button class="rounded-lg px-3 py-1.5 text-xs font-bold ring-1 transition {{ $metode->aktif ? 'bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100' : 'bg-slate-50 text-slate-500 ring-slate-200 hover:bg-slate-100' }}">
-                                        {{ $metode->aktif ? '● Aktif' : '○ Nonaktif' }}
-                                    </button>
-                                </form>
-                                <form action="{{ route('admin.metode-pembayaran.destroy', $metode) }}" method="POST" onsubmit="return confirm('Hapus metode ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 transition hover:bg-rose-100"><x-ikon nama="sampah" kelas="h-3.5 w-3.5" /></button>
-                                </form>
+
+                            <div>
+                                <label class="label-field">Atas Nama</label>
+                                <input type="text" name="atas_nama" class="input-field" maxlength="100"
+                                       value="{{ old('atas_nama', $metode->atas_nama) }}">
+                            </div>
+
+                            <div>
+                                <label class="label-field">Label Lencana Footer</label>
+                                <input type="text" name="label_pendek" class="input-field" maxlength="30"
+                                       value="{{ old('label_pendek', $metode->label_pendek) }}"
+                                       placeholder="Contoh: BCA">
+                            </div>
+
+                            <div>
+                                <label class="label-field">Warna Merchant</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" name="warna" value="{{ old('warna', $metode->warna_merchant) }}"
+                                           class="h-[42px] w-14 cursor-pointer rounded-xl border border-slate-300 bg-white p-1">
+                                    {{-- Pratinjau memakai warnanya langsung, bukan
+                                         kelas .kartu-merchant yang baru berwarna
+                                         saat disorot di footer gelap. --}}
+                                    <span class="inline-flex items-center rounded-xl px-3.5 py-2 text-[11px] font-bold tracking-wide text-white"
+                                          style="background-color: {{ $metode->warna_merchant }}">
+                                        {{ $metode->label_badge }}
+                                    </span>
+                                </div>
+                                <p class="mt-1 text-[11px] text-slate-400">Warna saat lencana disorot di footer.</p>
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label class="label-field">Instruksi Pembayaran</label>
+                                <textarea name="instruksi" rows="2" class="input-field"
+                                          maxlength="500">{{ old('instruksi', $metode->instruksi) }}</textarea>
                             </div>
                         </div>
-                    @endforeach
+
+                        <div class="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
+                            <label class="flex cursor-pointer items-center gap-2 rounded-xl bg-slate-50 px-3.5 py-2 ring-1 ring-slate-200">
+                                <input type="checkbox" name="aktif" value="1" @checked($metode->aktif)
+                                       class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                                <span class="text-xs font-semibold text-slate-600">Aktif</span>
+                            </label>
+
+                            <button class="btn-primary btn-sm">Simpan</button>
+
+                            <span class="ml-auto">
+                                <button type="submit" form="hapus-{{ $metode->id }}"
+                                        class="rounded-lg px-2 py-1.5 text-xs font-bold text-slate-400 transition hover:bg-rose-50 hover:text-rose-600">
+                                    Hapus
+                                </button>
+                            </span>
+                        </div>
+                    </form>
+
+                    {{-- Form hapus dipisah agar tidak bersarang di dalam form sunting. --}}
+                    <form id="hapus-{{ $metode->id }}" method="POST" class="hidden"
+                          action="{{ route('admin.metode-pembayaran.destroy', $metode) }}"
+                          onsubmit="return confirm('Hapus metode {{ $metode->nama }}?')">
+                        @csrf
+                        @method('DELETE')
+                    </form>
                 @endforeach
-            </div>
+            @endforeach
         </div>
 
         {{-- Form tambah --}}
         <div class="card h-fit p-6 lg:sticky lg:top-24">
             <h3 class="text-base font-extrabold text-slate-900">Tambah Metode</h3>
+            <p class="mt-0.5 text-xs text-slate-400">Metode baru langsung tampil bila nomornya diisi.</p>
+
             <form action="{{ route('admin.metode-pembayaran.store') }}" method="POST" class="mt-5 space-y-4">
                 @csrf
                 <div>
                     <label class="label-field">Nama Metode *</label>
                     <input type="text" name="nama" class="input-field" required placeholder="Contoh: Transfer Bank BNI">
+                    <x-input-error :messages="$errors->get('nama')" class="mt-2" />
                 </div>
                 <div>
                     <label class="label-field">Tipe *</label>
@@ -72,17 +178,27 @@
                     <label class="label-field">Atas Nama</label>
                     <input type="text" name="atas_nama" class="input-field" placeholder="Nama pemilik rekening">
                 </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="label-field">Label Lencana</label>
+                        <input type="text" name="label_pendek" class="input-field" maxlength="30" placeholder="BNI">
+                    </div>
+                    <div>
+                        <label class="label-field">Warna</label>
+                        <input type="color" name="warna" value="#0B5FB0"
+                               class="h-[42px] w-full cursor-pointer rounded-xl border border-slate-300 bg-white p-1">
+                    </div>
+                </div>
                 <div>
                     <label class="label-field">Instruksi</label>
                     <textarea name="instruksi" rows="3" class="input-field" placeholder="Langkah pembayaran untuk pelanggan"></textarea>
                 </div>
                 <label class="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200/70">
                     <input type="checkbox" name="aktif" value="1" checked class="h-5 w-5 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
-                    <span class="text-sm font-semibold text-slate-700">Aktif (tampil di checkout)</span>
+                    <span class="text-sm font-semibold text-slate-700">Aktif</span>
                 </label>
                 <button class="btn-primary w-full">Simpan Metode</button>
             </form>
         </div>
     </div>
-
 </x-layouts.admin>

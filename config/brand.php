@@ -48,21 +48,6 @@ return [
     ],
 
     /*
-    | Lencana metode pembayaran di footer. Warna diambil dari identitas resmi
-    | tiap penyedia, dipakai sebagai latar saat kartunya disorot kursor.
-    */
-    'metode_bayar' => [
-        ['nama' => 'BCA',     'warna' => '#0060AF'],
-        ['nama' => 'Mandiri', 'warna' => '#003D79'],
-        ['nama' => 'BRI',     'warna' => '#00529C'],
-        ['nama' => 'BNI',     'warna' => '#F05A22'],
-        ['nama' => 'GoPay',   'warna' => '#00AED6'],
-        ['nama' => 'OVO',     'warna' => '#4C3494'],
-        ['nama' => 'DANA',    'warna' => '#118EEA'],
-        ['nama' => 'COD',     'warna' => '#0E9F6E'],
-    ],
-
-    /*
     | Pilihan ikon kategori. Kuncinya harus ada di komponen <x-ikon>.
     */
     'ikon_kategori' => [

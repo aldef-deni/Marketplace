@@ -33,7 +33,7 @@ class CheckoutController extends Controller
         }
 
         $alamats = auth()->user()->alamats()->get();
-        $metodes = MetodePembayaran::where('aktif', true)->get();
+        $metodes = MetodePembayaran::siap()->get();
 
         $subtotal = $items->sum(fn ($i) => $i->produk->hargaEfektif() * $i->qty);
         $beratGram = $items->sum(fn ($i) => $i->produk->berat * $i->qty);
@@ -60,8 +60,10 @@ class CheckoutController extends Controller
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
-        $metode = MetodePembayaran::where('id', $validated['metode_pembayaran_id'])
-            ->where('aktif', true)
+        // Disaring ulang di sini, bukan hanya di formulir: metode yang nomornya
+        // dikosongkan sesudah halaman dimuat tidak boleh tetap lolos.
+        $metode = MetodePembayaran::siap()
+            ->where('id', $validated['metode_pembayaran_id'])
             ->firstOrFail();
 
         $subtotal = 0;

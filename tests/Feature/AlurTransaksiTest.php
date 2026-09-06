@@ -50,7 +50,7 @@ class AlurTransaksiTest extends TestCase
 
         $this->transfer = MetodePembayaran::create([
             'nama' => 'Transfer Bank Uji', 'tipe' => 'transfer',
-            'no_rekening' => '1234567890', 'atas_nama' => 'Market ArahInn', 'aktif' => true,
+            'nomor_rekening' => '1234567890', 'atas_nama' => 'Market ArahInn', 'aktif' => true,
         ]);
 
         Alamat::create([
