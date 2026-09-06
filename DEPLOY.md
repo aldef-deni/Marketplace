@@ -61,6 +61,21 @@ Berkas itu berada di luar `public/`, jadi tidak dapat diakses dari web.
 Periksa juga `php -v` — Composer menyelesaikan dependensi berdasarkan PHP CLI,
 yang di cPanel kadang berbeda versi dari PHP web.
 
+### Versi PHP dikunci di composer.json
+
+```json
+"config": { "platform": { "php": "8.2.30" } }
+```
+
+Komputer pengembang memakai PHP 8.3 sementara server 8.2. Tanpa penguncian ini,
+Composer memilih paket yang cocok untuk 8.3, lalu `composer install` di server
+menolaknya dengan pesan *"Your lock file does not contain a compatible set of
+packages"* — dan itu baru ketahuan saat deploy.
+
+**Bila PHP server nanti dinaikkan**, ubah angka tersebut agar sesuai, lalu
+jalankan `composer update` di komputer pengembang dan kirim ulang
+`composer.json` beserta `composer.lock`.
+
 > Node.js **tidak** dibutuhkan di server — aset sudah dikompilasi di lokal.
 
 ---
