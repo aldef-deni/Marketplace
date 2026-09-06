@@ -363,6 +363,61 @@ class FlashSaleTest extends TestCase
         $this->get('/')->assertOk()->assertDontSee('Kampanye Kosong');
     }
 
+    /* ---------- Halaman flash sale ---------- */
+
+    public function test_halaman_flash_sale_hanya_memuat_produk_yang_berpromo(): void
+    {
+        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $this->sertakanProduk($kampanye);
+
+        $biasa = Produk::create([
+            'kategori_id' => $this->produk->kategori_id,
+            'nama' => 'Produk Tanpa Promo', 'slug' => 'produk-tanpa-promo', 'deskripsi' => 'Uji.',
+            'harga' => 90000, 'stok' => 10, 'berat' => 300, 'status' => 'aktif',
+        ]);
+
+        $this->get(route('flash-sale.index'))
+            ->assertOk()
+            ->assertSee($kampanye->nama)
+            ->assertSee($this->produk->nama)
+            ->assertDontSee($biasa->nama);
+    }
+
+    public function test_halaman_flash_sale_melewatkan_produk_yang_kuotanya_habis(): void
+    {
+        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $this->sertakanProduk($kampanye, kuota: 3);
+        $kampanye->produks()->firstOrFail()->update(['terjual' => 3]);
+
+        $this->get(route('flash-sale.index'))
+            ->assertOk()
+            ->assertDontSee($this->produk->nama)
+            ->assertSee('Tidak ada flash sale yang berjalan');
+    }
+
+    public function test_halaman_flash_sale_menawarkan_jadwal_berikutnya_saat_kosong(): void
+    {
+        $this->buatKampanye([
+            'nama' => 'Kampanye Depan', 'slug' => 'kampanye-depan', 'diikuti' => true,
+            'mulai_at' => Carbon::now()->addDays(2), 'selesai_at' => Carbon::now()->addDays(3),
+        ]);
+
+        $this->get(route('flash-sale.index'))
+            ->assertOk()
+            ->assertSee('Tidak ada flash sale yang berjalan')
+            ->assertSee('Kampanye Depan');
+    }
+
+    public function test_tautan_flash_sale_di_navigasi_mengikuti_ada_tidaknya_promo(): void
+    {
+        $this->get('/')->assertOk()->assertDontSee(route('flash-sale.index'));
+
+        $kampanye = $this->buatKampanye(['diikuti' => true]);
+        $this->sertakanProduk($kampanye);
+
+        $this->get('/')->assertOk()->assertSee(route('flash-sale.index'));
+    }
+
     public function test_kampanye_berjalan_tidak_dapat_dihapus(): void
     {
         $kampanye = $this->buatKampanye(['diikuti' => true]);

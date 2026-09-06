@@ -128,6 +128,51 @@
         @apply relative overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/70 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-100 hover:ring-brand-200;
     }
 
+    /* ---------- Permukaan kaca ---------- */
+    /* Kaca sungguhan butuh dua hal: latar yang nyaris transparan supaya warna
+       di belakangnya terbaca, dan blur yang membiaskannya. Isian putih pekat
+       menghasilkan kartu putih biasa, bukan kaca. */
+    .kaca {
+        @apply relative overflow-hidden rounded-3xl bg-white/20 shadow-elevate ring-1 ring-white/50 backdrop-blur-2xl;
+    }
+
+    /* Sorotan tepi atas — meniru pantulan cahaya pada bibir kaca. */
+    .kaca::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        pointer-events: none;
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 44%);
+    }
+
+    .kaca-gelap {
+        @apply relative overflow-hidden rounded-3xl bg-ink-950/30 shadow-elevate ring-1 ring-white/15 backdrop-blur-2xl;
+    }
+
+    /* ---------- Tombol berkilat ---------- */
+    /* Sapuan cahaya melintas sekali tiap kali kursor masuk, bukan berputar
+       terus, agar tetap terasa sebagai tanggapan atas tindakan pengguna. */
+    .btn-kilat {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+    }
+
+    .btn-kilat::after {
+        content: '';
+        position: absolute;
+        inset: -20% -60%;
+        z-index: -1;
+        transform: translateX(-100%) skewX(-18deg);
+        background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.85) 50%, transparent 100%);
+    }
+
+    .btn-kilat:hover::after,
+    .btn-kilat:focus-visible::after {
+        animation: kilat-tombol 0.85s ease-out;
+    }
+
     /* ---------- Rel geser (carousel) ---------- */
     /* Jumlah kartu per layar diatur lewat --tampil, jadi lebar tiap kartu cukup
        dihitung sekali dan tidak perlu kelas lebar baru di tiap titik henti.
@@ -245,4 +290,9 @@
     .kartu-merchant:hover {
         transform: none;
     }
+}
+
+@keyframes kilat-tombol {
+    from { transform: translateX(-100%) skewX(-18deg); }
+    to   { transform: translateX(100%) skewX(-18deg); }
 }

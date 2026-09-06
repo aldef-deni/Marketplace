@@ -3,6 +3,7 @@
 use App\Http\Controllers\AlamatController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FlashSaleController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\KeranjangController;
 use App\Http\Controllers\NotifikasiController;
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [HomeController::class, 'index'])->name('beranda');
+
+Route::get('/flash-sale', [FlashSaleController::class, 'index'])->name('flash-sale.index');
 
 Route::get('/toko', [TokoController::class, 'index'])->name('toko.index');
 Route::get('/toko/{slug}', [TokoController::class, 'show'])->name('toko.show');

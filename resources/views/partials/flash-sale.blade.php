@@ -5,20 +5,23 @@
 @endphp
 
 @if ($flashSale && $barisFlash->isNotEmpty())
-    <section class="relative overflow-hidden py-12 sm:py-16">
-        {{-- Latar terang berlapis: gradien lembut, dua bola cahaya, dan kilat
-             berulang. Semuanya pointer-events-none agar tidak menghalangi kartu. --}}
-        <div class="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-accent-50 via-white to-brand-50"></div>
-        <div class="pointer-events-none absolute -left-24 top-4 -z-10 h-72 w-72 rounded-full bg-accent-300/40 blur-3xl"></div>
-        <div class="pointer-events-none absolute -right-24 bottom-0 -z-10 h-80 w-80 rounded-full bg-brand-300/35 blur-3xl"></div>
+    <section class="relative py-12 sm:py-16">
+        {{-- Latar dibiarkan tembus ke warna halaman; yang ada hanya bola cahaya
+             yang bergerak pelan. Inilah yang dibiaskan panel kaca di atasnya —
+             tanpa sesuatu di belakangnya, kaca hanya akan terlihat putih. --}}
+        <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+            <div class="absolute -left-20 top-0 h-72 w-72 animate-geser-blob rounded-full bg-accent-400/45 blur-3xl"></div>
+            <div class="absolute right-0 top-16 h-80 w-80 animate-geser-blob-2 rounded-full bg-brand-400/45 blur-3xl"></div>
+            <div class="absolute bottom-0 left-1/3 h-64 w-64 animate-geser-blob-lambat rounded-full bg-rose-400/35 blur-3xl"></div>
+        </div>
 
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/75 via-white/45 to-brand-50/60 p-5 shadow-elevate ring-1 ring-white/70 backdrop-blur-xl sm:p-7 lg:p-8">
-                {{-- Dua lapis gerak: kilat halilintar yang berkedip berkala, dan
+            <div class="kaca p-5 sm:p-7 lg:p-8">
+                {{-- Dua lapis gerak di atas kaca: kilatan halilintar berkala dan
                      sapuan cahaya yang melintas terus-menerus. --}}
-                <div class="pointer-events-none absolute inset-0 animate-kilat bg-gradient-to-br from-white via-accent-100 to-transparent"></div>
+                <div class="pointer-events-none absolute inset-0 animate-kilat bg-gradient-to-br from-white via-white to-accent-200/60"></div>
                 <div class="pointer-events-none absolute inset-0 overflow-hidden">
-                    <div class="absolute inset-y-0 w-full animate-sheen-sweep bg-brand-sheen opacity-70"></div>
+                    <div class="absolute inset-y-0 w-full animate-sheen-sweep bg-kilau-kaca"></div>
                 </div>
 
                 {{-- Kepala: identitas kampanye dan hitung mundur --}}
@@ -34,43 +37,11 @@
                         </h2>
 
                         @if ($flashSale->deskripsi)
-                            <p class="mt-2 max-w-lg text-sm leading-relaxed text-slate-500">{{ $flashSale->deskripsi }}</p>
+                            <p class="mt-2 max-w-lg text-sm leading-relaxed text-slate-600">{{ $flashSale->deskripsi }}</p>
                         @endif
                     </div>
 
-                    {{-- Hitung mundur dimulai dari sisa detik yang dihitung server,
-                         supaya jam perangkat pembeli yang meleset tidak mengubahnya. --}}
-                    <div x-data="{
-                            sisa: {{ $flashSale->sisaDetik() }},
-                            angka(n) { return String(Math.floor(n)).padStart(2, '0') },
-                            get bagian() {
-                                return [
-                                    ['Hari', this.angka(this.sisa / 86400)],
-                                    ['Jam', this.angka((this.sisa % 86400) / 3600)],
-                                    ['Menit', this.angka((this.sisa % 3600) / 60)],
-                                    ['Detik', this.angka(this.sisa % 60)],
-                                ]
-                            },
-                            mulai() { setInterval(() => { if (this.sisa > 0) this.sisa-- }, 1000) },
-                         }"
-                         x-init="mulai()"
-                         class="shrink-0">
-                        <p class="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 lg:text-right">
-                            Berakhir dalam
-                        </p>
-
-                        <div class="flex items-start gap-1.5 sm:gap-2">
-                            <template x-for="(b, i) in bagian" :key="b[0]">
-                                <div class="flex items-start gap-1.5 sm:gap-2">
-                                    <div class="w-14 rounded-2xl bg-white/80 px-1 py-2 text-center shadow-sm ring-1 ring-slate-200/80 backdrop-blur sm:w-16">
-                                        <span class="block text-xl font-extrabold tabular-nums text-slate-900 sm:text-2xl" x-text="b[1]"></span>
-                                        <span class="mt-0.5 block text-[10px] font-bold uppercase tracking-wide text-slate-400" x-text="b[0]"></span>
-                                    </div>
-                                    <span x-show="i < 3" class="pt-2 text-lg font-extrabold text-accent-500 sm:text-xl">:</span>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
+                    @include('partials.flash-hitung-mundur', ['flashSale' => $flashSale])
                 </div>
 
                 {{-- Rel produk. Kartunya berukuran sama dengan kartu di seluruh
@@ -128,6 +99,7 @@
                          :class="seret && '!cursor-grabbing select-none'"
                          @scroll.passive="perbarui()"
                          @pointerdown="turun($event)"
+                         @dragstart.prevent
                          @click.capture="klik($event)">
                         @foreach ($barisFlash as $baris)
                             @include('toko._kartu-produk', ['produk' => $baris->produk])
@@ -142,14 +114,14 @@
                 </div>
 
                 <div class="relative mt-6 flex flex-wrap items-center justify-between gap-3">
-                    <p class="text-xs font-semibold text-slate-400">
+                    <p class="text-xs font-semibold text-slate-500">
                         {{ $barisFlash->count() }} produk ikut kampanye ini
                     </p>
 
-                    <a href="{{ route('toko.index') }}"
-                       class="inline-flex items-center gap-2 rounded-2xl bg-accent-500 px-6 py-3 text-sm font-bold text-ink-950 shadow-accent transition hover:-translate-y-0.5 hover:bg-accent-400">
-                        Lihat Semua Produk
-                        <x-ikon nama="panah-kanan" kelas="h-4 w-4" />
+                    <a href="{{ route('flash-sale.index') }}"
+                       class="btn-kilat inline-flex items-center gap-2 rounded-2xl bg-accent-500 px-6 py-3 text-sm font-bold text-ink-950 shadow-accent transition hover:-translate-y-0.5 hover:bg-accent-400">
+                        <x-ikon nama="petir" kelas="h-4 w-4" />
+                        Lihat Semua Flash Sale
                     </a>
                 </div>
             </div>

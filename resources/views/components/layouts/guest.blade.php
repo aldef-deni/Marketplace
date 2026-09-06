@@ -46,6 +46,16 @@
                 </svg>
             </button>
 
+            {{-- Tautan flash sale hanya muncul saat ada promo berjalan; menu
+                 yang berujung halaman kosong lebih buruk daripada tidak ada. --}}
+            @if ($adaFlashSale ?? false)
+                <a href="{{ route('flash-sale.index') }}"
+                   class="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-accent-400 transition hover:bg-accent-500/10 hover:text-accent-300 sm:flex">
+                    <x-ikon nama="petir" kelas="h-4 w-4 animate-denyut-petir" />
+                    Flash Sale
+                </a>
+            @endif
+
             <a href="{{ route('toko.index') }}"
                class="hidden rounded-lg px-3 py-2 text-sm font-semibold text-ink-300 transition hover:bg-white/5 hover:text-white sm:block">
                 Toko

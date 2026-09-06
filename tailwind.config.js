@@ -76,6 +76,7 @@ export default {
             backgroundImage: {
                 'brand-gradient': 'linear-gradient(120deg, #06203E 0%, #0B5FB0 48%, #F59300 100%)',
                 'brand-sheen': 'linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0) 100%)',
+                'kilau-kaca': 'linear-gradient(115deg, rgba(255,255,255,0) 36%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 64%)',
             },
 
             keyframes: {
@@ -90,11 +91,23 @@ export default {
                 /* Kilatan petir: gelap hampir sepanjang siklus, lalu berkedip
                    dua kali singkat seperti halilintar sungguhan. */
                 'kilat': {
-                    '0%, 86%, 100%': { opacity: '0' },
-                    '88%': { opacity: '0.5' },
-                    '90%': { opacity: '0.06' },
-                    '93%': { opacity: '0.34' },
-                    '96%': { opacity: '0.04' },
+                    '0%, 82%, 100%': { opacity: '0' },
+                    '84%': { opacity: '0.9' },
+                    '87%': { opacity: '0.08' },
+                    '90%': { opacity: '0.65' },
+                    '94%': { opacity: '0.05' },
+                },
+                /* Bola cahaya di belakang panel kaca. Gerakannya pelan dan
+                   terus-menerus supaya kacanya terlihat benar-benar membiaskan
+                   sesuatu, bukan sekadar kotak putih transparan. */
+                'geser-blob': {
+                    '0%, 100%': { transform: 'translate3d(0, 0, 0) scale(1)' },
+                    '33%': { transform: 'translate3d(34px, -26px, 0) scale(1.16)' },
+                    '66%': { transform: 'translate3d(-26px, 20px, 0) scale(0.9)' },
+                },
+                'geser-blob-2': {
+                    '0%, 100%': { transform: 'translate3d(0, 0, 0) scale(1.06)' },
+                    '50%': { transform: 'translate3d(-38px, -30px, 0) scale(0.88)' },
                 },
                 'denyut-petir': {
                     '0%, 100%': { transform: 'scale(1)', filter: 'drop-shadow(0 0 0 rgba(245,147,0,0))' },
@@ -106,6 +119,9 @@ export default {
                 'sheen-sweep': 'sheen-sweep 2.6s ease-in-out infinite',
                 'float-soft': 'float-soft 6s ease-in-out infinite',
                 'kilat': 'kilat 6s ease-in-out infinite',
+                'geser-blob': 'geser-blob 16s ease-in-out infinite',
+                'geser-blob-lambat': 'geser-blob 26s ease-in-out infinite',
+                'geser-blob-2': 'geser-blob-2 20s ease-in-out infinite',
                 'denyut-petir': 'denyut-petir 2.4s ease-in-out infinite',
             },
         },
