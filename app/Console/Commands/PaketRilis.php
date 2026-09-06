@@ -22,11 +22,11 @@ class PaketRilis extends Command
 {
     protected $signature = 'rilis:paket
         {--sejak= : Hanya sertakan berkas yang berubah sejak ref git ini, misal HEAD~1 atau nama tag}
-        {--penuh : Bungkus seluruh aplikasi, bukan hanya perubahan}
+        {--lanjut : Hanya berkas yang berubah sejak rilis terakhir yang dibungkus}
         {--tujuan= : Folder tujuan ZIP (baku: folder Downloads pengguna)}
         {--tanpa-build : Lewati "npm run build"; pakai aset yang sudah ada}';
 
-    protected $description = 'Bungkus perubahan menjadi ZIP siap unggah ke market.arahinn.com';
+    protected $description = 'Bungkus aplikasi menjadi ZIP siap unggah ke market.arahinn.com';
 
     /**
      * Folder dan berkas yang tidak boleh ikut terkirim ke server.
@@ -134,12 +134,16 @@ class PaketRilis extends Command
      */
     private function titikAwal(string $akar): ?string
     {
-        if ($this->option('penuh')) {
-            return null;
-        }
-
         if ($sejak = $this->option('sejak')) {
             return $sejak;
+        }
+
+        // Baku membungkus seluruh aplikasi. Paket sebagian memang jauh lebih
+        // kecil, tetapi satu berkas yang terlewat berubah menjadi galat yang
+        // sulit ditelusuri di server — dan itu sudah dua kali terjadi. Ukuran
+        // beberapa megabita tidak sebanding dengan risikonya pada rilis manual.
+        if (! $this->option('lanjut')) {
+            return null;
         }
 
         $penanda = $akar.DIRECTORY_SEPARATOR.self::BERKAS_PENANDA;
