@@ -29,10 +29,13 @@
 
             {{-- Form --}}
             <div class="p-8 sm:p-12">
+                {{-- Tanpa pelat gelap: berkas logonya sudah transparan, jadi
+                     kotak hitam itu kini murni tempelan yang justru memotong
+                     kartu putihnya. --}}
                 <div class="mb-8 flex justify-center lg:hidden">
-                    <a href="{{ route('beranda') }}" class="logo-plate px-6 py-3.5 transition hover:opacity-90"
+                    <a href="{{ route('beranda') }}" class="inline-flex transition hover:opacity-90"
                        aria-label="{{ config('brand.nama') }} — beranda">
-                        <x-logo varian="landscape" kelas="h-11 w-auto" />
+                        <x-logo varian="landscape" kelas="h-16 w-auto sm:h-20" />
                     </a>
                 </div>
 
