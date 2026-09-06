@@ -69,7 +69,7 @@
 
                 @if ($produks->hasPages())
                     <div class="mt-10">
-                        {{ $produks->links('vendor.pagination.brand') }}
+                        {{ $produks->links('vendor.pagination.brand', ['satuan' => 'produk']) }}
                     </div>
                 @endif
             @else

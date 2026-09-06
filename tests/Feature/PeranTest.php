@@ -55,7 +55,6 @@ class PeranTest extends TestCase
             route('admin.pengiriman.index'),
             route('admin.kategori.index'),
             route('admin.laporan.transaksi'),
-            route('admin.laporan.toko'),
             route('admin.pengguna.index'),
             route('admin.metode-pembayaran.index'),
             route('admin.flash-sale.kampanye.index'),
@@ -137,6 +136,42 @@ class PeranTest extends TestCase
             ->assertRedirect(route('admin.produk.index'));
 
         $this->actingAs($this->pembeli)->get(route('dashboard'))->assertOk();
+    }
+
+    /* ---------- Batas daftar ---------- */
+
+    public function test_daftar_transaksi_dibatasi_dua_puluh_baris_per_halaman(): void
+    {
+        $pembeli = User::factory()->create(['role' => 'pengguna']);
+
+        $alamat = \App\Models\Alamat::create([
+            'user_id' => $pembeli->id, 'label' => 'Rumah',
+            'nama_penerima' => 'Uji', 'no_hp' => '0812',
+            'provinsi' => 'Jabar', 'kota' => 'Bekasi', 'kecamatan' => 'Pondok Gede',
+            'kode_pos' => '17412', 'alamat_lengkap' => 'Jl. Uji', 'is_default' => true,
+        ]);
+
+        // Dua puluh lima pesanan: dua puluh di halaman pertama, lima sisanya
+        // wajib pindah — daftar ini memuat transaksi seluruh toko sekaligus.
+        for ($i = 1; $i <= 25; $i++) {
+            \App\Models\Pesanan::create([
+                'no_invoice' => sprintf('INV-UJI-%04d', $i),
+                'user_id' => $pembeli->id,
+                'alamat_id' => $alamat->id,
+                'subtotal' => 100000, 'ongkir' => 10000, 'total' => 110000,
+                'status' => 'selesai', 'kurir' => 'JNE', 'layanan_kurir' => 'REG',
+            ]);
+        }
+
+        $satu = $this->actingAs($this->superadmin)
+            ->get(route('admin.pesanan.index'))->assertOk()->getContent();
+
+        $this->assertSame(20, substr_count($satu, 'INV-UJI-'));
+
+        $dua = $this->actingAs($this->superadmin)
+            ->get(route('admin.pesanan.index', ['page' => 2]))->assertOk()->getContent();
+
+        $this->assertSame(5, substr_count($dua, 'INV-UJI-'));
     }
 
     /* ---------- Kebersihan data ---------- */

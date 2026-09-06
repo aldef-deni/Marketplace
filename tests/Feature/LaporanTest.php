@@ -81,29 +81,6 @@ class LaporanTest extends TestCase
             ->assertSee('Pembeli Uji');
     }
 
-    public function test_pemilik_toko_tidak_boleh_membuka_laporan_toko(): void
-    {
-        // Pemilik toko hanya berwenang atas lapaknya; laporan lintas toko
-        // adalah pandangan platform.
-        $this->admin = User::factory()->create(['role' => 'admin']);
-
-        $this->actingAs($this->admin)->get(route('admin.laporan.toko'))->assertForbidden();
-        $this->actingAs($this->admin)->get(route('admin.laporan.toko.pdf'))->assertForbidden();
-        $this->actingAs($this->admin)->get(route('admin.laporan.toko.excel'))->assertForbidden();
-    }
-
-    public function test_superadmin_dapat_membuka_laporan_toko(): void
-    {
-        $this->buatPesanan();
-
-        $this->actingAs($this->superadmin)
-            ->get(route('admin.laporan.toko'))
-            ->assertOk()
-            ->assertSee('Kinerja per Kategori')
-            ->assertSee('Produk Laporan')
-            ->assertSee('Elektronik');
-    }
-
     public function test_pembeli_tidak_dapat_membuka_laporan(): void
     {
         $this->actingAs($this->pembeli)->get(route('admin.laporan.transaksi'))->assertForbidden();
@@ -207,19 +184,6 @@ class LaporanTest extends TestCase
 
         // Berkas xlsx berupa arsip zip; tanda tangannya diawali "PK".
         $this->assertStringStartsWith('PK', $respons->streamedContent());
-    }
-
-    public function test_unduhan_laporan_toko_tersedia_bagi_superadmin(): void
-    {
-        $this->buatPesanan();
-
-        $pdf = $this->actingAs($this->superadmin)->get(route('admin.laporan.toko.pdf'));
-        $pdf->assertOk();
-        $this->assertSame('application/pdf', $pdf->headers->get('content-type'));
-
-        $excel = $this->actingAs($this->superadmin)->get(route('admin.laporan.toko.excel'));
-        $excel->assertOk();
-        $this->assertStringStartsWith('PK', $excel->streamedContent());
     }
 
     /**

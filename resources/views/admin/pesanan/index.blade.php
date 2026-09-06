@@ -78,7 +78,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="p-6">{{ $pesanans->links() }}</div>
+        <div class="p-6">{{ $pesanans->links('vendor.pagination.brand', ['satuan' => 'pesanan']) }}</div>
     </div>
 
 </x-layouts.admin>

@@ -78,7 +78,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="p-6">{{ $pengirimans->links() }}</div>
+        <div class="p-6">{{ $pengirimans->links('vendor.pagination.brand', ['satuan' => 'pengiriman']) }}</div>
     </div>
 
 </x-layouts.admin>

@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\DB;
 
 class PesananController extends Controller
 {
+    /**
+     * Baris per halaman. Daftar ini memuat seluruh transaksi lintas toko, jadi
+     * tanpa batas yang tegas satu halaman bisa memuat ribuan baris sekaligus.
+     */
+    private const PER_HALAMAN = 20;
+
     public function index(Request $request)
     {
         $query = Pesanan::with('user', 'items', 'pembayaran.metodePembayaran');
@@ -27,7 +33,7 @@ class PesananController extends Controller
             });
         }
 
-        $pesanans = $query->latest()->paginate(15)->withQueryString();
+        $pesanans = $query->latest()->paginate(self::PER_HALAMAN)->withQueryString();
 
         $jumlahStatus = Pesanan::selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status');
 

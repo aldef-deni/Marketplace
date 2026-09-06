@@ -59,13 +59,6 @@
                 <x-ikon nama="grafik" kelas="h-5 w-5" /> Laporan Transaksi
             </a>
 
-            @if (auth()->user()->isSuperadmin())
-                <a href="{{ route('admin.laporan.toko') }}"
-                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ request()->routeIs('admin.laporan.toko*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30' : 'hover:bg-white/5 hover:text-white' }}">
-                    <x-ikon nama="toko" kelas="h-5 w-5" /> Laporan Toko
-                </a>
-            @endif
-
             @endif
 
             {{-- Judulnya ikut disembunyikan saat tidak ada satu pun menu di
@@ -183,7 +176,6 @@
             <div class="ml-auto flex items-center gap-3">
                 <x-lonceng-notifikasi :gelap="false" />
 
-                <a href="{{ route('produk.index') }}" class="hidden rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 sm:block">Toko</a>
                 <div class="flex items-center gap-2.5 rounded-full bg-slate-50 py-1.5 pl-1.5 pr-4 ring-1 ring-slate-200">
                     <x-avatar :user="auth()->user()" ukuran="h-8 w-8" cincin="ring-1 ring-slate-200" />
                     <div class="hidden sm:block">

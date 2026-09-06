@@ -3,6 +3,11 @@
      Dipakai eksplisit lewat $paginator->links('vendor.pagination.brand'), bukan
      dipasang sebagai bawaan global, supaya tabel di panel admin tidak ikut
      berubah tanpa diminta. --}}
+{{-- Satuan dikirim pemanggilnya lewat links('vendor.pagination.brand',
+     ['satuan' => 'pesanan']); dipaku di sini, daftar pesanan akan berbunyi
+     "30 produk". --}}
+@php ($satuan = $satuan ?? 'data')
+
 @if ($paginator->hasPages())
     <nav role="navigation" aria-label="Navigasi halaman" class="flex flex-col items-center gap-4">
         {{-- Angka halaman disembunyikan di layar sempit; deret angka yang
@@ -62,7 +67,7 @@
 
         <p class="text-xs font-semibold text-slate-400">
             Menampilkan {{ $paginator->firstItem() }}&ndash;{{ $paginator->lastItem() }}
-            dari {{ number_format($paginator->total()) }} produk
+            dari {{ number_format($paginator->total()) }} {{ $satuan }}
         </p>
     </nav>
 @endif

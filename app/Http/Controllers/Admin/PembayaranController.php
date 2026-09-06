@@ -10,6 +10,12 @@ use Illuminate\Support\Carbon;
 
 class PembayaranController extends Controller
 {
+    /**
+     * Baris per halaman. Daftar ini memuat seluruh transaksi lintas toko, jadi
+     * tanpa batas yang tegas satu halaman bisa memuat ribuan baris sekaligus.
+     */
+    private const PER_HALAMAN = 20;
+
     public function index(Request $request)
     {
         $query = Pembayaran::with('pesanan.user', 'metodePembayaran');
@@ -23,7 +29,7 @@ class PembayaranController extends Controller
                 ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$q}%")));
         }
 
-        $pembayarans = $query->latest()->paginate(15)->withQueryString();
+        $pembayarans = $query->latest()->paginate(self::PER_HALAMAN)->withQueryString();
 
         $jumlahStatus = Pembayaran::selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status');
 

@@ -194,19 +194,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     });
 
     /*
-    | Laporan transaksi terbuka bagi admin dan superadmin; laporan toko —
-    | kondisi katalog dan kinerja produk — khusus superadmin.
+    | Laporan transaksi — khusus superadmin.
     */
     Route::prefix('laporan')->name('laporan.')->middleware('role:superadmin')->group(function () {
         Route::get('/transaksi', [App\Http\Controllers\Admin\LaporanController::class, 'transaksi'])->name('transaksi');
         Route::get('/transaksi/pdf', [App\Http\Controllers\Admin\LaporanController::class, 'transaksiPdf'])->name('transaksi.pdf');
         Route::get('/transaksi/excel', [App\Http\Controllers\Admin\LaporanController::class, 'transaksiExcel'])->name('transaksi.excel');
-
-        Route::middleware('role:superadmin')->group(function () {
-            Route::get('/toko', [App\Http\Controllers\Admin\LaporanController::class, 'toko'])->name('toko');
-            Route::get('/toko/pdf', [App\Http\Controllers\Admin\LaporanController::class, 'tokoPdf'])->name('toko.pdf');
-            Route::get('/toko/excel', [App\Http\Controllers\Admin\LaporanController::class, 'tokoExcel'])->name('toko.excel');
-        });
     });
 
     Route::prefix('pengguna')->name('pengguna.')->middleware('role:superadmin')->group(function () {
