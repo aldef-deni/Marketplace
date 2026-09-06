@@ -108,6 +108,22 @@ class PeranTest extends TestCase
         $this->actingAs($this->pembeli)->get(route('admin.toko.index'))->assertForbidden();
     }
 
+    public function test_tautan_lihat_toko_hanya_untuk_pemilik_lapak(): void
+    {
+        $superadmin = $this->actingAs($this->superadmin)
+            ->get(route('admin.dashboard'))->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('Lihat Toko', $superadmin,
+            'Superadmin tidak punya lapak untuk dilihat.');
+
+        // Pemilik toko mendapat tautan ke lapaknya sendiri, bukan ke beranda.
+        $pemilik = $this->actingAs($this->pemilikToko)
+            ->get(route('admin.produk.index'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('Lihat Toko Saya', $pemilik);
+        $this->assertStringContainsString(route('toko.show', 'lapak-uji'), $pemilik);
+    }
+
     /* ---------- Pengalihan sesudah masuk ---------- */
 
     public function test_setiap_peran_mendarat_di_halaman_yang_dapat_dibukanya(): void

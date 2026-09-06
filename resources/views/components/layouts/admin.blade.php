@@ -138,9 +138,21 @@
         </nav>
 
         <div class="border-t border-white/5 p-4">
-            <a href="{{ route('beranda') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-white/5">
-                <x-ikon nama="rumah" kelas="h-5 w-5" /> Lihat Toko
-            </a>
+            {{-- Tautan ini milik pemilik toko dan mengarah ke lapaknya sendiri.
+                 Superadmin tidak punya lapak untuk dilihat, dan menautkannya ke
+                 beranda etalase hanya mengulang tombol Toko di kanan atas. --}}
+            @php
+                $lapakSaya = auth()->user()->isPemilikToko()
+                    ? \App\Models\Toko::tampil()->where('user_id', auth()->id())->first()
+                    : null;
+            @endphp
+
+            @if ($lapakSaya)
+                <a href="{{ route('toko.show', $lapakSaya->slug) }}" target="_blank" rel="noopener"
+                   class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-white/5">
+                    <x-ikon nama="toko" kelas="h-5 w-5" /> Lihat Toko Saya
+                </a>
+            @endif
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-rose-400 transition hover:bg-white/5">
