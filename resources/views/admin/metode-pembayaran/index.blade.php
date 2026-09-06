@@ -36,6 +36,14 @@
                     @php
                         $siap = $metode->siapDipakai();
                         $butuhNomor = $metode->tipe !== 'cod';
+
+                        // old() berlaku untuk seluruh halaman, sedangkan halaman
+                        // ini memuat satu formulir per metode. Tanpa penanda ini,
+                        // kegagalan di satu kartu akan mengisi ulang semua kartu
+                        // dengan nilai yang bukan miliknya.
+                        $disunting = session('metode_disunting') === $metode->id;
+                        $galat = $errors->getBag('metode'.$metode->id);
+                        $isi = fn (string $kunci, $baku) => $disunting ? old($kunci, $baku) : $baku;
                     @endphp
 
                     <form action="{{ route('admin.metode-pembayaran.update', $metode) }}" method="POST"
@@ -69,7 +77,7 @@
                             <div class="sm:col-span-2">
                                 <label class="label-field">Nama Metode *</label>
                                 <input type="text" name="nama" class="input-field" required maxlength="100"
-                                       value="{{ old('nama', $metode->nama) }}">
+                                       value="{{ $isi('nama', $metode->nama) }}">
                             </div>
 
                             <div>
@@ -78,7 +86,7 @@
                                     @if ($butuhNomor) <span class="text-rose-500">*</span> @endif
                                 </label>
                                 <input type="text" name="nomor_rekening" class="input-field" maxlength="50"
-                                       value="{{ old('nomor_rekening', $metode->nomor_rekening) }}"
+                                       value="{{ $isi('nomor_rekening', $metode->nomor_rekening) }}"
                                        placeholder="{{ $butuhNomor ? 'Wajib agar metode ini tampil' : 'Tidak diperlukan untuk COD' }}">
                                 @if ($butuhNomor)
                                     <p class="mt-1 text-[11px] text-slate-400">Dikosongkan berarti metode ini disembunyikan.</p>
@@ -88,20 +96,20 @@
                             <div>
                                 <label class="label-field">Atas Nama</label>
                                 <input type="text" name="atas_nama" class="input-field" maxlength="100"
-                                       value="{{ old('atas_nama', $metode->atas_nama) }}">
+                                       value="{{ $isi('atas_nama', $metode->atas_nama) }}">
                             </div>
 
                             <div>
                                 <label class="label-field">Label Lencana Footer</label>
                                 <input type="text" name="label_pendek" class="input-field" maxlength="30"
-                                       value="{{ old('label_pendek', $metode->label_pendek) }}"
+                                       value="{{ $isi('label_pendek', $metode->label_pendek) }}"
                                        placeholder="Contoh: BCA">
                             </div>
 
                             <div>
                                 <label class="label-field">Warna Merchant</label>
                                 <div class="flex items-center gap-2">
-                                    <input type="color" name="warna" value="{{ old('warna', $metode->warna_merchant) }}"
+                                    <input type="color" name="warna" value="{{ $isi('warna', $metode->warna_merchant) }}"
                                            class="h-[42px] w-14 cursor-pointer rounded-xl border border-slate-300 bg-white p-1">
                                     {{-- Pratinjau memakai warnanya langsung, bukan
                                          kelas .kartu-merchant yang baru berwarna
@@ -117,7 +125,7 @@
                             <div class="sm:col-span-2">
                                 <label class="label-field">Instruksi Pembayaran</label>
                                 <textarea name="instruksi" rows="2" class="input-field"
-                                          maxlength="500">{{ old('instruksi', $metode->instruksi) }}</textarea>
+                                          maxlength="500">{{ $isi('instruksi', $metode->instruksi) }}</textarea>
                             </div>
                         </div>
 
@@ -129,6 +137,10 @@
                             </label>
 
                             <button class="btn-primary btn-sm">Simpan</button>
+
+                            @if ($galat->isNotEmpty())
+                                <p class="text-xs font-semibold text-rose-600">{{ $galat->first() }}</p>
+                            @endif
 
                             <span class="ml-auto">
                                 <button type="submit" form="hapus-{{ $metode->id }}"

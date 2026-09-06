@@ -130,6 +130,62 @@ class MetodePembayaranTest extends TestCase
             ->assertSee('Nomor belum diisi');
     }
 
+    public function test_menyunting_satu_kartu_tidak_menuntut_mengirim_ulang_tipenya(): void
+    {
+        $metode = $this->buat();
+
+        // Formulir per baris tidak menampilkan pilihan tipe — tipenya sudah
+        // melekat pada metode itu. Mewajibkannya membuat setiap penyimpanan
+        // gagal diam-diam.
+        $this->actingAs($this->superadmin)
+            ->from(route('admin.metode-pembayaran.index'))
+            ->patch(route('admin.metode-pembayaran.update', $metode), [
+                'nama' => 'Bank BCA',
+                'nomor_rekening' => '8830 1234 5678',
+                'warna' => '#123456',
+                'aktif' => '1',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $metode->refresh();
+
+        $this->assertSame('Bank BCA', $metode->nama);
+        $this->assertSame('#123456', $metode->warna);
+        $this->assertSame('transfer', $metode->tipe, 'Tipe lama harus dipertahankan.');
+    }
+
+    public function test_gagal_menyunting_satu_kartu_tidak_mengubah_isian_kartu_lain(): void
+    {
+        $bca = $this->buat();
+        $bni = $this->buat(['nama' => 'Transfer Bank BNI', 'label_pendek' => 'BNI', 'warna' => '#F05A22']);
+
+        // Warna tidak sah pada satu kartu; kartu lain tidak boleh ikut
+        // menampilkan nilai yang barusan diketik di kartu yang gagal.
+        $halaman = $this->actingAs($this->superadmin)
+            ->from(route('admin.metode-pembayaran.index'))
+            ->patch(route('admin.metode-pembayaran.update', $bca), [
+                'nama' => 'Bank BCA',
+                'warna' => 'bukan-warna',
+            ])
+            ->assertRedirect(route('admin.metode-pembayaran.index'));
+
+        $isi = $this->actingAs($this->superadmin)
+            ->get(route('admin.metode-pembayaran.index'))
+            ->assertOk()
+            ->getContent();
+
+        // Kartu yang gagal memang menyimpan isiannya — itu gunanya old(). Yang
+        // dibuktikan di sini: nilainya muncul tepat sekali, tidak menular.
+        $this->assertSame(1, substr_count($isi, 'value="Bank BCA"'),
+            'Nama yang gagal disimpan hanya boleh muncul di kartunya sendiri.');
+
+        $this->assertStringContainsString('value="Transfer Bank BNI"', $isi,
+            'Kartu lain harus tetap menampilkan nilainya sendiri.');
+
+        $this->assertStringContainsString('#F05A22', $isi,
+            'Warna kartu lain harus tetap seperti tersimpan.');
+    }
+
     public function test_warna_harus_berupa_kode_heksadesimal(): void
     {
         $metode = $this->buat();
@@ -142,7 +198,8 @@ class MetodePembayaranTest extends TestCase
                 'tipe' => 'transfer',
                 'warna' => 'merah; background: url(x)',
             ])
-            ->assertSessionHasErrors('warna');
+            // Galat dikantongi per metode supaya kartu lain tidak ikut menyala.
+            ->assertSessionHasErrors('warna', null, 'metode'.$metode->id);
     }
 
     public function test_hanya_superadmin_yang_dapat_mengelola(): void
