@@ -148,7 +148,7 @@ penjualan tujuh hari, produk terlaris, dan peringatan stok menipis.
 
 <div align="center">
 
-<strong>DEVELOP BY</strong>
+<strong>DEVELOPED BY</strong>
 
 <br>
 
