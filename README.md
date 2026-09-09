@@ -134,106 +134,6 @@ diunduh sebagai **PDF** dan **Excel** dengan kriteria yang sedang aktif.
 Dibatasi middleware `role`. Dashboard admin menampilkan pendapatan, grafik
 penjualan tujuh hari, produk terlaris, dan peringatan stok menipis.
 
----
-
-## Menjalankan di Lokal
-
-**Prasyarat:** PHP ≥ 8.2 (`pdo_mysql`, `gd`, `fileinfo`, `mbstring`),
-Composer 2.x, Node.js ≥ 20, MySQL/MariaDB.
-
-```bash
-composer install
-npm install && npm run build
-
-cp .env.example .env
-php artisan key:generate
-```
-
-Sesuaikan kredensial database di `.env`, lalu:
-
-```bash
-php artisan migrate --seed
-php artisan serve
-```
-
-Buka **http://127.0.0.1:8000**.
-
-> Bila memakai XAMPP/Laragon, nyalakan MySQL lebih dulu.
-
-### Akun Demo
-
-| Peran | Email | Kata Sandi |
-|-------|-------|------------|
-| Superadmin | `superadmin@arahinn.com` | `password` |
-| Admin | `admin@arahinn.com` | `password` |
-| Pengguna | `pengguna@arahinn.com` | `password` |
-
-> Ganti ketiga kata sandi ini sebelum situs dibuka untuk umum.
-
----
-
-## Deploy ke market.arahinn.com
-
-Panduan lengkap — termasuk struktur folder, konfigurasi Apache/Nginx,
-dan langkah pembaruan berkala — ada di **[DEPLOY.md](DEPLOY.md)**.
-
-Membuat paket rilis siap unggah:
-
-```bash
-php artisan rilis:paket
-```
-
-Perintah ini menghasilkan `market-arahinn-<tanggal>.zip` di folder `Downloads`,
-berisi kode aplikasi beserta aset yang sudah di-build, tanpa `vendor/`,
-`node_modules/`, `.env`, maupun berkas pengembangan.
-
----
-
-## Pengujian
-
-```bash
-php artisan test
-```
-
-Mencakup autentikasi (termasuk alur Google SSO dengan Socialite yang
-dipalsukan), profil, aksesibilitas halaman publik, konsistensi identitas
-merek, dan kelengkapan set ikon.
-
----
-
-## Struktur Database
-
-| Tabel | Isi |
-|-------|-----|
-| `users` | Pengguna, peran, dan `google_id` untuk akun tertaut Google |
-| `kategoris` | Kategori produk (kolom `ikon` menyimpan nama ikon `<x-ikon>`) |
-| `produks` | Produk: harga, stok, berat, gambar, status |
-| `keranjangs` | Keranjang belanja |
-| `alamats` | Buku alamat pengguna |
-| `pesanans` | Pesanan: no. invoice, status, kurir, total |
-| `pesanan_items` | Rincian item pesanan |
-| `metode_pembayarans` | Transfer, e-wallet, COD |
-| `pembayarans` | Bukti bayar, status, verifikasi |
-| `pengirimans` | Kurir, resi, status |
-
-## Route Utama
-
-| URL | Deskripsi |
-|-----|-----------|
-| `/` | Beranda |
-| `/toko` | Katalog produk |
-| `/keranjang` | Keranjang belanja |
-| `/checkout` | Checkout |
-| `/pesanan` | Pesanan saya |
-| `/dashboard` | Dashboard pengguna |
-| `/admin` | Dashboard admin |
-| `/admin/produk` | Manajemen produk |
-| `/admin/pesanan` | Manajemen pesanan |
-| `/admin/pembayaran` | Verifikasi pembayaran |
-| `/admin/pengiriman` | Manajemen pengiriman |
-| `/admin/pengguna` | Manajemen pengguna (superadmin) |
-| `/admin/metode-pembayaran` | Kelola metode bayar (superadmin) |
-
 ## Teknologi
 
 - **Laravel 12** — kerangka backend
@@ -248,6 +148,32 @@ merek, dan kelengkapan set ikon.
 
 <div align="center">
 
-&copy; 2026 Market ArahInn &mdash; bagian dari ArahInn
+<strong>DEVELOP BY</strong>
+
+<br>
+
+<a href="https://aldeftech.com" target="_blank">
+  <img src="https://raw.githubusercontent.com/aldef-deni/aldeftech.com/master/public/images/logo.png" width="360" alt="Logo Aldef Tech">
+</a>
 
 </div>
+
+<p align="center">
+  <strong>JIKA BERMINAT UNTUK KUSTOMISASI BISA MENGHUBUNGI DENI AFRIZAL</strong>
+</p>
+
+<p align="center">
+  <a href="https://wa.me/628128968609" target="_blank">
+    <img src="https://img.shields.io/badge/WhatsApp-Hubungi_Deni_Afrizal-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" alt="Hubungi Deni Afrizal melalui WhatsApp">
+  </a>
+</p>
+
+## Kontak
+
+Punya kebutuhan sistem, aplikasi, SaaS, integrasi, atau otomasi AI? Kunjungi [aldeftech.com/contact](https://aldeftech.com/contact) untuk mendiskusikan kebutuhan bisnis Anda bersama Aldef Tech.
+
+---
+
+<p align="center">
+  &copy; Aldef Tech. Seluruh hak cipta dilindungi.
+</p>
