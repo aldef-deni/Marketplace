@@ -27,6 +27,10 @@ class CekSistem extends Command
 
     private int $peringatan = 0;
 
+    /** Basis data dapat dihubungi. Selama false, pemeriksaan apa pun yang
+     *  menyentuhnya harus mundur — bukan melempar galat yang sama berulang. */
+    private bool $dbHidup = false;
+
     public function handle(): int
     {
         $this->newLine();
@@ -36,15 +40,22 @@ class CekSistem extends Command
         $this->periksaVersi();
 
         $this->bagian('Basis data');
-        $this->periksaKoneksi();
-        $this->periksaTipeAngka();
-        $this->periksaTabel();
-        $this->periksaKolom();
-        $this->periksaMigrasi();
 
-        $this->periksaPeran();
-
-        $this->periksaAkunInduk();
+        // Tanpa koneksi, seluruh pemeriksaan skema hanya akan melempar galat
+        // yang sama berulang kali. Dilewati saja, lalu lanjut ke bagian yang
+        // tidak bergantung pada basis data — justru bagian itulah yang paling
+        // sering menjelaskan kenapa koneksinya gagal.
+        if ($this->dbHidup = $this->periksaKoneksi()) {
+            $this->periksaTipeAngka();
+            $this->periksaTabel();
+            $this->periksaKolom();
+            $this->periksaMigrasi();
+            $this->periksaPeran();
+            $this->periksaAkunInduk();
+        } else {
+            $this->peringatan('Pemeriksaan skema', 'dilewati selama basis data tidak terhubung');
+            $this->petunjuk('Pastikan layanan MySQL berjalan dan kredensial pada .env benar, lalu ulangi perintah ini.');
+        }
 
         $this->bagian('Paket & dependensi');
         $this->periksaPaket();
@@ -76,13 +87,20 @@ class CekSistem extends Command
         return self::SUCCESS;
     }
 
-    private function periksaKoneksi(): void
+    /**
+     * @return bool apakah basis data benar-benar dapat dihubungi
+     */
+    private function periksaKoneksi(): bool
     {
         try {
             DB::connection()->getPdo();
             $this->ok('Koneksi basis data', config('database.connections.'.config('database.default').'.database'));
+
+            return true;
         } catch (Throwable $e) {
             $this->salah('Koneksi basis data', Str::limit($e->getMessage(), 70));
+
+            return false;
         }
     }
 
@@ -280,7 +298,7 @@ class CekSistem extends Command
 
     private function periksaJalurBukti(): void
     {
-        if (! Schema::hasTable('pembayarans')) {
+        if (! $this->dbHidup || ! Schema::hasTable('pembayarans')) {
             return;
         }
 
