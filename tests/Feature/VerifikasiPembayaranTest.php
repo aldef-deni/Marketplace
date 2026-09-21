@@ -64,7 +64,7 @@ class VerifikasiPembayaranTest extends TestCase
         $this->actingAs($this->pembeli)->post(route('checkout.store'), [
             'alamat_id' => $this->pembeli->alamats()->first()->id,
             'kurir' => 'JNE',
-            'metode_pembayaran_id' => MetodePembayaran::first()->id,
+            'metode_pembayaran_id' => MetodePembayaran::whereNull('gateway')->first()->id,
         ]);
 
         return $this->pembeli->pesanans()->firstOrFail();

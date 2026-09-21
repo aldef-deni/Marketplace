@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Midtrans;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,12 +12,13 @@ class MetodePembayaran extends Model
     public const TIPE = ['transfer', 'ewallet', 'cod'];
 
     protected $fillable = [
-        'nama', 'label_pendek', 'tipe', 'nomor_rekening', 'atas_nama',
-        'logo', 'warna', 'instruksi', 'aktif',
+        'nama', 'label_pendek', 'tipe', 'gateway', 'saluran', 'nomor_rekening',
+        'atas_nama', 'logo', 'warna', 'instruksi', 'aktif',
     ];
 
     protected $casts = [
         'aktif' => 'boolean',
+        'saluran' => 'array',
     ];
 
     public function pembayarans(): HasMany
@@ -33,10 +35,20 @@ class MetodePembayaran extends Model
      */
     public function scopeSiap(Builder $q): Builder
     {
-        return $q->where('aktif', true)
-            ->where(fn (Builder $s) => $s->where('tipe', 'cod')
-                ->orWhere(fn (Builder $t) => $t->whereNotNull('nomor_rekening')
-                    ->where('nomor_rekening', '!=', '')));
+        $q->where('aktif', true);
+
+        // Metode bergerbang tidak punya nomor tujuan — yang menentukan siap
+        // atau tidaknya adalah kredensial Midtrans di server. Selama itu belum
+        // terpasang, metodenya disembunyikan sama sekali, bukan ditawarkan
+        // lalu gagal saat pembeli menekan bayar.
+        if (! Midtrans::aktif()) {
+            $q->whereNull('gateway');
+        }
+
+        return $q->where(fn (Builder $s) => $s->whereNotNull('gateway')
+            ->orWhere('tipe', 'cod')
+            ->orWhere(fn (Builder $t) => $t->whereNotNull('nomor_rekening')
+                ->where('nomor_rekening', '!=', '')));
     }
 
     public function siapDipakai(): bool
@@ -45,7 +57,19 @@ class MetodePembayaran extends Model
             return false;
         }
 
+        if ($this->viaGateway()) {
+            return Midtrans::aktif();
+        }
+
         return $this->tipe === 'cod' || filled($this->nomor_rekening);
+    }
+
+    /**
+     * Pembayarannya diverifikasi gerbang, bukan oleh admin.
+     */
+    public function viaGateway(): bool
+    {
+        return filled($this->gateway);
     }
 
     /**
@@ -55,6 +79,8 @@ class MetodePembayaran extends Model
     {
         return match (true) {
             ! $this->aktif => 'Dinonaktifkan',
+            $this->viaGateway() && ! Midtrans::aktif() => 'Midtrans belum disetel di server',
+            $this->viaGateway() => null,
             $this->tipe !== 'cod' && blank($this->nomor_rekening) => 'Nomor belum diisi',
             default => null,
         };
@@ -75,6 +101,12 @@ class MetodePembayaran extends Model
 
     public function getLabelTipeAttribute(): string
     {
+        // Yang membedakan metode bergerbang di mata pembeli bukan bentuknya,
+        // melainkan bahwa pembayarannya tercatat sendiri.
+        if ($this->viaGateway()) {
+            return 'Bayar Otomatis';
+        }
+
         return match ($this->tipe) {
             'transfer' => 'Transfer Bank',
             'ewallet' => 'E-Wallet',

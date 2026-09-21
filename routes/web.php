@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FlashSaleController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\KeranjangController;
+use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\PesananController;
 use App\Http\Controllers\ProdukController;
@@ -22,6 +23,16 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('beranda');
 
 Route::get('/flash-sale', [FlashSaleController::class, 'index'])->name('flash-sale.index');
+
+/*
+| Notifikasi pembayaran Midtrans.
+|
+| Sengaja di luar seluruh grup auth: pengirimnya server Midtrans, yang tidak
+| punya sesi dan tidak pernah bisa masuk. Keasliannya diperiksa lewat tanda
+| tangan SHA512 dengan Server Key, bukan lewat login.
+*/
+Route::post('/midtrans/notifikasi', [MidtransController::class, 'notifikasi'])
+    ->name('midtrans.notifikasi');
 
 /* Katalog produk lintas toko. */
 Route::get('/produk', [ProdukController::class, 'index'])->name('produk.index');
@@ -65,6 +76,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [PesananController::class, 'index'])->name('index');
         Route::get('/{noInvoice}', [PesananController::class, 'show'])->name('show');
         Route::post('/{pesanan}/bayar', [PesananController::class, 'uploadBukti'])->name('bayar');
+
+        /*
+        | Pembayaran lewat gerbang. Dipisah dari unggah bukti karena alurnya
+        | berbeda sejak awal: tidak ada berkas yang dikirim pembeli, dan yang
+        | menyatakan lunas adalah Midtrans.
+        */
+        Route::post('/{pesanan}/midtrans', [MidtransController::class, 'mulai'])->name('midtrans.mulai');
+        Route::post('/{pesanan}/midtrans/periksa', [MidtransController::class, 'periksa'])->name('midtrans.periksa');
         Route::post('/{pesanan}/terima', [PesananController::class, 'konfirmasiTerima'])->name('terima');
         Route::post('/{pesanan}/batalkan', [PesananController::class, 'batalkan'])->name('batalkan');
         Route::get('/{noInvoice}/cetak', [PesananController::class, 'cetak'])->name('cetak');

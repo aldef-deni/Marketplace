@@ -17,6 +17,8 @@ class Pembayaran extends Model
     protected $fillable = [
         'pesanan_id', 'metode_pembayaran_id', 'kode', 'jumlah', 'status',
         'bukti', 'nama_pengirim', 'dibayar_at', 'keterangan',
+        'gateway', 'order_id_gateway', 'kanal_gateway', 'snap_token',
+        'snap_url', 'payload_gateway',
     ];
 
     protected $casts = [
@@ -24,6 +26,7 @@ class Pembayaran extends Model
         'metode_pembayaran_id' => 'integer',
         'jumlah' => 'decimal:0',
         'dibayar_at' => 'datetime',
+        'payload_gateway' => 'array',
     ];
 
     public function pesanan(): BelongsTo
@@ -44,9 +47,29 @@ class Pembayaran extends Model
      */
     public function menungguPenilaian(): bool
     {
+        // Pembayaran bergerbang tidak pernah menunggu penilaian: Midtrans yang
+        // menyatakan lunas, dan tombol verifikasi manual di atasnya hanya akan
+        // membuka celah untuk meluluskan pesanan yang belum dibayar.
         return $this->status === 'menunggu'
             && filled($this->bukti)
+            && ! $this->viaGateway()
             && $this->metodePembayaran?->tipe !== 'cod';
+    }
+
+    /**
+     * Ditangani gerbang pembayaran, bukan lewat bukti unggahan.
+     */
+    public function viaGateway(): bool
+    {
+        return filled($this->gateway);
+    }
+
+    /**
+     * Masih bisa dibayar: belum lunas dan belum dibatalkan.
+     */
+    public function bisaDibayar(): bool
+    {
+        return $this->status === 'menunggu';
     }
 
     public function ditolak(): bool

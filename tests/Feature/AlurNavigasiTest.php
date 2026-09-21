@@ -125,7 +125,7 @@ class AlurNavigasiTest extends TestCase
         $this->actingAs($orangLain)->post(route('checkout.store'), [
             'alamat_id' => $orangLain->alamats()->first()->id,
             'kurir' => 'JNE',
-            'metode_pembayaran_id' => MetodePembayaran::first()->id,
+            'metode_pembayaran_id' => MetodePembayaran::whereNull('gateway')->first()->id,
         ]);
 
         $pesanan = $orangLain->pesanans()->firstOrFail();
@@ -149,7 +149,7 @@ class AlurNavigasiTest extends TestCase
         $this->actingAs($this->pembeli)->post(route('checkout.store'), [
             'alamat_id' => $this->pembeli->alamats()->first()->id,
             'kurir' => 'JNE',
-            'metode_pembayaran_id' => MetodePembayaran::first()->id,
+            'metode_pembayaran_id' => MetodePembayaran::whereNull('gateway')->first()->id,
         ]);
 
         $pesanan = $this->pembeli->pesanans()->firstOrFail();

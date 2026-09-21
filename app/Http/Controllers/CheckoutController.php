@@ -123,8 +123,16 @@ class CheckoutController extends Controller
                 'metode_pembayaran_id' => $metode->id,
                 'kode' => 'PAY-'.$pesanan->no_invoice.'-'.Str::upper(Str::random(4)),
                 'jumlah' => $subtotal + $ongkir,
-                'status' => $metode->tipe === 'cod' ? 'menunggu' : 'menunggu',
-                'keterangan' => $metode->tipe === 'cod' ? 'Pembayaran dilakukan saat pesanan diterima (COD).' : null,
+                'status' => 'menunggu',
+                // Dicatat sejak awal, bukan saat tagihan dibuat: dari sinilah
+                // halaman pesanan tahu harus menawarkan tombol bayar otomatis
+                // alih-alih kolom unggah bukti.
+                'gateway' => $metode->gateway,
+                'keterangan' => match (true) {
+                    $metode->tipe === 'cod' => 'Pembayaran dilakukan saat pesanan diterima (COD).',
+                    $metode->viaGateway() => 'Menunggu pembayaran lewat '.$metode->nama.'.',
+                    default => null,
+                },
             ]);
 
             auth()->user()->keranjangs()->delete();

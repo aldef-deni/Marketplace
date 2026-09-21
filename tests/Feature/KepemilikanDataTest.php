@@ -78,7 +78,7 @@ class KepemilikanDataTest extends TestCase
         $this->actingAs($pembeli)->post(route('checkout.store'), [
             'alamat_id' => $pembeli->alamats()->first()->id,
             'kurir' => 'JNE',
-            'metode_pembayaran_id' => MetodePembayaran::first()->id,
+            'metode_pembayaran_id' => MetodePembayaran::whereNull('gateway')->first()->id,
         ]);
 
         $pesanan = $pembeli->pesanans()->firstOrFail();

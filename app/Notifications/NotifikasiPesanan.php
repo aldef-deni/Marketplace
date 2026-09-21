@@ -40,6 +40,12 @@ class NotifikasiPesanan extends Notification
             'judul' => 'Pembayaran terverifikasi',
             'ikon' => 'centang', 'nada' => 'emerald', 'untuk' => 'pembeli',
         ],
+        // Dibedakan dari bukti_diunggah: yang ini tidak menuntut tindakan
+        // admin, hanya mengabarkan uang sudah masuk lewat gerbang.
+        'pembayaran_otomatis' => [
+            'judul' => 'Pembayaran otomatis diterima',
+            'ikon' => 'centang', 'nada' => 'emerald', 'untuk' => 'admin',
+        ],
         'pembayaran_ditolak' => [
             'judul' => 'Bukti pembayaran ditolak',
             'ikon' => 'peringatan', 'nada' => 'rose', 'untuk' => 'pembeli',
@@ -116,6 +122,7 @@ class NotifikasiPesanan extends Notification
             'pesanan_baru' => "{$invoice} dari {$this->pesanan->user?->name} senilai {$total}.",
             'bukti_diunggah' => "Pembeli mengunggah bukti pembayaran untuk {$invoice}.",
             'pembayaran_diverifikasi' => "Pembayaran {$invoice} sudah kami terima.",
+            'pembayaran_otomatis' => "{$invoice} senilai {$total} lunas lewat gerbang pembayaran.",
             'pembayaran_ditolak' => "Bukti pembayaran {$invoice} belum sesuai. Silakan unggah ulang.",
             'pesanan_diproses' => "Pesanan {$invoice} sedang kami siapkan.",
             'pesanan_dikirim' => "Pesanan {$invoice} dikirim via {$this->pesanan->kurir}"

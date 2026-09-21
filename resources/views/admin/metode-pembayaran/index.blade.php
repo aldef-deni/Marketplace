@@ -26,7 +26,7 @@
     <div class="mt-6 grid gap-6 lg:grid-cols-3">
         {{-- Daftar metode, tiap baris dapat disunting langsung --}}
         <div class="space-y-4 lg:col-span-2">
-            @foreach ($metodes->groupBy('tipe') as $tipe => $kelompok)
+            @foreach ($metodes->groupBy(fn ($m) => $m->viaGateway() ? 'gateway' : $m->tipe) as $tipe => $kelompok)
                 <div class="flex items-center gap-2">
                     <span class="badge {{ $kelompok->first()->warna_tipe }}">{{ $kelompok->first()->label_tipe }}</span>
                     <span class="text-xs font-semibold text-slate-400">{{ $kelompok->count() }} metode</span>
@@ -35,7 +35,7 @@
                 @foreach ($kelompok as $metode)
                     @php
                         $siap = $metode->siapDipakai();
-                        $butuhNomor = $metode->tipe !== 'cod';
+                        $butuhNomor = $metode->tipe !== 'cod' && ! $metode->viaGateway();
 
                         // old() berlaku untuk seluruh halaman, sedangkan halaman
                         // ini memuat satu formulir per metode. Tanpa penanda ini,
@@ -80,6 +80,26 @@
                                        value="{{ $isi('nama', $metode->nama) }}">
                             </div>
 
+                            @if ($metode->viaGateway())
+                                {{-- Tidak ada nomor tujuan yang bisa diisi: uangnya masuk
+                                     lewat Midtrans, bukan ke rekening yang diketik di sini.
+                                     Kanalnya pun dikunci di config, bukan di halaman ini,
+                                     supaya satu salah ketik tidak memunculkan kartu kredit
+                                     atau virtual account di halaman pembayaran. --}}
+                                <div class="sm:col-span-2">
+                                    <label class="label-field">Kanal Midtrans</label>
+                                    <div class="flex flex-wrap gap-1.5 rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200/70">
+                                        @forelse ((array) $metode->saluran as $kanal)
+                                            <span class="badge bg-brand-50 text-brand-700 ring-brand-200">{{ $kanal }}</span>
+                                        @empty
+                                            <span class="text-xs text-slate-400">Belum ada kanal</span>
+                                        @endforelse
+                                    </div>
+                                    <p class="mt-1 text-[11px] text-slate-400">
+                                        Ditetapkan di config/midtrans.php dan tidak dapat diubah dari halaman ini.
+                                    </p>
+                                </div>
+                            @else
                             <div>
                                 <label class="label-field">
                                     Nomor {{ $metode->tipe === 'ewallet' ? 'E-Wallet' : 'Rekening' }}
@@ -98,6 +118,7 @@
                                 <input type="text" name="atas_nama" class="input-field" maxlength="100"
                                        value="{{ $isi('atas_nama', $metode->atas_nama) }}">
                             </div>
+                            @endif
 
                             <div>
                                 <label class="label-field">Label Lencana Footer</label>

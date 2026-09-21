@@ -19,6 +19,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // Subdomain dilayani di balik proxy/load balancer ArahInn, sehingga
         // X-Forwarded-* perlu dipercaya agar skema HTTPS dan IP klien benar.
         $middleware->trustProxies(at: '*');
+
+        // Notifikasi Midtrans datang dari server Midtrans, bukan dari peramban
+        // yang memegang sesi — tidak ada token CSRF yang bisa disertakannya.
+        // Keasliannya dijamin tanda tangan SHA512 di controller, yang justru
+        // lebih kuat daripada token sesi.
+        $middleware->validateCsrfTokens(except: [
+            'midtrans/notifikasi',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

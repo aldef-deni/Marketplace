@@ -118,9 +118,9 @@
                         @endif
 
                         <div class="mt-5 space-y-3">
-                            @foreach ($metodes->groupBy('tipe') as $tipe => $kelompok)
+                            @foreach ($metodes->groupBy(fn ($m) => $m->viaGateway() ? 'gateway' : $m->tipe) as $tipe => $kelompok)
                                 <div class="mb-2 flex items-center gap-2">
-                                    <span class="badge {{ $kelompok->first()->warna }}">{{ $kelompok->first()->label_tipe }}</span>
+                                    <span class="badge {{ $kelompok->first()->warna_tipe }}">{{ $kelompok->first()->label_tipe }}</span>
                                     <span class="h-px flex-1 bg-slate-200"></span>
                                 </div>
                                 <div class="grid gap-3 sm:grid-cols-2">
@@ -131,12 +131,14 @@
                                             <span class="pointer-events-none absolute right-3 top-3 h-5 w-5 rounded-full bg-white transition"
                                                   x-bind:class="metode === '{{ $metode->id }}' ? 'border-[6px] border-brand-600' : 'border-2 border-slate-300'"></span>
                                             <div class="flex items-center gap-3 pr-6">
-                                                <span class="flex h-11 w-11 items-center justify-center rounded-xl text-xl {{ match ($metode->tipe) { 'transfer' => 'bg-blue-50', 'ewallet' => 'bg-emerald-50', 'cod' => 'bg-amber-50', default => 'bg-slate-50' } }}">
-                                                    <x-ikon :nama="match ($metode->tipe) { 'transfer' => 'bank', 'ewallet' => 'ponsel', 'cod' => 'uang', default => 'kartu' }" kelas="h-5 w-5 text-slate-700" />
+                                                <span class="flex h-11 w-11 items-center justify-center rounded-xl text-xl {{ $metode->viaGateway() ? 'bg-brand-50' : match ($metode->tipe) { 'transfer' => 'bg-blue-50', 'ewallet' => 'bg-emerald-50', 'cod' => 'bg-amber-50', default => 'bg-slate-50' } }}">
+                                                    <x-ikon :nama="$metode->viaGateway() ? 'gembok' : match ($metode->tipe) { 'transfer' => 'bank', 'ewallet' => 'ponsel', 'cod' => 'uang', default => 'kartu' }" kelas="h-5 w-5 text-slate-700" />
                                                 </span>
                                                 <div class="min-w-0">
                                                     <p class="text-sm font-bold text-slate-800">{{ $metode->nama }}</p>
-                                                    @if ($metode->tipe === 'transfer' || $metode->tipe === 'ewallet')
+                                                    @if ($metode->viaGateway())
+                                                        <p class="truncate text-xs text-slate-400">Bayar langsung, tercatat otomatis</p>
+                                                    @elseif ($metode->tipe === 'transfer' || $metode->tipe === 'ewallet')
                                                         <p class="truncate text-xs text-slate-400">a.n. {{ $metode->atas_nama }}</p>
                                                     @else
                                                         <p class="text-xs text-slate-400">Bayar tunai saat pesanan tiba</p>

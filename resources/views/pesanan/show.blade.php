@@ -90,6 +90,45 @@
                                 </div>
                             @endif
 
+                            @if ($pesanan->pembayaran->viaGateway())
+                                {{-- Pembayaran bergerbang: tidak ada bukti yang perlu
+                                     diunggah, dan tidak ada yang perlu diverifikasi admin.
+                                     Pembeli menekan tombol, membayar di halaman Midtrans,
+                                     lalu kembali; kelunasannya tercatat lewat notifikasi. --}}
+                                <div class="mt-5 rounded-2xl border-2 border-dashed border-brand-200 bg-brand-50/40 p-5 text-center">
+                                    <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-white">
+                                        <x-ikon nama="gembok" kelas="h-6 w-6" />
+                                    </span>
+
+                                    <p class="mt-3 text-sm font-extrabold text-slate-800">
+                                        Bayar dengan {{ $pesanan->pembayaran->metodePembayaran->nama }}
+                                    </p>
+                                    <p class="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-slate-500">
+                                        Anda akan dibawa ke halaman pembayaran aman milik Midtrans.
+                                        Pembayaran tercatat otomatis &mdash; tidak perlu mengunggah bukti.
+                                    </p>
+
+                                    <form action="{{ route('pesanan.midtrans.mulai', $pesanan) }}" method="POST"
+                                          onsubmit="this.querySelector('button').disabled = true">
+                                        @csrf
+                                        <button class="btn-primary mt-4 w-full py-3.5 text-base">
+                                            Bayar Sekarang &middot; {{ rp($pesanan->total) }}
+                                        </button>
+                                    </form>
+
+                                    {{-- Jaring pengaman: notifikasi bisa tidak pernah sampai,
+                                         dan tanpa pintu ini pesanan yang sudah dibayar akan
+                                         menggantung sampai ada yang memeriksanya manual. --}}
+                                    @if (filled($pesanan->pembayaran->order_id_gateway))
+                                        <form action="{{ route('pesanan.midtrans.periksa', $pesanan) }}" method="POST" class="mt-3">
+                                            @csrf
+                                            <button class="text-xs font-bold text-brand-600 hover:text-brand-800">
+                                                Sudah bayar tapi status belum berubah? Periksa sekarang
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            @else
                             {{-- Form unggah bukti --}}
                             <form action="{{ route('pesanan.bayar', $pesanan) }}" method="POST" enctype="multipart/form-data"
                                   class="mt-5 rounded-2xl border-2 border-dashed border-brand-200 bg-brand-50/40 p-5"
@@ -127,6 +166,7 @@
                                 </div>
                                 <button type="submit" class="btn-primary mt-4 w-full">Kirim Bukti Pembayaran</button>
                             </form>
+                            @endif
 
                             <form action="{{ route('pesanan.batalkan', $pesanan) }}" method="POST" class="mt-3 text-center"
                                   onsubmit="return confirm('Yakin ingin membatalkan pesanan ini?')">

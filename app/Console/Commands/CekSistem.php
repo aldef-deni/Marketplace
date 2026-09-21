@@ -67,6 +67,7 @@ class CekSistem extends Command
 
         $this->bagian('Konfigurasi');
         $this->periksaKonfigurasi();
+        $this->periksaMidtrans();
 
         $this->newLine();
 
@@ -362,6 +363,51 @@ class CekSistem extends Command
         if (($isi['dibuat'] ?? '') !== '') {
             $this->ok('Paket dibuat', $isi['dibuat']);
         }
+    }
+
+    /**
+     * Keadaan gerbang pembayaran.
+     *
+     * Yang paling mahal bila salah bukan kunci yang kosong — itu ketahuan
+     * seketika — melainkan kunci produksi yang dipasang sementara saklarnya
+     * masih sandbox, atau sebaliknya. Keduanya membuat setiap pembayaran
+     * ditolak dengan pesan yang tidak menjelaskan apa-apa.
+     */
+    private function periksaMidtrans(): void
+    {
+        if (! config('midtrans.aktif')) {
+            $this->peringatan('Midtrans', 'dimatikan — QRIS dan E-Wallet tidak ditawarkan di checkout');
+
+            return;
+        }
+
+        $server = (string) config('midtrans.server_key');
+        $client = (string) config('midtrans.client_key');
+
+        if ($server === '' || $client === '') {
+            $this->salah('Midtrans', 'dinyalakan tapi kuncinya belum diisi');
+            $this->petunjuk('Isi MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY pada .env, lalu jalankan php artisan optimize.');
+
+            return;
+        }
+
+        $produksi = (bool) config('midtrans.produksi');
+        $kunciSandbox = str_starts_with($server, 'SB-Mid-');
+
+        if ($produksi && $kunciSandbox) {
+            $this->salah('Midtrans', 'mode produksi memakai Server Key sandbox');
+
+            return;
+        }
+
+        if (! $produksi && ! $kunciSandbox) {
+            $this->salah('Midtrans', 'mode sandbox memakai Server Key produksi');
+
+            return;
+        }
+
+        $this->ok('Midtrans', ($produksi ? 'produksi' : 'sandbox').' — merchant '.(config('midtrans.merchant_id') ?: 'tidak disebut'));
+        $this->petunjuk('Payment Notification URL di dasbor Midtrans: '.url('/midtrans/notifikasi'));
     }
 
     private function periksaKonfigurasi(): void
