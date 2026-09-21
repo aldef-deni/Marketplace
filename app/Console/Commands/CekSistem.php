@@ -375,18 +375,27 @@ class CekSistem extends Command
      */
     private function periksaMidtrans(): void
     {
-        if (! config('midtrans.aktif')) {
-            $this->peringatan('Midtrans', 'dimatikan — QRIS dan E-Wallet tidak ditawarkan di checkout');
-
-            return;
-        }
-
         $server = (string) config('midtrans.server_key');
         $client = (string) config('midtrans.client_key');
 
         if ($server === '' || $client === '') {
-            $this->salah('Midtrans', 'dinyalakan tapi kuncinya belum diisi');
-            $this->petunjuk('Isi MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY pada .env, lalu jalankan php artisan optimize.');
+            $this->peringatan('Midtrans', 'kunci belum diisi — QRIS dan E-Wallet tidak ditawarkan di checkout');
+
+            // Config yang sudah di-cache tidak ikut berubah saat .env disunting.
+            // Ini penyebab paling sering "sudah diisi tapi tetap tidak terbaca",
+            // jadi disebut di sini alih-alih dibiarkan ditebak sendiri.
+            if (file_exists(base_path('bootstrap/cache/config.php'))) {
+                $this->petunjuk('Config sedang di-cache. Bila .env baru saja diubah, jalankan php artisan optimize agar terbaca.');
+            } else {
+                $this->petunjuk('Isi MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY pada .env server.');
+            }
+
+            return;
+        }
+
+        if (! config('midtrans.aktif')) {
+            $this->peringatan('Midtrans', 'kuncinya ada tapi sengaja dimatikan lewat MIDTRANS_AKTIF');
+            $this->petunjuk('Hapus baris MIDTRANS_AKTIF=false pada .env untuk menyalakannya kembali.');
 
             return;
         }
@@ -396,12 +405,14 @@ class CekSistem extends Command
 
         if ($produksi && $kunciSandbox) {
             $this->salah('Midtrans', 'mode produksi memakai Server Key sandbox');
+            $this->petunjuk('Setel MIDTRANS_PRODUKSI=false, atau ganti kuncinya dengan kunci produksi.');
 
             return;
         }
 
         if (! $produksi && ! $kunciSandbox) {
             $this->salah('Midtrans', 'mode sandbox memakai Server Key produksi');
+            $this->petunjuk('Hapus MIDTRANS_PRODUKSI=false agar mode disimpulkan dari kuncinya sendiri.');
 
             return;
         }

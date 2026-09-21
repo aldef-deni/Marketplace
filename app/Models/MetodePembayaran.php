@@ -79,7 +79,11 @@ class MetodePembayaran extends Model
     {
         return match (true) {
             ! $this->aktif => 'Dinonaktifkan',
-            $this->viaGateway() && ! Midtrans::aktif() => 'Midtrans belum disetel di server',
+            // Pesannya menyebut sebab yang sebenarnya. "Belum disetel" pada
+            // server yang kuncinya sudah terisi hanya menyesatkan orang untuk
+            // memeriksa ulang hal yang sudah benar.
+            $this->viaGateway() && ! Midtrans::kunciTerpasang() => 'Kunci Midtrans belum diisi di .env server',
+            $this->viaGateway() && ! Midtrans::aktif() => 'Midtrans dimatikan lewat MIDTRANS_AKTIF',
             $this->viaGateway() => null,
             $this->tipe !== 'cod' && blank($this->nomor_rekening) => 'Nomor belum diisi',
             default => null,

@@ -26,9 +26,18 @@ class Midtrans
      */
     public static function aktif(): bool
     {
-        return (bool) config('midtrans.aktif')
-            && filled(config('midtrans.server_key'))
-            && filled(config('midtrans.client_key'));
+        return (bool) config('midtrans.aktif') && self::kunciTerpasang();
+    }
+
+    /**
+     * Kredensialnya ada, terlepas dari saklarnya.
+     *
+     * Dipisah supaya panel dapat membedakan "kunci belum diisi" dari "sengaja
+     * dimatikan" — dua keadaan yang menuntut tindakan berbeda.
+     */
+    public static function kunciTerpasang(): bool
+    {
+        return filled(config('midtrans.server_key')) && filled(config('midtrans.client_key'));
     }
 
     public static function produksi(): bool

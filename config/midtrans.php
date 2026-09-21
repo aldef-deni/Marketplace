@@ -14,21 +14,36 @@ return [
     |
     */
 
-    /*
-     | Saklar utama. Selama false, metode pembayaran bergerbang tidak
-     | ditawarkan sama sekali di checkout — bukan ditawarkan lalu gagal.
-     */
-    'aktif' => (bool) env('MIDTRANS_AKTIF', false),
-
-    /*
-     | Produksi berarti uang sungguhan. Sengaja false secara baku: salah setel
-     | ke arah ini jauh lebih mahal daripada sebaliknya.
-     */
-    'produksi' => (bool) env('MIDTRANS_PRODUKSI', false),
-
     'merchant_id' => env('MIDTRANS_MERCHANT_ID'),
     'client_key' => env('MIDTRANS_CLIENT_KEY'),
     'server_key' => env('MIDTRANS_SERVER_KEY'),
+
+    /*
+     | Saklar utama — tapi mengisi kuncinya sudah berarti menyalakan.
+     |
+     | Semula ini saklar tersendiri yang baku mati. Rancangan itu keliru:
+     | kunci yang sudah terisi tidak punya arti lain selain "pakai gerbangnya",
+     | sementara saklar yang lupa diisi terlihat persis sama dengan kunci yang
+     | belum dipasang — dan pesan di panel pun menuduh hal yang salah.
+     |
+     | MIDTRANS_AKTIF sekarang hanya perlu ditulis untuk mematikan gerbang
+     | tanpa menghapus kuncinya.
+     */
+    'aktif' => (bool) env('MIDTRANS_AKTIF', filled(env('MIDTRANS_SERVER_KEY')) && filled(env('MIDTRANS_CLIENT_KEY'))),
+
+    /*
+     | Sandbox atau produksi.
+     |
+     | Bakunya disimpulkan dari kuncinya sendiri: kunci sandbox selalu berawalan
+     | "SB-Mid-", kunci produksi tidak pernah. Kesimpulan itu lebih sulit salah
+     | daripada saklar terpisah yang harus diingat — dan bila keduanya berbeda,
+     | sistem:cek akan menyebutnya.
+     |
+     | MIDTRANS_IS_PRODUCTION ikut dibaca karena itu nama yang dipakai ArahInn;
+     | menyamakan .env kedua aplikasi lebih murah daripada mengingat dua nama.
+     */
+    'produksi' => (bool) env('MIDTRANS_PRODUKSI', env('MIDTRANS_IS_PRODUCTION',
+        filled(env('MIDTRANS_SERVER_KEY')) && ! str_starts_with((string) env('MIDTRANS_SERVER_KEY'), 'SB-Mid-'))),
 
     /*
      | Masa berlaku tagihan. Disamakan dengan batas_pembayaran pesanan (24 jam)
