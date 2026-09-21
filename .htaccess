@@ -1,0 +1,57 @@
+# Satu alamat saja untuk satu halaman.
+#
+# Aplikasi Laravel sebenarnya dilayani dari folder public/. Di hosting cPanel,
+# akar dokumen sering diarahkan ke folder aplikasi ini, bukan ke public/-nya,
+# sehingga halaman yang sama dapat dibuka lewat dua alamat sekaligus:
+#
+#     https://market.arahinn.com/login          <- yang benar
+#     https://market.arahinn.com/public/login   <- kembarannya
+#
+# Kembaran itu bukan sekadar jelek. Laravel menyusun alamat pengalihan
+# berdasarkan basis permintaan yang sedang berjalan, bukan APP_URL. Pengunjung
+# yang masuk lewat /public/ akan dikembalikan ke /public/ lagi sesudah logout —
+# dan di situ ia bertemu galat, bukan beranda.
+#
+# Berkas ini menutup kembarannya: /public/... dialihkan permanen ke alamat
+# bersihnya, lalu sisanya diteruskan ke front controller.
+#
+# Lebih baik lagi bila akar dokumen subdomain diarahkan langsung ke folder
+# public/ lewat cPanel; berkas ini tetap aman dibiarkan bila itu dilakukan.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Pengalihan /public/... ke alamat bersihnya TIDAK dipasang di sini,
+    # melainkan di public/.htaccess. mod_rewrite tidak mewariskan aturan
+    # per-folder ke folder anak yang punya aturannya sendiri, sehingga aturan
+    # di berkas ini tidak pernah dijalankan untuk permintaan ke /public/...
+    # Hal itu sudah dibuktikan dengan menyalakan jejak rewrite Apache.
+
+    # Berkas dan folder yang memang ada di public/ dilayani apa adanya.
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f [OR]
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -d
+    RewriteRule ^(.*)$ public/$1 [L]
+
+    # Sisanya ke front controller.
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/index.php [L]
+</IfModule>
+
+# Isi folder aplikasi tidak boleh terbaca dari luar. Akar dokumen yang
+# menunjuk ke sini membuat .env, storage/, dan vendor/ berada satu tingkat
+# dengan halaman publik — tanpa penjagaan ini, seluruhnya dapat diunduh.
+<IfModule mod_authz_core.c>
+    <FilesMatch "^\.env">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+<IfModule !mod_authz_core.c>
+    <FilesMatch "^\.env">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>
+
+Options -Indexes

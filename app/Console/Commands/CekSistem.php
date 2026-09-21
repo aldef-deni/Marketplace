@@ -61,6 +61,7 @@ class CekSistem extends Command
         $this->periksaPaket();
 
         $this->bagian('Berkas & aset');
+        $this->periksaHtaccess();
         $this->periksaAset();
         $this->periksaJalurBukti();
         $this->periksaIzinTulis();
@@ -270,6 +271,31 @@ class CekSistem extends Command
             class_exists($kelas)
                 ? $this->ok('Paket '.$paket[$fitur], $fitur)
                 : $this->salah('Paket '.$paket[$fitur].' hilang', $fitur.' akan galat — jalankan composer install --no-dev');
+        }
+    }
+
+    /**
+     * Aturan penulisan ulang alamat.
+     *
+     * Berkas berawalan titik mudah tertinggal saat ZIP diekstrak lewat panel
+     * hosting. Bila .htaccess akar hilang, seluruh situs 404; bila yang hilang
+     * public/.htaccess, alamat kembar berawalan /public hidup kembali dan
+     * pengalihan sesudah logout berujung galat.
+     */
+    private function periksaHtaccess(): void
+    {
+        foreach ([
+            '.htaccess' => 'alamat tanpa /public',
+            'public/.htaccess' => 'front controller dan pengalihan /public',
+        ] as $jalur => $guna) {
+            if (! is_file(base_path($jalur))) {
+                $this->salah('Berkas '.$jalur, 'hilang — '.$guna.' tidak berfungsi');
+                $this->petunjuk('Berkas berawalan titik kadang terlewat saat ekstrak. Unggah ulang '.$jalur.' dari paket rilis.');
+
+                continue;
+            }
+
+            $this->ok('Berkas '.$jalur, $guna);
         }
     }
 

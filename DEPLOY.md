@@ -230,8 +230,36 @@ otomatis mengambil versi baru tanpa perlu hard refresh.
 
 ### Apache (cPanel / shared hosting)
 
-Berkas `public/.htaccess` bawaan Laravel sudah memadai. Tambahkan pengalihan
-ke HTTPS di `.htaccess` root subdomain bila panel belum menanganinya:
+Paket rilis sudah membawa dua berkas aturan, dan keduanya wajib ikut terekstrak:
+
+| Berkas | Gunanya |
+|---|---|
+| `.htaccess` (akar aplikasi) | situs dapat dibuka tanpa `/public` |
+| `public/.htaccess` | front controller, dan pengalihan `/public/...` ke alamat bersihnya |
+
+Berkas berawalan titik kadang terlewat saat ZIP diekstrak lewat panel hosting.
+`php artisan sistem:cek` memeriksa keduanya di bagian **Berkas & aset**.
+
+**Mengapa pengalihan `/public` itu perlu.** Bila akar dokumen subdomain
+menunjuk ke folder aplikasi (bukan ke `public/`), satu halaman dapat dibuka
+lewat dua alamat sekaligus: `/login` dan `/public/login`. Itu bukan sekadar
+jelek — Laravel menyusun alamat pengalihan dari basis permintaan yang sedang
+berjalan, bukan dari `APP_URL`. Pengunjung yang masuk lewat `/public/` akan
+dikembalikan ke `/public/` lagi sesudah logout, dan di situ ia bertemu galat
+alih-alih beranda. Aturan di `public/.htaccess` menutup kembarannya.
+
+Aturan itu harus berada di `public/.htaccess`, bukan di `.htaccess` akar:
+mod_rewrite tidak mewariskan aturan per-folder ke folder anak yang punya
+aturannya sendiri, sehingga aturan di akar tidak pernah dijalankan untuk
+permintaan ke `/public/...`.
+
+**Cara yang lebih bersih.** Arahkan akar dokumen subdomain langsung ke
+`public/` lewat cPanel — *Domains > market.arahinn.com > Manage > Document
+Root* — sehingga `/public` tidak pernah dapat dijangkau sejak awal. Kedua
+berkas aturan di atas tetap aman dibiarkan bila ini dilakukan.
+
+Tambahkan pengalihan ke HTTPS di `.htaccess` akar bila panel belum
+menanganinya:
 
 ```apache
 RewriteEngine On
