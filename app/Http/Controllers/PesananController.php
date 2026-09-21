@@ -181,7 +181,11 @@ class PesananController extends Controller
 
         Notifikasi::keAdmin($pesanan, 'pesanan_dibatalkan_pembeli');
 
-        return back()->with('success', 'Pesanan dibatalkan.');
+        // Penanda untuk memunculkan pilihan lanjut di halaman pesanan: setelah
+        // batal, tidak ada lagi yang bisa dikerjakan di sana.
+        return back()
+            ->with('success', 'Pesanan dibatalkan.')
+            ->with('pesanan_dibatalkan', $pesanan->no_invoice);
     }
 
     public function cetak(string $noInvoice)

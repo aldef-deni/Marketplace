@@ -422,6 +422,61 @@
         </div>
     </div>
 
+        {{-- Sesudah pesanan dibatalkan.
+
+             Halaman ini berubah menjadi catatan pesanan yang sudah gugur, dan
+             tidak ada lagi yang bisa dikerjakan di sini. Daripada meninggalkan
+             pembeli di halaman mati, ditawarkan dua jalan lanjut. --}}
+        @if (session('pesanan_dibatalkan'))
+            <div x-data="{ tampil: true }" x-on:keydown.escape.window="tampil = false">
+                <div x-show="tampil" x-cloak class="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
+                     role="dialog" aria-modal="true" aria-labelledby="judul-pesanan-batal">
+
+                    <div x-show="tampil" x-transition.opacity @click="tampil = false"
+                         class="absolute inset-0 bg-ink-950/60 backdrop-blur-sm"></div>
+
+                    <div x-show="tampil"
+                         x-transition:enter="transition duration-200 ease-out"
+                         x-transition:enter-start="translate-y-8 opacity-0 sm:translate-y-0 sm:scale-95"
+                         x-transition:enter-end="translate-y-0 opacity-100 sm:scale-100"
+                         class="relative w-full max-w-md rounded-t-3xl bg-white p-6 shadow-elevate sm:rounded-3xl sm:p-8">
+
+                        <span class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 ring-1 ring-rose-100">
+                            <x-ikon nama="silang" kelas="h-7 w-7" />
+                        </span>
+
+                        <h3 id="judul-pesanan-batal" class="mt-4 text-center text-lg font-extrabold text-slate-900">
+                            Pesanan Dibatalkan
+                        </h3>
+                        <p class="mx-auto mt-2 max-w-sm text-center text-sm leading-relaxed text-slate-500">
+                            Pesanan <span class="font-bold text-slate-700">{{ session('pesanan_dibatalkan') }}</span>
+                            sudah dibatalkan. Stok produknya sudah kami kembalikan.
+                            Mau lanjut ke mana?
+                        </p>
+
+                        <div class="mt-6 space-y-2.5">
+                            <a href="{{ route('beranda') }}"
+                               class="btn-primary flex w-full items-center justify-center gap-2 py-3.5">
+                                <x-ikon nama="rumah" kelas="h-4 w-4" />
+                                Kembali ke Beranda
+                            </a>
+
+                            <a href="{{ route('keranjang.index') }}"
+                               class="btn-secondary flex w-full items-center justify-center gap-2 py-3.5">
+                                <x-ikon nama="keranjang" kelas="h-4 w-4" />
+                                Kembali ke Keranjang
+                            </a>
+
+                            <button type="button" @click="tampil = false"
+                                    class="w-full py-2 text-center text-sm font-bold text-slate-400 transition hover:text-slate-600">
+                                Lihat Detail Pesanan Ini
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- Tombol kembali peramban saat pesanan masih menunggu dibayar.
 
              Halaman sebelumnya adalah checkout atas keranjang yang isinya sudah

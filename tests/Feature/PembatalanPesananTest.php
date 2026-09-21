@@ -140,6 +140,30 @@ class PembatalanPesananTest extends TestCase
         $this->assertSame(0, $this->baris->fresh()->terjual);
     }
 
+    public function test_pembatalan_menawarkan_pilihan_lanjut(): void
+    {
+        // Sesudah batal, halaman pesanan tidak menyisakan apa pun untuk
+        // dikerjakan; pembeli tidak boleh ditinggal di halaman mati.
+        $pesanan = $this->checkout(1);
+
+        $this->actingAs($this->pembeli)
+            ->post(route('pesanan.batalkan', $pesanan))
+            ->assertSessionHas('pesanan_dibatalkan', $pesanan->no_invoice);
+    }
+
+    public function test_halaman_memunculkan_pilihan_kembali_sesudah_batal(): void
+    {
+        $pesanan = $this->checkout(1);
+
+        $html = $this->actingAs($this->pembeli)
+            ->withSession(['pesanan_dibatalkan' => $pesanan->no_invoice])
+            ->get(route('pesanan.show', $pesanan->no_invoice))
+            ->assertOk()->getContent();
+
+        $this->assertStringContainsString('Kembali ke Beranda', $html);
+        $this->assertStringContainsString('Kembali ke Keranjang', $html);
+    }
+
     public function test_pembatalan_tidak_pernah_mengembalikan_dua_kali(): void
     {
         $pesanan = $this->checkout(3);

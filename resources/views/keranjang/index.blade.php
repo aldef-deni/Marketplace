@@ -142,15 +142,67 @@
                             </div>
 
                             <div class="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
-                                <form action="{{ route('keranjang.updateQty', $item) }}" method="POST">
+                                {{-- Pengatur jumlah.
+
+                                     Angka yang diketik langsung ikut terkunci di
+                                     batas stok dan langsung dikirim. Sebelumnya
+                                     hanya tombol +/- yang mengirim, sehingga
+                                     mengetik 99 pada stok 5 tampak berhasil di
+                                     layar padahal tidak pernah tersimpan — dan
+                                     harganya pun tidak ikut berubah.
+
+                                     Server tetap memangkas ulang; ini hanya agar
+                                     angka di layar tidak pernah berbohong. --}}
+                                <form action="{{ route('keranjang.updateQty', $item) }}" method="POST"
+                                      x-data="{
+                                          qty: {{ $item->qty }},
+                                          stok: {{ (int) $item->produk->stok }},
+                                          kirim() {
+                                              this.$refs.kolom.value = this.qty
+                                              this.$refs.kolom.form.submit()
+                                          },
+                                          ubah(selisih) {
+                                              const baru = Math.min(this.stok, Math.max(1, this.qty + selisih))
+                                              if (baru === this.qty) return
+                                              this.qty = baru
+                                              this.kirim()
+                                          },
+                                          ketik(e) {
+                                              const angka = parseInt(e.target.value, 10)
+                                              const baru = Number.isNaN(angka)
+                                                  ? 1
+                                                  : Math.min(this.stok, Math.max(1, angka))
+
+                                              // Dikembalikan ke layar lebih dulu supaya nilai di
+                                              // luar batas tidak sempat terbaca sebagai diterima.
+                                              e.target.value = baru
+
+                                              if (baru === this.qty) return
+                                              this.qty = baru
+                                              this.kirim()
+                                          },
+                                      }">
                                     @csrf
                                     @method('PATCH')
                                     <div class="flex items-center rounded-xl ring-1 ring-slate-300">
-                                        <button type="button" onclick="let i=this.parentElement.querySelector('input'); i.value=Math.max(1, +i.value-1); this.closest('form').submit();" class="px-3 py-2 text-sm font-bold text-slate-500 hover:text-brand-600">&minus;</button>
-                                        <input type="number" name="qty" value="{{ $item->qty }}" min="1" max="{{ $item->produk->stok }}"
+                                        <button type="button" @click="ubah(-1)" :disabled="qty <= 1"
+                                                class="px-3 py-2 text-sm font-bold text-slate-500 transition hover:text-brand-600 disabled:cursor-not-allowed disabled:text-slate-300"
+                                                aria-label="Kurangi jumlah">&minus;</button>
+
+                                        <input type="number" name="qty" x-ref="kolom" :value="qty"
+                                               min="1" max="{{ (int) $item->produk->stok }}" inputmode="numeric"
+                                               @change="ketik($event)" @keydown.enter.prevent="ketik($event)"
+                                               aria-label="Jumlah {{ $item->produk->nama }}"
                                                class="w-12 border-0 bg-transparent text-center text-sm font-bold focus:ring-0">
-                                        <button type="button" onclick="let i=this.parentElement.querySelector('input'); i.value=Math.min(+i.max||999, +i.value+1); this.closest('form').submit();" class="px-3 py-2 text-sm font-bold text-slate-500 hover:text-brand-600">+</button>
+
+                                        <button type="button" @click="ubah(1)" :disabled="qty >= stok"
+                                                class="px-3 py-2 text-sm font-bold text-slate-500 transition hover:text-brand-600 disabled:cursor-not-allowed disabled:text-slate-300"
+                                                aria-label="Tambah jumlah">+</button>
                                     </div>
+
+                                    <p class="mt-1 text-center text-[10px] font-semibold text-slate-400">
+                                        Stok {{ (int) $item->produk->stok }}
+                                    </p>
                                 </form>
                                 <div class="flex items-center gap-3">
                                     <p class="text-sm font-extrabold text-slate-800">{{ rp($item->subtotal) }}</p>

@@ -52,10 +52,18 @@ class KeranjangController extends Controller
             'user_id' => auth()->id(),
             'produk_id' => $produk->id,
         ]);
+        $sebelum = (int) $item->qty;
         $item->qty = min($item->qty + $qty, $produk->stok);
         // Baru dimasukkan berarti memang berniat dibeli.
         $item->dipilih = true;
         $item->save();
+
+        // Yang benar-benar masuk bisa lebih sedikit daripada yang diminta bila
+        // keranjangnya sudah berisi produk yang sama.
+        if ($item->qty - $sebelum < $qty) {
+            return redirect()->route('keranjang.index')
+                ->with('info', "Stok {$produk->nama} tinggal {$produk->stok}. Jumlah di keranjang disesuaikan.");
+        }
 
         return redirect()->route('keranjang.index')
             ->with('success', 'Produk berhasil ditambahkan ke keranjang.');
@@ -65,9 +73,23 @@ class KeranjangController extends Controller
     {
         $this->authorizeOwn($item);
 
-        $qty = (int) $request->input('qty');
-        $item->qty = max(1, min($qty, $item->produk->stok));
+        $diminta = (int) $request->input('qty');
+        $stok = (int) ($item->produk?->stok ?? 0);
+
+        if ($stok < 1) {
+            return back()->with('error', 'Produk ini sedang kosong dan tidak dapat dibeli.');
+        }
+
+        $qty = max(1, min($diminta, $stok));
+
+        $item->qty = $qty;
         $item->save();
+
+        // Dipangkas diam-diam membuat pembeli mengira permintaannya diterima,
+        // lalu heran melihat angka yang berbeda saat halaman dimuat ulang.
+        if ($diminta > $stok) {
+            return back()->with('info', "Stok {$item->produk->nama} tinggal {$stok}. Jumlahnya disesuaikan.");
+        }
 
         return back()->with('success', 'Jumlah item diperbarui.');
     }
