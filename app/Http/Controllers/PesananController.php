@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MetodePembayaran;
 use App\Models\Pembayaran;
 use App\Models\Pesanan;
 use App\Models\Pengiriman;
@@ -38,7 +39,74 @@ class PesananController extends Controller
             return $milikOrangLain;
         }
 
-        return view('pesanan.show', compact('pesanan'));
+        // Pilihan metode hanya berguna selama pesanannya memang masih menunggu
+        // dibayar; di luar itu daftarnya tidak perlu ikut dimuat.
+        $metodes = $pesanan->bolehGantiMetode()
+            ? MetodePembayaran::siap()->get()
+            : collect();
+
+        return view('pesanan.show', compact('pesanan', 'metodes'));
+    }
+
+    /**
+     * Mengganti metode pembayaran pesanan yang belum dibayar.
+     *
+     * Tanpa ini, pembeli yang salah pilih metode hanya punya satu jalan keluar:
+     * membatalkan pesanannya lalu menyusunnya ulang dari awal.
+     */
+    public function ubahMetode(Request $request, Pesanan $pesanan)
+    {
+        $this->authorizeOwn($pesanan);
+
+        abort_unless($pesanan->bolehGantiMetode(), 422,
+            'Metode pembayaran tidak dapat diubah pada keadaan ini.');
+
+        $data = $request->validate([
+            'metode_pembayaran_id' => ['required', 'exists:metode_pembayarans,id'],
+        ]);
+
+        // Disaring ulang di sini: metode yang nomornya dikosongkan sesudah
+        // halaman dimuat tidak boleh tetap lolos.
+        $metode = MetodePembayaran::siap()->where('id', $data['metode_pembayaran_id'])->firstOrFail();
+
+        $pembayaran = $pesanan->pembayaran;
+
+        if ($pembayaran->metode_pembayaran_id === $metode->id) {
+            return back()->with('info', 'Metode pembayaran tidak berubah.');
+        }
+
+        DB::transaction(function () use ($pesanan, $pembayaran, $metode) {
+            $pembayaran->update([
+                'metode_pembayaran_id' => $metode->id,
+                'gateway' => $metode->gateway,
+
+                // Bukti untuk metode lama tidak berlaku lagi bagi metode baru.
+                'bukti' => null,
+                'nama_pengirim' => null,
+
+                // Tagihan Midtrans yang lama ditinggalkan, bukan dipakai ulang:
+                // ia terikat pada kanal metode sebelumnya. Tagihannya gugur
+                // sendiri saat masa berlakunya habis.
+                'order_id_gateway' => null,
+                'snap_token' => null,
+                'snap_url' => null,
+
+                'status' => 'menunggu',
+                'keterangan' => $metode->tipe === 'cod'
+                    ? 'Pembayaran dilakukan saat pesanan diterima (COD).'
+                    : 'Menunggu pembayaran lewat '.$metode->nama.'.',
+            ]);
+
+            // COD tidak menunggu pembayaran, melainkan konfirmasi — dan tidak
+            // punya tenggat bayar sama sekali.
+            $pesanan->update([
+                'status' => $metode->tipe === 'cod' ? 'menunggu_konfirmasi' : 'menunggu_pembayaran',
+                'batas_pembayaran' => $metode->tipe === 'cod' ? null : Carbon::now()->addHours(24),
+            ]);
+        });
+
+        return redirect()->route('pesanan.show', $pesanan->no_invoice)
+            ->with('success', 'Metode pembayaran diubah menjadi '.$metode->nama.'.');
     }
 
     public function uploadBukti(Request $request, Pesanan $pesanan)
@@ -106,11 +174,7 @@ class PesananController extends Controller
             'Pesanan tidak dapat dibatalkan pada status ini.');
 
         DB::transaction(function () use ($pesanan) {
-            foreach ($pesanan->items as $item) {
-                if ($item->produk) {
-                    $item->produk->increment('stok', $item->qty);
-                }
-            }
+            $pesanan->kembalikanCadangan();
             $pesanan->pembayaran?->update(['status' => 'dibatalkan']);
             $pesanan->update(['status' => 'dibatalkan']);
         });

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Keranjang extends Model
 {
-    protected $fillable = ['user_id', 'produk_id', 'qty'];
+    protected $fillable = ['user_id', 'produk_id', 'qty', 'dipilih'];
 
     protected $casts = [
         // Lihat catatan pada model Pesanan: kunci asing yang terbaca sebagai
@@ -15,6 +15,7 @@ class Keranjang extends Model
         'user_id' => 'integer',
         'produk_id' => 'integer',
         'qty' => 'integer',
+        'dipilih' => 'boolean',
     ];
 
     public function user(): BelongsTo
@@ -25,6 +26,28 @@ class Keranjang extends Model
     public function produk(): BelongsTo
     {
         return $this->belongsTo(Produk::class);
+    }
+
+    /**
+     * Item yang benar-benar akan dibeli pada checkout berikutnya.
+     */
+    public function scopeDipilih($q)
+    {
+        return $q->where('dipilih', true);
+    }
+
+    /**
+     * Produk yang sudah tidak dapat dibeli tidak boleh ikut terbawa.
+     *
+     * Produk bisa dinonaktifkan atau kehabisan stok setelah masuk keranjang;
+     * membiarkannya tercentang hanya akan menggagalkan checkout di detik
+     * terakhir tanpa penjelasan.
+     */
+    public function tersedia(): bool
+    {
+        return $this->produk
+            && $this->produk->status === 'aktif'
+            && $this->produk->stok > 0;
     }
 
     public function getSubtotalAttribute(): float

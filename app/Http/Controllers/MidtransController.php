@@ -217,9 +217,7 @@ class MidtransController extends Controller
 
     private function gugurkan(Pesanan $pesanan): void
     {
-        foreach ($pesanan->items as $item) {
-            $item->produk?->increment('stok', $item->qty);
-        }
+        $pesanan->kembalikanCadangan();
 
         $pesanan->update(['status' => 'dibatalkan']);
     }

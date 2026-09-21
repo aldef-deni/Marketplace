@@ -26,10 +26,13 @@ class CheckoutController extends Controller
 
     public function index()
     {
-        $items = auth()->user()->keranjangs()->with('produk.kategori')->get();
+        // Hanya yang dicentang di keranjang. Isi keranjang belum tentu ingin
+        // dibeli seluruhnya sekali jalan.
+        $items = auth()->user()->keranjangs()->dipilih()->with('produk.kategori')->get();
 
         if ($items->isEmpty()) {
-            return redirect()->route('produk.index')->with('info', 'Keranjang Anda masih kosong.');
+            return redirect()->route('keranjang.index')
+                ->with('info', 'Pilih dulu produk yang ingin dibeli.');
         }
 
         $alamats = auth()->user()->alamats()->get();
@@ -43,10 +46,13 @@ class CheckoutController extends Controller
 
     public function store(Request $request)
     {
-        $items = auth()->user()->keranjangs()->with('produk')->get();
+        // Disaring ulang di sisi server: yang dibeli adalah yang tercentang
+        // saat tombol ditekan, bukan apa pun yang dikirim formulirnya.
+        $items = auth()->user()->keranjangs()->dipilih()->with('produk')->get();
 
         if ($items->isEmpty()) {
-            return redirect()->route('produk.index')->with('info', 'Keranjang Anda masih kosong.');
+            return redirect()->route('keranjang.index')
+                ->with('info', 'Pilih dulu produk yang ingin dibeli.');
         }
 
         $validated = $request->validate([
@@ -94,7 +100,7 @@ class CheckoutController extends Controller
             ]);
 
             foreach ($items as $item) {
-                PesananItem::create([
+                $baris = PesananItem::create([
                     'pesanan_id' => $pesanan->id,
                     'produk_id' => $item->produk_id,
                     'nama_produk' => $item->produk->nama,
@@ -112,9 +118,21 @@ class CheckoutController extends Controller
                 // kehilangan arti. Yang dikurangi hanya potongan yang benar-benar
                 // dipakai, bukan setiap potongan yang kebetulan berlaku.
                 if ($potongan = $item->produk->potonganBerlaku()) {
-                    $potongan->sumber->increment('terjual', $potongan->sisaKuota === null
+                    $terpakai = $potongan->sisaKuota === null
                         ? $item->qty
-                        : min($item->qty, $potongan->sisaKuota));
+                        : min($item->qty, $potongan->sisaKuota);
+
+                    $potongan->sumber->increment('terjual', $terpakai);
+
+                    // Dicatat pada barisnya supaya pembatalan dapat mengembalikan
+                    // persis sebanyak yang terambil. Menghitungnya ulang nanti
+                    // tidak bisa: kampanyenya mungkin sudah berakhir, dan jatah
+                    // yang terambil belum tentu sebanyak kuantitas yang dibeli.
+                    $baris->update([
+                        'potongan_type' => $potongan->sumber->getMorphClass(),
+                        'potongan_id' => $potongan->sumber->getKey(),
+                        'kuota_terpakai' => $terpakai,
+                    ]);
                 }
             }
 
@@ -135,7 +153,8 @@ class CheckoutController extends Controller
                 },
             ]);
 
-            auth()->user()->keranjangs()->delete();
+            // Yang tidak ikut dibeli tetap tinggal di keranjang.
+            auth()->user()->keranjangs()->dipilih()->delete();
 
             $pesanan->load('user');
             Notifikasi::kePembeli($pesanan, 'pesanan_dibuat');

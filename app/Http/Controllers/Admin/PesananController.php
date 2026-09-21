@@ -136,11 +136,7 @@ class PesananController extends Controller
         $keterangan = $request->input('keterangan');
 
         DB::transaction(function () use ($pesanan, $keterangan) {
-            foreach ($pesanan->items as $item) {
-                if ($item->produk) {
-                    $item->produk->increment('stok', $item->qty);
-                }
-            }
+            $pesanan->kembalikanCadangan();
             $pesanan->pembayaran?->update([
                 'status' => 'dibatalkan',
                 'keterangan' => $keterangan ?: $pesanan->pembayaran->keterangan,

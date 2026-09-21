@@ -15,6 +15,31 @@ class KeranjangController extends Controller
         return view('keranjang.index', compact('items'));
     }
 
+    /**
+     * Menyimpan centang pilihan.
+     *
+     * Dipanggil dari halaman keranjang tiap kali centangnya berubah, sehingga
+     * pilihannya bertahan saat pembeli berpindah halaman. Dijawab JSON karena
+     * pemanggilnya tidak ingin halamannya dimuat ulang — jumlah di ringkasan
+     * sudah dihitung di layar.
+     */
+    public function pilih(Request $request)
+    {
+        $data = $request->validate([
+            'id' => ['required', 'array'],
+            'id.*' => ['integer'],
+        ]);
+
+        $milikSendiri = auth()->user()->keranjangs();
+
+        // Disaring lewat relasi pemiliknya, jadi id keranjang orang lain yang
+        // diselipkan ke permintaan tidak berpengaruh apa pun.
+        (clone $milikSendiri)->update(['dipilih' => false]);
+        (clone $milikSendiri)->whereIn('id', $data['id'])->update(['dipilih' => true]);
+
+        return response()->json(['pesan' => 'Pilihan tersimpan.']);
+    }
+
     public function tambah(Request $request, Produk $produk)
     {
         $qty = max(1, min((int) $request->input('qty', 1), $produk->stok));
@@ -28,6 +53,8 @@ class KeranjangController extends Controller
             'produk_id' => $produk->id,
         ]);
         $item->qty = min($item->qty + $qty, $produk->stok);
+        // Baru dimasukkan berarti memang berniat dibeli.
+        $item->dipilih = true;
         $item->save();
 
         return redirect()->route('keranjang.index')

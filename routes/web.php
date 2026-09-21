@@ -53,6 +53,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('keranjang')->name('keranjang.')->group(function () {
         Route::get('/', [KeranjangController::class, 'index'])->name('index');
+        Route::post('/pilih', [KeranjangController::class, 'pilih'])->name('pilih');
         Route::post('/tambah/{produk}', [KeranjangController::class, 'tambah'])->name('tambah');
         Route::patch('/{item}/qty', [KeranjangController::class, 'updateQty'])->name('updateQty');
         Route::delete('/{item}', [KeranjangController::class, 'hapus'])->name('hapus');
@@ -76,6 +77,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [PesananController::class, 'index'])->name('index');
         Route::get('/{noInvoice}', [PesananController::class, 'show'])->name('show');
         Route::post('/{pesanan}/bayar', [PesananController::class, 'uploadBukti'])->name('bayar');
+        Route::post('/{pesanan}/metode', [PesananController::class, 'ubahMetode'])->name('metode');
 
         /*
         | Pembayaran lewat gerbang. Dipisah dari unggah bukti karena alurnya

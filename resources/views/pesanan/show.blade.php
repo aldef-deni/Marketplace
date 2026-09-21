@@ -168,6 +168,72 @@
                             </form>
                             @endif
 
+                            {{-- Ganti metode pembayaran.
+
+                                 Tanpa ini, pembeli yang salah pilih metode hanya
+                                 punya satu jalan keluar: membatalkan pesanannya
+                                 lalu menyusunnya ulang dari awal.
+
+                                 Panel ini sekaligus menjadi sasaran modal tombol
+                                 kembali di bawah — keduanya berbagi satu keadaan
+                                 Alpine milik bagian ini. --}}
+                            @if ($pesanan->bolehGantiMetode() && $metodes->isNotEmpty())
+                                <div class="mt-5 overflow-hidden rounded-2xl ring-1 ring-slate-200"
+                                     x-data="{ buka: false }"
+                                     x-on:buka-metode.window="buka = true; $nextTick(() => $el.scrollIntoView({ behavior: 'smooth', block: 'center' }))">
+
+                                    <button type="button" @click="buka = ! buka"
+                                            class="flex w-full items-center justify-between gap-3 bg-slate-50 px-5 py-4 text-left transition hover:bg-slate-100">
+                                        <span class="flex items-center gap-3">
+                                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 ring-1 ring-slate-200">
+                                                <x-ikon nama="perkakas" kelas="h-4 w-4" />
+                                            </span>
+                                            <span>
+                                                <span class="block text-sm font-extrabold text-slate-800">Ubah Metode Pembayaran</span>
+                                                <span class="block text-[11px] text-slate-400">Salah pilih? Ganti tanpa membatalkan pesanan</span>
+                                            </span>
+                                        </span>
+                                        <x-ikon nama="panah-kanan" kelas="h-4 w-4 shrink-0 text-slate-400 transition" ::class="buka ? 'rotate-90' : ''" />
+                                    </button>
+
+                                    <div x-show="buka" x-transition x-cloak class="border-t border-slate-200 bg-white p-5">
+                                        <form action="{{ route('pesanan.metode', $pesanan) }}" method="POST"
+                                              x-data="{ pilih: '{{ $pesanan->pembayaran->metode_pembayaran_id }}' }"
+                                              onsubmit="this.querySelector('button[type=submit]').disabled = true">
+                                            @csrf
+
+                                            <div class="grid gap-2.5 sm:grid-cols-2">
+                                                @foreach ($metodes as $pilihan)
+                                                    <label class="flex cursor-pointer items-center gap-3 rounded-xl border-2 p-3 transition"
+                                                           :class="pilih === '{{ $pilihan->id }}' ? 'border-brand-500 bg-brand-50/50' : 'border-slate-200 bg-white hover:border-brand-200'">
+                                                        <input type="radio" name="metode_pembayaran_id" value="{{ $pilihan->id }}"
+                                                               x-model="pilih" class="sr-only">
+                                                        <span class="flex h-4 w-4 shrink-0 rounded-full transition"
+                                                              :class="pilih === '{{ $pilihan->id }}' ? 'border-[5px] border-brand-600' : 'border-2 border-slate-300'"></span>
+                                                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $pilihan->viaGateway() ? 'bg-brand-50' : match ($pilihan->tipe) { 'transfer' => 'bg-blue-50', 'ewallet' => 'bg-emerald-50', 'cod' => 'bg-amber-50', default => 'bg-slate-50' } }}">
+                                                            <x-ikon :nama="$pilihan->viaGateway() ? 'gembok' : match ($pilihan->tipe) { 'transfer' => 'bank', 'ewallet' => 'ponsel', 'cod' => 'uang', default => 'kartu' }" kelas="h-4 w-4 text-slate-700" />
+                                                        </span>
+                                                        <span class="min-w-0">
+                                                            <span class="block truncate text-sm font-bold text-slate-800">{{ $pilihan->nama }}</span>
+                                                            <span class="block truncate text-[11px] text-slate-400">{{ $pilihan->label_tipe }}</span>
+                                                        </span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+
+                                            <p class="mt-3 rounded-xl bg-amber-50/70 px-4 py-2.5 text-[11px] leading-relaxed text-amber-800 ring-1 ring-amber-100">
+                                                Mengganti metode akan menyetel ulang tagihan sebelumnya. Bukti yang sudah diunggah ikut terhapus.
+                                            </p>
+
+                                            <div class="mt-4 flex flex-wrap gap-2">
+                                                <button type="submit" class="btn-primary flex-1 sm:flex-none">Simpan Metode</button>
+                                                <button type="button" @click="buka = false" class="btn-secondary flex-1 sm:flex-none">Batal</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            @endif
+
                             <form action="{{ route('pesanan.batalkan', $pesanan) }}" method="POST" class="mt-3 text-center"
                                   onsubmit="return confirm('Yakin ingin membatalkan pesanan ini?')">
                                 @csrf
@@ -355,5 +421,98 @@
             </div>
         </div>
     </div>
+
+        {{-- Tombol kembali peramban saat pesanan masih menunggu dibayar.
+
+             Halaman sebelumnya adalah checkout atas keranjang yang isinya sudah
+             berpindah menjadi pesanan ini; kembali ke sana hanya akan memantulkan
+             pembeli ke halaman kosong tanpa penjelasan. Jadi tekanan pertama
+             ditahan sekali, lalu ditawarkan dua jalan yang benar-benar berguna.
+
+             Ditahan hanya sekali: tekanan berikutnya berjalan seperti biasa,
+             supaya pembeli tidak pernah merasa terkurung di halaman ini. --}}
+        @if (in_array($pesanan->status, ['menunggu_pembayaran', 'menunggu_konfirmasi']))
+            <div x-data="{
+                    tampil: false,
+                    sudahDitahan: false,
+
+                    init() {
+                        history.pushState({ tahanKembali: true }, '', location.href)
+
+                        window.addEventListener('popstate', () => {
+                            if (this.sudahDitahan) return
+
+                            this.sudahDitahan = true
+                            this.tampil = true
+
+                            // Dikembalikan ke halaman ini supaya modalnya sempat
+                            // terbaca; tekanan kembali berikutnya lolos.
+                            history.pushState({ tahanKembali: true }, '', location.href)
+                        })
+                    },
+
+                    tutup() { this.tampil = false },
+
+                    keMetode() {
+                        this.tutup()
+                        window.dispatchEvent(new CustomEvent('buka-metode'))
+                    },
+                }"
+                 x-on:keydown.escape.window="tutup()">
+
+                <div x-show="tampil" x-cloak class="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
+                     role="dialog" aria-modal="true" aria-labelledby="judul-tahan-kembali">
+
+                    <div x-show="tampil" x-transition.opacity @click="tutup()"
+                         class="absolute inset-0 bg-ink-950/60 backdrop-blur-sm"></div>
+
+                    <div x-show="tampil"
+                         x-transition:enter="transition duration-200 ease-out"
+                         x-transition:enter-start="translate-y-8 opacity-0 sm:translate-y-0 sm:scale-95"
+                         x-transition:enter-end="translate-y-0 opacity-100 sm:scale-100"
+                         class="relative w-full max-w-md rounded-t-3xl bg-white p-6 shadow-elevate sm:rounded-3xl sm:p-8">
+
+                        <span class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 ring-1 ring-amber-100">
+                            <x-ikon nama="peringatan" kelas="h-7 w-7" />
+                        </span>
+
+                        <h3 id="judul-tahan-kembali" class="mt-4 text-center text-lg font-extrabold text-slate-900">
+                            Pesanan Anda belum dibayar
+                        </h3>
+                        <p class="mx-auto mt-2 max-w-sm text-center text-sm leading-relaxed text-slate-500">
+                            Pesanan <span class="font-bold text-slate-700">{{ $pesanan->no_invoice }}</span> sudah dibuat
+                            dan menunggu pembayaran. Mau lanjut bayar, atau ada yang ingin diubah?
+                        </p>
+
+                        <div class="mt-6 space-y-2.5">
+                            @if ($pesanan->bolehGantiMetode() && $metodes->isNotEmpty())
+                                <button type="button" @click="keMetode()"
+                                        class="btn-primary flex w-full items-center justify-center gap-2 py-3.5">
+                                    <x-ikon nama="perkakas" kelas="h-4 w-4" />
+                                    Ubah Metode Pembayaran
+                                </button>
+                            @endif
+
+                            <a href="{{ route('keranjang.index') }}"
+                               class="btn-secondary flex w-full items-center justify-center gap-2 py-3.5">
+                                <x-ikon nama="keranjang" kelas="h-4 w-4" />
+                                Kembali ke Keranjang
+                            </a>
+
+                            <button type="button" @click="tutup()"
+                                    class="w-full py-2 text-center text-sm font-bold text-slate-400 transition hover:text-slate-600">
+                                Lanjut Bayar
+                            </button>
+                        </div>
+
+                        <p class="mt-4 text-center text-[11px] leading-relaxed text-slate-400">
+                            Pesanan ini tetap tersimpan di
+                            <a href="{{ route('pesanan.index') }}" class="font-bold text-brand-600 hover:text-brand-800">Daftar Pesanan</a>
+                            selama belum dibatalkan.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        @endif
 
 </x-layouts.app>

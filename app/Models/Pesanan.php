@@ -63,6 +63,53 @@ class Pesanan extends Model
         return $this->hasOne(Pengiriman::class);
     }
 
+    /**
+     * Metode pembayaran masih boleh diganti.
+     *
+     * Syaratnya pesanan belum dibayar dan belum ada bukti yang sedang dinilai.
+     * Mengganti metode saat bukti menunggu penilaian akan membuat admin menilai
+     * bukti untuk metode yang sudah tidak dipakai lagi.
+     */
+    public function bolehGantiMetode(): bool
+    {
+        if (! in_array($this->status, ['menunggu_pembayaran', 'menunggu_konfirmasi'], true)) {
+            return false;
+        }
+
+        $pembayaran = $this->pembayaran;
+
+        return $pembayaran !== null
+            && $pembayaran->status === 'menunggu'
+            && blank($pembayaran->bukti);
+    }
+
+    /**
+     * Melepas kembali apa yang dicadangkan checkout: stok dan kuota potongan.
+     *
+     * Dulu tiap jalur pembatalan mengulang sendiri pengembalian stoknya, dan
+     * tidak satu pun mengembalikan kuotanya — sehingga pesanan batal tetap
+     * menghabiskan jatah flash sale. Disatukan di sini supaya jalur pembatalan
+     * berikutnya tidak bisa lagi lupa separuhnya.
+     *
+     * Dipanggil sekali per pesanan. Pemanggilnya yang memastikan pesanan belum
+     * berstatus batal, dan kuota yang sudah dilepas dinolkan agar pemanggilan
+     * kedua tidak menggandakan apa pun.
+     */
+    public function kembalikanCadangan(): void
+    {
+        foreach ($this->items as $item) {
+            $item->produk?->increment('stok', $item->qty);
+
+            if ($item->kuota_terpakai > 0) {
+                // decrement tidak pernah membuat terjual minus: yang dikurangi
+                // persis sebanyak yang dicatat saat mencadangkan.
+                $item->potongan?->decrement('terjual', $item->kuota_terpakai);
+
+                $item->update(['kuota_terpakai' => 0]);
+            }
+        }
+    }
+
     public function getStatusLabelAttribute(): string
     {
         return self::STATUS[$this->status] ?? $this->status;
