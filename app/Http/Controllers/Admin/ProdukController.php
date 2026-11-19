@@ -101,6 +101,51 @@ class ProdukController extends Controller
         return back()->with('success', 'Produk dihapus.');
     }
 
+    /**
+     * Hapus banyak produk sekaligus dari checklist di daftar produk.
+     *
+     * Tiap produk tetap dihapus lewat $produk->delete() — cara yang sama dengan
+     * tombol hapus satuan. Pemilik toko hanya bisa menyentuh produk lapaknya
+     * sendiri: id milik toko lain diabaikan, bukan dihapus.
+     *
+     * Produk yang gagal dihapus (mis. masih dirujuk data lain) tidak
+     * membatalkan produk lain yang dipilih; namanya disebut di pesan.
+     */
+    public function destroyMassal(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:100'],
+            'ids.*' => ['integer'],
+        ], [
+            'ids.required' => 'Pilih minimal satu produk.',
+            'ids.max' => 'Maksimal 100 produk sekali hapus.',
+        ]);
+
+        $produks = Produk::whereIn('id', $data['ids'])
+            ->when($this->tokoPenjual(), fn ($q, $tokoId) => $q->where('toko_id', $tokoId))
+            ->get();
+
+        $terhapus = 0;
+        $gagal = [];
+        foreach ($produks as $produk) {
+            try {
+                $produk->delete();
+                $terhapus++;
+            } catch (\Illuminate\Database\QueryException $e) {
+                report($e);
+                $gagal[] = $produk->nama;
+            }
+        }
+
+        $pesan = $terhapus.' produk dihapus.';
+        if ($gagal) {
+            $pesan .= ' '.count($gagal).' gagal dihapus: '
+                .implode(', ', array_slice($gagal, 0, 5)).(count($gagal) > 5 ? ', …' : '').'.';
+        }
+
+        return back()->with('success', $pesan);
+    }
+
     public function toggleStatus(Produk $produk)
     {
         $this->pastikanBoleh($produk);

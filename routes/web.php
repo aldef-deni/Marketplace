@@ -123,6 +123,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
         Route::get('/', [App\Http\Controllers\Admin\ProdukController::class, 'index'])->name('index');
         Route::get('/tambah', [App\Http\Controllers\Admin\ProdukController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\Admin\ProdukController::class, 'store'])->name('store');
+        Route::delete('/hapus-massal', [App\Http\Controllers\Admin\ProdukController::class, 'destroyMassal'])->name('destroy-massal');
         Route::get('/{produk}/edit', [App\Http\Controllers\Admin\ProdukController::class, 'edit'])->name('edit');
         Route::patch('/{produk}', [App\Http\Controllers\Admin\ProdukController::class, 'update'])->name('update');
         Route::patch('/{produk}/status', [App\Http\Controllers\Admin\ProdukController::class, 'toggleStatus'])->name('status');

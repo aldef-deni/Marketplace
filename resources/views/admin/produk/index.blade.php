@@ -1,13 +1,45 @@
 <x-layouts.admin>
     <x-slot name="title">Manajemen Produk</x-slot>
 
-    <div class="card overflow-hidden">
+    {{-- Checklist hapus massal (Alpine). "Pilih semua" = produk di HALAMAN INI
+         saja, mengikuti filter & pencarian yang sedang aktif. --}}
+    <div class="card overflow-hidden"
+         x-data="{
+            pilih: [],
+            semua: @js($produks->map(fn ($p) => (string) $p->id)->values()),
+            nama: @js((object) $produks->mapWithKeys(fn ($p) => [(string) $p->id => $p->nama])->all()),
+            get semuaTerpilih() { return this.semua.length > 0 && this.pilih.length === this.semua.length },
+            get sebagian() { return this.pilih.length > 0 && ! this.semuaTerpilih },
+            aturSemua(centang) { this.pilih = centang ? [...this.semua] : [] },
+            konfirmasi() {
+                const daftar = this.pilih.slice(0, 5).map(id => '• ' + this.nama[id]).join('\n');
+                const lagi = this.pilih.length > 5 ? '\n…dan ' + (this.pilih.length - 5) + ' produk lainnya' : '';
+                return confirm('Hapus ' + this.pilih.length + ' produk terpilih?\n\n' + daftar + lagi + '\n\nTindakan ini tidak bisa dibatalkan.');
+            }
+         }">
         <div class="flex flex-wrap items-center justify-between gap-4 p-6 pb-4">
             <div>
                 <h3 class="text-base font-extrabold text-slate-900">Daftar Produk</h3>
-                <p class="mt-0.5 text-xs text-slate-400">Total {{ $produks->total() }} produk</p>
+                <p class="mt-0.5 text-xs text-slate-400">
+                    Total {{ $produks->total() }} produk
+                    <span x-cloak x-show="pilih.length > 0" class="font-bold text-brand-700">· <span x-text="pilih.length"></span> dipilih</span>
+                </p>
             </div>
-            <a href="{{ route('admin.produk.create') }}" class="btn-primary">+ Tambah Produk</a>
+            <div class="flex flex-wrap items-center gap-3">
+                <button type="button" x-cloak x-show="pilih.length > 0" @click="pilih = []" class="btn-secondary">Batal pilih</button>
+                <form x-cloak x-show="pilih.length > 0" action="{{ route('admin.produk.destroy-massal') }}" method="POST"
+                      @submit="if (! konfirmasi()) $event.preventDefault()">
+                    @csrf
+                    @method('DELETE')
+                    <template x-for="id in pilih" :key="id">
+                        <input type="hidden" name="ids[]" :value="id">
+                    </template>
+                    <button type="submit" class="btn-danger">
+                        <x-ikon nama="sampah" kelas="h-4 w-4" /> Hapus (<span x-text="pilih.length"></span>)
+                    </button>
+                </form>
+                <a href="{{ route('admin.produk.create') }}" class="btn-primary">+ Tambah Produk</a>
+            </div>
         </div>
 
         {{-- Filter --}}
@@ -36,6 +68,14 @@
             <table class="w-full min-w-[820px]">
                 <thead class="bg-slate-50">
                     <tr>
+                        <th class="table-head w-10">
+                            <input type="checkbox" title="Pilih semua produk di halaman ini"
+                                   class="h-4 w-4 cursor-pointer rounded border-slate-300 text-brand-600"
+                                   :checked="semuaTerpilih"
+                                   :disabled="semua.length === 0"
+                                   x-effect="$el.indeterminate = sebagian"
+                                   @change="aturSemua($event.target.checked)">
+                        </th>
                         <th class="table-head">Produk</th>
                         <th class="table-head">Kategori</th>
                         <th class="table-head">Harga</th>
@@ -47,7 +87,12 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse ($produks as $produk)
-                        <tr class="transition hover:bg-slate-50/60">
+                        <tr class="transition hover:bg-slate-50/60" :class="pilih.includes('{{ $produk->id }}') ? 'bg-brand-50' : ''">
+                            <td class="table-cell w-10">
+                                <input type="checkbox" value="{{ $produk->id }}" x-model="pilih"
+                                       class="h-4 w-4 cursor-pointer rounded border-slate-300 text-brand-600"
+                                       aria-label="Pilih {{ $produk->nama }}">
+                            </td>
                             <td class="table-cell">
                                 <div class="flex items-center gap-3">
                                     @if ($produk->gambar)
@@ -98,7 +143,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-16 text-center">
+                            <td colspan="8" class="px-4 py-16 text-center">
                                 <p class="text-4xl"><x-ikon nama="cari" kelas="h-9 w-9" /></p>
                                 <p class="mt-3 text-sm font-semibold text-slate-500">Tidak ada produk ditemukan.</p>
                             </td>
